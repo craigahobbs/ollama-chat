@@ -8,6 +8,7 @@ The ollama-chat back-end application
 import importlib.resources as pkg_resources
 
 import chisel
+import schema_markdown
 
 from .ollama import OllamaChat
 
@@ -65,12 +66,12 @@ class OllamaChatApplication(chisel.Application):
             ))
 
 
-@chisel.action(spec='''\
+API_TYPES = schema_markdown.parse_schema_markdown('''\
 group "Ollama Chat API"
 
 
 # Start a language model chat
-action start_chat
+action startChat
     urls
         POST
 
@@ -84,19 +85,10 @@ action start_chat
     output
         # The chat ID
         int id
-''')
-def start_chat(ctx, req):
-    chat_id = len(ctx.app.chats)
-    chat = OllamaChat(req.get('model', DEFAULT_MODEL), req['prompt'])
-    ctx.app.chats[chat_id] = chat
-    return {
-        'id': chat_id
-    }
 
 
-@chisel.action(spec='''\
 # Get the language model chat text
-action get_chat
+action getChat
     urls
         GET
 
@@ -119,7 +111,33 @@ action get_chat
 
     errors
         UnknownChatID
+
+
+# Stop a language model chat
+action stopChat
+    urls
+        POST
+
+    input
+        # The chat ID
+        int id
+
+    errors
+        UnknownChatID
 ''')
+
+
+@chisel.action(name='startChat', types=API_TYPES)
+def start_chat(ctx, req):
+    chat_id = len(ctx.app.chats)
+    chat = OllamaChat(req.get('model', DEFAULT_MODEL), req['prompt'])
+    ctx.app.chats[chat_id] = chat
+    return {
+        'id': chat_id
+    }
+
+
+@chisel.action(name='getChat', types=API_TYPES)
 def get_chat(ctx, req):
     chat_id = req['id']
     if chat_id not in ctx.app.chats:
@@ -134,19 +152,7 @@ def get_chat(ctx, req):
     }
 
 
-@chisel.action(spec='''\
-# Stop a language model chat
-action stop_chat
-    urls
-        POST
-
-    input
-        # The chat ID
-        int id
-
-    errors
-        UnknownChatID
-''')
+@chisel.action(name='stopChat', types=API_TYPES)
 def stop_chat(ctx, req):
     chat_id = req['id']
     if chat_id not in ctx.app.chats:

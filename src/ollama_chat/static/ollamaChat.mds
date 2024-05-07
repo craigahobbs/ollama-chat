@@ -73,7 +73,7 @@ endfunction
 
 # Start a new chat
 async function ollamaChatIndexOnClick(model, prompt):
-    startResponse = systemFetch(objectNew('url', 'start_chat', 'body', jsonStringify(objectNew('model', model, 'prompt', prompt))))
+    startResponse = systemFetch(objectNew('url', 'startChat', 'body', jsonStringify(objectNew('model', model, 'prompt', prompt))))
     if startResponse != null:
         startResponse = jsonParse(startResponse)
     endif
@@ -93,7 +93,7 @@ async function ollamaChatPage(args):
     chatId = objectGet(args, 'id')
 
     # Fetch the chat
-    chatResponse = systemFetch('get_chat?id=' + chatId)
+    chatResponse = systemFetch('getChat?id=' + chatId)
     if chatResponse != null:
         chatResponse = jsonParse(chatResponse)
     endif
@@ -149,7 +149,7 @@ endfunction
 # Stop a chat
 async function ollamaChatPageOnStop(chatId):
     # Stop the chat
-    systemFetch(objectNew('url', 'stop_chat', 'body', jsonStringify(objectNew('id', chatId))))
+    systemFetch(objectNew('url', 'stopChat', 'body', jsonStringify(objectNew('id', chatId))))
 
     # Render main
     ollamaChatMain()
