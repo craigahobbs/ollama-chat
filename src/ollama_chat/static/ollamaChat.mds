@@ -28,10 +28,6 @@ ollamaChatArguments = argsValidate(arrayNew( \
 ))
 
 
-# The application title
-ollamaChatTitle = 'Ollama Chat'
-
-
 # The Ollama Chat index page
 function ollamaChatIndexPage(args):
     model = objectGet(args, 'model')
@@ -55,6 +51,10 @@ function ollamaChatIndexPage(args):
         ))
     endfor
 endfunction
+
+
+# The application title
+ollamaChatTitle = 'Ollama Chat'
 
 
 # The sample prompts
