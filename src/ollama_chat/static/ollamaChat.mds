@@ -8,15 +8,7 @@ include <forms.mds>
 # The Ollama Chat application main entry point
 async function ollamaChatMain():
     args = argsParse(ollamaChatArguments)
-    model = objectGet(args, 'model')
     chatId = objectGet(args, 'id')
-    prompt = objectGet(args, 'prompt')
-
-    # Start a chat?
-    if prompt != null:
-        ollamaChatStartChat(model, prompt)
-        return
-    endif
 
     # Render the chat page
     if chatId != null:
@@ -32,9 +24,37 @@ endfunction
 # The Ollama Chat application URL arguments
 ollamaChatArguments = argsValidate(arrayNew( \
     objectNew('name', 'model', 'default', 'phi3'), \
-    objectNew('name', 'id', 'type', 'int'), \
-    objectNew('name', 'prompt', 'explicit', true) \
+    objectNew('name', 'id', 'type', 'int') \
 ))
+
+
+# The application title
+ollamaChatTitle = 'Ollama Chat'
+
+
+# The Ollama Chat index page
+function ollamaChatIndexPage(args):
+    model = objectGet(args, 'model')
+
+    # Render the title
+    documentSetTitle(ollamaChatTitle)
+    markdownPrint('# ' + ollamaChatTitle, '')
+
+    # Start new chat form
+    elementModelRender(arrayNew( \
+        objectNew('html', 'p', 'elem', formsTextElements('ollama-chat-prompt', '', 50, systemPartial(ollamaChatIndexPromptOnSubmit, model))), \
+        objectNew('html', 'p', 'elem', formsLinkButtonElements('Start New Chat', systemPartial(ollamaChatIndexPromptOnSubmit, model))) \
+    ))
+
+    # Render the sample links
+    markdownPrint('## Example Prompts', '')
+    for prompt in ollamaChatSamplePrompts:
+        elementModelRender(objectNew( \
+            'html', 'p', \
+            'elem', formsLinkButtonElements(prompt, systemPartial(ollamaChatIndexOnClick, model, prompt)) \
+        ))
+    endfor
+endfunction
 
 
 # The sample prompts
@@ -44,37 +64,27 @@ ollamaChatSamplePrompts = arrayNew( \
 )
 
 
+# Start a new chat form submit handler
+async function ollamaChatIndexPromptOnSubmit(model):
+    prompt = documentInputValue('ollama-chat-prompt')
+    ollamaChatIndexOnClick(model, prompt)
+endfunction
+
+
 # Start a new chat
-async function ollamaChatStartChat(model, prompt):
+async function ollamaChatIndexOnClick(model, prompt):
     startResponse = systemFetch(objectNew('url', 'start_chat', 'body', jsonStringify(objectNew('model', model, 'prompt', prompt))))
     if startResponse != null:
         startResponse = jsonParse(startResponse)
     endif
-    if startResponse != null:
-        chatId = objectGet(startResponse, 'id')
-        windowSetLocation(argsURL(ollamaChatArguments, objectNew('id', chatId)))
+    if startResponse == null:
+        systemLogDebug('ollama-chat - Error: Failed to start chat')
+        return
     endif
-endfunction
 
-
-# The Ollama Chat index page
-function ollamaChatIndexPage(args):
-    model = objectGet(args, 'model')
-    prompt = objectGet(args, 'prompt')
-
-    # Render the title
-    title = 'Ollama Chat' + if(chatId != null, ' - ' + chatId, '')
-    documentSetTitle(title)
-    markdownPrint('# ' + title, '')
-
-    # Render the sample links
-    markdownPrint('## Example Prompts', '')
-    for prompt in ollamaChatSamplePrompts:
-        elementModelRender(objectNew( \
-            'html', 'p', \
-            'elem', formsLinkButtonElements(prompt, systemPartial(ollamaChatStartChat, model, prompt)) \
-        ))
-    endfor
+    chatId = objectGet(startResponse, 'id')
+    chatURL = argsURL(ollamaChatArguments, objectNew('id', chatId))
+    windowSetLocation(chatURL)
 endfunction
 
 
@@ -88,11 +98,10 @@ async function ollamaChatPage(args):
         chatResponse = jsonParse(chatResponse)
     endif
     if chatResponse == null:
-        title = 'Ollama Chat'
-        documentSetTitle(title)
+        documentSetTitle(ollamaChatTitle)
         markdownPrint( \
             argsLink(ollamaChatArguments, 'Back', objectNew('id', null)), \
-            '# ' + title, \
+            '# ' + ollamaChatTitle, \
             '', \
             '**ERROR:** Unknown chat ID' \
         )
@@ -104,12 +113,11 @@ async function ollamaChatPage(args):
     completed = objectGet(chatResponse, 'completed')
 
     # Render the title
-    title = 'Ollama Chat'
-    documentSetTitle(title)
+    documentSetTitle(ollamaChatTitle)
     markdownPrint( \
         argsLink(ollamaChatArguments, 'Back', objectNew('id', null)), \
         '', \
-        '# ' + title, \
+        '# ' + ollamaChatTitle, \
         '' \
     )
 
