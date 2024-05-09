@@ -15,54 +15,42 @@ class OllamaChat():
     The ollama chat manager class
     """
 
-    __slots__ = ('model', 'prompt', 'lock', 'chunks', 'completed')
+    __slots__ = ('app', 'id_', 'chunks', 'completed')
 
 
-    def __init__(self, model, prompt):
-        self.model = model
-        self.prompt = prompt
-        self.lock = threading.Lock()
-        self.chunks = []
+    def __init__(self, app, id_):
+        self.app = app
+        self.id_ = id_
         self.completed = False
 
         # Start the chat thread
-        chat_thread = threading.Thread(target=OllamaChat.chat_thread_fn, args=(self, prompt))
+        chat_thread = threading.Thread(target=OllamaChat.chat_thread_fn, args=(self,))
         chat_thread.daemon = True
         chat_thread.start()
 
 
     def stop(self):
-        with self.lock:
-            self.completed = True
-
-
-    def get_response(self):
-        with self.lock:
-            return (''.join(self.chunks), self.completed)
-
-
-    def add_chunk(self, chunk):
-        with self.lock:
-            self.chunks.append(chunk)
+        self.completed = True
 
 
     @staticmethod
-    def chat_thread_fn(chat, prompt):
+    def chat_thread_fn(chat):
+        # Get the conversation
+        conversation = next(conv for conv in chat.app.config['conversations'] if conv['id'] == chat.id_)
+
+        # Create the Ollama messages
+        messages = []
+        for exchange in conversation['exchanges']:
+            messages.append({'role': 'user', 'content': exchange['user']})
+            messages.append({'role': 'assistant', 'content': exchange['model']})
+
         # Start the chat
-        stream = ollama.chat(
-            model=chat.model,
-            messages=[
-                {
-                    'role': 'user',
-                    'content': prompt
-                }
-            ],
-            stream=True
-        )
+        stream = ollama.chat(model=conversation['model'], messages=messages, stream=True)
 
         # Stream the chat response
+        exchange = conversation['exchanges'][-1]
         for chunk in stream:
-            chat.add_chunk(chunk['message']['content'])
+            exchange['model'] += chunk['message']['content']
             if chat.completed:
                 break
 
@@ -71,3 +59,6 @@ class OllamaChat():
 
         # Mark the chat completed
         chat.completed = True
+
+        # Delete the app chat entry
+        del chat.app.chats[chat.id_]

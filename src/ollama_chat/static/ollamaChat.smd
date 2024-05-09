@@ -1,0 +1,155 @@
+# Licensed under the MIT License
+# https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
+
+
+group "Ollama Chat JSON"
+
+
+# The Ollama Chat file format
+struct OllamaChat
+
+    # The current model name
+    string model
+
+    # The saved conversations
+    Conversation[] conversations
+
+
+# The user-model conversation info
+struct ConversationInfo
+
+    # The conversation identifier
+    string id
+
+    # The model name
+    string model
+
+    # The conversation title
+    string title
+
+
+# A user-model conversation
+struct Conversation (ConversationInfo)
+
+    # The conversation's exchanges
+    ConversationExchange[len > 0] exchanges
+
+
+# A conversation user-model exchange
+struct ConversationExchange
+
+    # The user prompt
+    string(len > 0) user
+
+    # The model response
+    string model
+
+
+group "Ollama Chat API"
+
+
+# Get the current model name
+action getModel
+    urls
+        GET
+
+    output
+        # The current model name
+        string model
+
+
+# Set the current model name
+action setModel
+    urls
+        POST
+
+    input
+        # The model name
+        string model
+
+
+# Get the list of conversations
+action getConversations
+    urls
+        GET
+
+    output
+        ConversationInfo[] conversations
+
+
+# Start a conversation
+action startConversation
+    urls
+        POST
+
+    input
+        # The user prompt
+        string(len > 0) user
+
+    output
+        # The new conversation ID
+        string id
+
+
+# Get a conversation
+action getConversation
+    urls
+        GET
+
+    query
+        # The conversation identifier
+        string id
+
+    output
+        # The conversation
+        Conversation conversation
+
+        # If True, the latest exchange is actively generating
+        bool generating
+
+    errors
+        UnknownConversationID
+
+
+# Stop a generating conversation
+action replyConversation
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+        # The user reply prompt
+        string(len > 0) user
+
+    errors
+        UnknownConversationID
+        ConversationBusy
+
+
+# Stop a generating conversation
+action stopConversation
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+    errors
+        UnknownConversationID
+
+
+# Deelete a conversation
+action deleteConversation
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+    errors
+        UnknownConversationID
+        ConversationBusy

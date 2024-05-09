@@ -1,0 +1,179 @@
+# Licensed under the MIT License
+# https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
+
+include <args.mds>
+include <forms.mds>
+
+
+# The Ollama Chat application main entry point
+async function ollamaChatMain():
+    args = argsParse(ollamaChatArguments)
+    view = objectGet(args, 'view')
+
+    # Render the chat page
+    if view == 'chat':
+        ollamaChatPage(args)
+        return
+    endif
+
+    # Render the index page
+    ollamaChatIndexPage()
+endfunction
+
+
+# The Ollama Chat application URL arguments
+ollamaChatArguments = argsValidate(arrayNew( \
+    objectNew('name', 'view'), \
+    objectNew('name', 'id', 'type', 'string') \
+))
+
+
+# The application title
+ollamaChatTitle = 'Ollama Chat'
+
+
+# The chat refresh period, in milliseconds
+ollamaChatTimeoutMs = 500
+
+
+# The Ollama Chat error page
+function ollamaChatErrorPage(message):
+    documentSetTitle(ollamaChatTitle)
+    markdownPrint( \
+        argsLink(ollamaChatArguments, 'Back', objectNew('view', null, 'id', null)), \
+        '# ' + ollamaChatTitle, \
+        '', \
+        '**ERROR:** ' + message \
+    )
+endfunction
+
+
+# The Ollama Chat index page
+async function ollamaChatIndexPage():
+    # Render the title
+    documentSetTitle(ollamaChatTitle)
+    markdownPrint( \
+        '# ' + ollamaChatTitle, \
+        '' \
+    )
+
+    # Render the start new chat link
+    markdownPrint( \
+        argsLink(ollamaChatArguments, 'Start New Chat', objectNew('view', 'chat')) \
+    )
+
+    # Render the sample links
+    conversationsResponse = systemFetch('getConversations')
+    conversationsResponse = if(conversationsResponse != null, jsonParse(conversationsResponse))
+    conversations = if(conversationsResponse != null, objectGet(conversationsResponse, 'conversations'))
+    if conversations != null && arrayLength(conversations) != 0:
+        markdownPrint( \
+            '', \
+            '## Conversations', \
+            '' \
+        )
+        for conversation in conversations:
+            systemLog('*** ' + conversation)
+            markdownPrint( \
+                argsLink(ollamaChatArguments, objectGet(conversation, 'title'), objectNew( \
+                    'view', 'chat', \
+                    'id', objectGet(conversation, 'id') \
+                )), \
+                '' \
+            )
+        endfor
+    endif
+endfunction
+
+
+# The Ollama Chat chat page
+async function ollamaChatPage(args):
+    id = objectGet(args, 'id')
+
+    # Fetch the conversation
+    title = ollamaChatTitle
+    conversation = null
+    if id != null:
+        conversationResponse = systemFetch('getConversation?id=' + id)
+        conversationResponse = if(conversationResponse != null, jsonParse(conversationResponse))
+        if conversationResponse == null:
+            ollamaChatErrorPage('Unknown conversation ID')
+            return
+        endif
+        conversation = objectGet(conversationResponse, 'conversation')
+        generating = objectGet(conversationResponse, 'generating')
+        title = objectGet(conversation, 'title')
+    endif
+
+    # Render the chat title
+    documentSetTitle(title)
+    markdownPrint( \
+        argsLink(ollamaChatArguments, 'Back', objectNew('view', null, 'id', null)), \
+        '', \
+        '# ' + title, \
+        '' \
+    )
+
+    # Render the prompt input
+    elementModelRender(arrayNew( \
+        objectNew('html', 'p', 'elem', formsTextElements('ollama-chat-prompt', '', 50, systemPartial(ollamaChatOnPrompt, id))), \
+        objectNew('html', 'p', 'elem', formsLinkButtonElements('Submit', systemPartial(ollamaChatOnPrompt, id))) \
+    ))
+
+    # Render the exchanges
+    if conversation != null:
+        for exchange in objectGet(conversation, 'exchanges'):
+            markdownPrint( \
+                '', \
+                '## User:', \
+                '', \
+                objectGet(exchange, 'user'), \
+                '', \
+                '## ' + markdownEscape(objectGet(conversation, 'model')) + ':', \
+                '', \
+                objectGet(exchange, 'model') \
+            )
+        endfor
+    endif
+
+    # Set the chat timeout
+    if generating:
+        windowSetTimeout(ollamaChatMain, ollamaChatTimeoutMs)
+    endif
+endfunction
+
+
+# Prompt on-enter/on-click event handler
+async function ollamaChatOnPrompt(id):
+    # Get the prompt text
+    prompt = stringTrim(documentInputValue('ollama-chat-prompt'))
+    if prompt == '':
+        return
+    endif
+
+    # Starting a chat?
+    if id == null:
+        # Start the chat
+        startRequest = jsonStringify(objectNew('user', prompt))
+        startResponse = systemFetch(objectNew('url', 'startConversation', 'body', startRequest))
+        startResponse = if(startResponse != null, jsonParse(startResponse))
+        if startResponse == null:
+            return
+        endif
+        id = objectGet(startResponse, 'id')
+
+        # Navigate to the conversation ID
+        windowSetLocation(argsURL(ollamaChatArguments, objectNew('id', id)))
+    endif
+
+    # Reply to that chat
+    replyRequest = jsonStringify(objectNew('id', id, 'user', prompt))
+    replyResponse = systemFetch(objectNew('url', 'replyConversation', 'body', replyRequest))
+    replyResponse = if(replyResponse != null, jsonParse(replyResponse))
+    if replyResponse == null:
+        return
+    endif
+
+    # Set the chat timeout
+    windowSetTimeout(ollamaChatMain, ollamaChatTimeoutMs)
+endfunction
