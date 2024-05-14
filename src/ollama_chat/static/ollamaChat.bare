@@ -130,6 +130,7 @@ async function ollamaChatPage(args):
             objectNew('html', 'p', 'elem', formsTextElements('ollama-chat-prompt', '', 50, systemPartial(ollamaChatOnPrompt, id))), \
             objectNew('html', 'p', 'elem', formsLinkButtonElements('Submit', systemPartial(ollamaChatOnPrompt, id))) \
         ))
+        documentSetFocus('ollama-chat-prompt')
     else:
         elementModelRender( \
             objectNew('html', 'p', 'elem', arrayNew( \

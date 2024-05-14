@@ -180,7 +180,7 @@ def stop_conversation(ctx, req):
         return
 
     # Stop the conversation
-    chat.stop = True
+    chat.stop()
 
 
 @chisel.action(name='deleteConversation', types=OLLAMA_CHAT_TYPES)
