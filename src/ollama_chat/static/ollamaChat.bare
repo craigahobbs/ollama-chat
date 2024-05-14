@@ -73,7 +73,6 @@ async function ollamaChatIndexPage():
             '' \
         )
         for conversation in conversations:
-            systemLog('*** ' + conversation)
             markdownPrint( \
                 argsLink(ollamaChatArguments, objectGet(conversation, 'title'), objectNew( \
                     'view', 'chat', \
@@ -92,7 +91,6 @@ async function ollamaChatPage(args):
 
     # Fetch the conversation
     title = ollamaChatTitle
-    conversation = null
     if id != null:
         conversationResponse = systemFetch('getConversation?id=' + id)
         conversationResponse = if(conversationResponse != null, jsonParse(conversationResponse))
@@ -103,6 +101,15 @@ async function ollamaChatPage(args):
         conversation = objectGet(conversationResponse, 'conversation')
         generating = objectGet(conversationResponse, 'generating')
         title = objectGet(conversation, 'title')
+        model = objectGet(conversation, 'model')
+    else:
+        modelResponse = systemFetch('getModel')
+        modelResponse = if(modelResponse != null, jsonParse(modelResponse))
+        if modelResponse == null:
+            ollamaChatErrorPage('Failed to get current model')
+            return
+        endif
+        model = objectGet(modelResponse, 'model')
     endif
 
     # Render the chat title
@@ -111,14 +118,26 @@ async function ollamaChatPage(args):
         argsLink(ollamaChatArguments, 'Back', objectNew('view', null, 'id', null)), \
         '', \
         '# ' + title, \
+        '', \
+        '**Model:** ' + markdownEscape(model), \
         '' \
     )
 
-    # Render the prompt input
-    elementModelRender(arrayNew( \
-        objectNew('html', 'p', 'elem', formsTextElements('ollama-chat-prompt', '', 50, systemPartial(ollamaChatOnPrompt, id))), \
-        objectNew('html', 'p', 'elem', formsLinkButtonElements('Submit', systemPartial(ollamaChatOnPrompt, id))) \
-    ))
+    # Generating?
+    if !generating:
+        # Render the prompt input
+        elementModelRender(arrayNew( \
+            objectNew('html', 'p', 'elem', formsTextElements('ollama-chat-prompt', '', 50, systemPartial(ollamaChatOnPrompt, id))), \
+            objectNew('html', 'p', 'elem', formsLinkButtonElements('Submit', systemPartial(ollamaChatOnPrompt, id))) \
+        ))
+    else:
+        elementModelRender( \
+            objectNew('html', 'p', 'elem', arrayNew( \
+                objectNew('text', 'Generating... '), \
+                formsLinkButtonElements('Stop', systemPartial(ollamaChatOnStop, id)) \
+            )) \
+        )
+    endif
 
     # Render the exchanges
     if conversation != null:
@@ -140,6 +159,17 @@ async function ollamaChatPage(args):
     if generating:
         windowSetTimeout(ollamaChatMain, ollamaChatTimeoutMs)
     endif
+endfunction
+
+
+# Stop on-click event handler
+async function ollamaChatOnStop(id):
+    # Stop the chat
+    stopRequest = jsonStringify(objectNew('id', id))
+    systemFetch(objectNew('url', 'stopConversation', 'body', stopRequest))
+
+    # Render the page
+    ollamaChatMain()
 endfunction
 
 

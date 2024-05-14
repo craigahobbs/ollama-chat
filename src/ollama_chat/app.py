@@ -169,9 +169,18 @@ def reply_conversation(ctx, req):
 
 @chisel.action(name='stopConversation', types=OLLAMA_CHAT_TYPES)
 def stop_conversation(ctx, req):
-    conversation = _get_conversation(ctx.app.config, req['id'])
+    id_ = req['id']
+    conversation = _get_conversation(ctx.app.config, id_)
     if conversation is None:
         raise chisel.ActionError('UnknownConversationID')
+
+    # Not generating?
+    chat = ctx.app.chats.get(id_)
+    if chat is None:
+        return
+
+    # Stop the conversation
+    chat.stop = True
 
 
 @chisel.action(name='deleteConversation', types=OLLAMA_CHAT_TYPES)

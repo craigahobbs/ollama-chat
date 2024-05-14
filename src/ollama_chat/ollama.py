@@ -15,22 +15,19 @@ class OllamaChat():
     The ollama chat manager class
     """
 
-    __slots__ = ('app', 'id_', 'chunks', 'completed')
+    __slots__ = ('app', 'id_', 'stop', 'completed')
 
 
     def __init__(self, app, id_):
         self.app = app
         self.id_ = id_
+        self.stop = False
         self.completed = False
 
         # Start the chat thread
         chat_thread = threading.Thread(target=OllamaChat.chat_thread_fn, args=(self,))
         chat_thread.daemon = True
         chat_thread.start()
-
-
-    def stop(self):
-        self.completed = True
 
 
     @staticmethod
@@ -51,7 +48,7 @@ class OllamaChat():
         exchange = conversation['exchanges'][-1]
         for chunk in stream:
             exchange['model'] += chunk['message']['content']
-            if chat.completed:
+            if chat.stop:
                 break
 
         # Mke sure the stream is closed

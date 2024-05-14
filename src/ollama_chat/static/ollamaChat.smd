@@ -111,7 +111,7 @@ action getConversation
         UnknownConversationID
 
 
-# Stop a generating conversation
+# Reply to a conversation
 action replyConversation
     urls
         POST
@@ -141,7 +141,7 @@ action stopConversation
         UnknownConversationID
 
 
-# Deelete a conversation
+# Delete a conversation
 action deleteConversation
     urls
         POST
