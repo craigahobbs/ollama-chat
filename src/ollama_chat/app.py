@@ -11,6 +11,7 @@ import importlib.resources as pkg_resources
 import uuid
 
 import chisel
+import ollama
 import schema_markdown
 
 from .ollama import OllamaChat
@@ -58,6 +59,7 @@ class OllamaChatApplication(chisel.Application):
         self.add_request(get_conversation)
         self.add_request(get_conversations)
         self.add_request(get_model)
+        self.add_request(get_models)
         self.add_request(reply_conversation)
         self.add_request(set_model)
         self.add_request(start_conversation)
@@ -93,6 +95,19 @@ class OllamaChatApplication(chisel.Application):
 # Parse the Ollama Chat schema
 with pkg_resources.open_text('ollama_chat.static', 'ollamaChat.smd') as cm_smd:
     OLLAMA_CHAT_TYPES = schema_markdown.parse_schema_markdown(cm_smd.read())
+
+
+@chisel.action(name='getModels', types=OLLAMA_CHAT_TYPES)
+def get_models(unused_ctx, unused_req):
+    return {
+        'models': [
+            {
+                'model': model['name'],
+                'size': model['size']
+            }
+            for model in ollama.list()['models']
+        ]
+    }
 
 
 @chisel.action(name='getModel', types=OLLAMA_CHAT_TYPES)

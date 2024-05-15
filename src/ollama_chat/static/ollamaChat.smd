@@ -49,6 +49,26 @@ group "Ollama Chat API"
 
 
 # Get the current model name
+action getModels
+    urls
+        GET
+
+    output
+        # The local models
+        ModelInfo[] models
+
+
+# Model information struct
+struct ModelInfo
+
+    # The current model name
+    string model
+
+    # The model size, in bytes
+    int size
+
+
+# Get the current model name
 action getModel
     urls
         GET

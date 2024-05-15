@@ -10,6 +10,12 @@ async function ollamaChatMain():
     args = argsParse(ollamaChatArguments)
     view = objectGet(args, 'view')
 
+    # Select the model?
+    if view == 'select':
+        ollamaChatSelectPage(args)
+        return
+    endif
+
     # Render the chat page
     if view == 'chat':
         ollamaChatPage(args)
@@ -57,16 +63,26 @@ async function ollamaChatIndexPage():
         '' \
     )
 
+    # Get the current model and the conversations list
+    responses = systemFetch(arrayNew('getModel', 'getConversations'))
+    modelResponse = if(responses != null && arrayGet(responses, 0) != null, jsonParse(arrayGet(responses, 0)))
+    conversationsResponse = if(responses != null && arrayGet(responses, 1) != null, jsonParse(arrayGet(responses, 1)))
+    if modelResponse == null || conversationsResponse == null:
+        ollamaChatErrorPage('Failed to load model and conversations')
+        return
+    endif
+
     # Render the start new chat link
     markdownPrint( \
+        '**Model:** ' + objectGet(modelResponse, 'model') + '&nbsp;', \
+        argsLink(ollamaChatArguments, '(select)', objectNew('view', 'select')), \
+        '', \
         argsLink(ollamaChatArguments, 'Start New Chat', objectNew('view', 'chat')) \
     )
 
     # Render the sample links
-    conversationsResponse = systemFetch('getConversations')
-    conversationsResponse = if(conversationsResponse != null, jsonParse(conversationsResponse))
-    conversations = if(conversationsResponse != null, objectGet(conversationsResponse, 'conversations'))
-    if conversations != null && arrayLength(conversations) != 0:
+    conversations = objectGet(conversationsResponse, 'conversations')
+    if arrayLength(conversations) != 0:
         markdownPrint( \
             '', \
             '## Conversations', \
@@ -82,6 +98,47 @@ async function ollamaChatIndexPage():
             )
         endfor
     endif
+endfunction
+
+
+# The Ollama Chat select-model page
+async function ollamaChatSelectPage():
+    # Render the title
+    documentSetTitle(ollamaChatTitle)
+    markdownPrint( \
+        '# ' + ollamaChatTitle, \
+        '' \
+    )
+
+    # Render the model selection links
+    modelsResponse = systemFetch('getModels')
+    modelsResponse = if(modelsResponse != null, jsonParse(modelsResponse))
+    if modelsResponse == null:
+        ollamaChatErrorPage('Failed to download models')
+        return
+    endif
+
+    # Render the model selection links
+    markdownPrint( \
+        '**Select a model:**', \
+        '' \
+    )
+    for modelInfo in objectGet(modelsResponse, 'models'):
+        model = objectGet(modelInfo, 'model')
+        elementModelRender( \
+            objectNew('html', 'p', 'elem', formsLinkButtonElements(model, systemPartial(ollamaChatOnSelect, model))) \
+        )
+    endfor
+endfunction
+
+
+# Stop on-click event handler
+async function ollamaChatOnSelect(model):
+    # Set the model (ignore errors)
+    systemFetch(objectNew('url', 'setModel', 'body', jsonStringify(objectNew('model', model))))
+
+    # Set location to the index page
+    windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', null)))
 endfunction
 
 
