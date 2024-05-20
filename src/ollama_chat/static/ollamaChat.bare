@@ -47,6 +47,7 @@ function ollamaChatErrorPage(message):
     documentSetTitle(ollamaChatTitle)
     markdownPrint( \
         argsLink(ollamaChatArguments, 'Back', objectNew('view', null, 'id', null)), \
+        '', \
         '# ' + ollamaChatTitle, \
         '', \
         '**ERROR:** ' + message \
@@ -93,7 +94,7 @@ async function ollamaChatIndexPage():
                 argsLink(ollamaChatArguments, objectGet(conversation, 'title'), objectNew( \
                     'view', 'chat', \
                     'id', objectGet(conversation, 'id') \
-                )), \
+                )) + '&nbsp;&nbsp;(' + markdownEscape(objectGet(conversation, 'model')) + ')', \
                 '' \
             )
         endfor
@@ -106,6 +107,8 @@ async function ollamaChatSelectPage():
     # Render the title
     documentSetTitle(ollamaChatTitle)
     markdownPrint( \
+        argsLink(ollamaChatArguments, 'Back', objectNew('view', null, 'id', null)), \
+        '', \
         '# ' + ollamaChatTitle, \
         '' \
     )
