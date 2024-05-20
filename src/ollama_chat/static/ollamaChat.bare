@@ -78,7 +78,7 @@ async function ollamaChatIndexPage():
         '**Model:** ' + objectGet(modelResponse, 'model') + '&nbsp;', \
         argsLink(ollamaChatArguments, '(select)', objectNew('view', 'select')), \
         '', \
-        argsLink(ollamaChatArguments, 'Start New Chat', objectNew('view', 'chat')) \
+        argsLink(ollamaChatArguments, 'Start New Conversation', objectNew('view', 'chat')) \
     )
 
     # Render the sample links
@@ -89,15 +89,20 @@ async function ollamaChatIndexPage():
             '## Conversations', \
             '' \
         )
+        conversationData = arrayNew()
         for conversation in conversations:
-            markdownPrint( \
-                argsLink(ollamaChatArguments, objectGet(conversation, 'title'), objectNew( \
+            arrayPush(conversationData, objectNew( \
+                'Title', argsLink(ollamaChatArguments, objectGet(conversation, 'title'), objectNew( \
                     'view', 'chat', \
                     'id', objectGet(conversation, 'id') \
-                )) + '&nbsp;&nbsp;(' + markdownEscape(objectGet(conversation, 'model')) + ')', \
-                '' \
-            )
+                )), \
+                'Model', objectGet(conversation, 'model') \
+            ))
         endfor
+        dataTable(conversationData, objectNew( \
+            'fields', arrayNew('Title', 'Model'), \
+            'formats', objectNew('Title', objectNew('markdown', true)) \
+        ))
     endif
 endfunction
 
