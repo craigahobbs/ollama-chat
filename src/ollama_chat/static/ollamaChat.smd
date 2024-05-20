@@ -94,6 +94,7 @@ action getConversations
         GET
 
     output
+        # The conversations
         ConversationInfo[] conversations
 
 

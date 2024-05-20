@@ -2,6 +2,7 @@
 /Makefile.base
 /build/
 /dist/
+/ollama-chat.json
 /pylintrc
 /src/*.egg-info/
 __pycache__/

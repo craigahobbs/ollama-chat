@@ -252,6 +252,7 @@ async function ollamaChatOnPrompt(id):
 
         # Navigate to the conversation ID
         windowSetLocation(argsURL(ollamaChatArguments, objectNew('id', id)))
+        return
     endif
 
     # Reply to that chat

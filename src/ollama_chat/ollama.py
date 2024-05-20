@@ -35,24 +35,28 @@ class OllamaChat():
 
     @staticmethod
     def chat_thread_fn(chat):
-        # Get the conversation
-        conversation = next(conv for conv in chat.app.config['conversations'] if conv['id'] == chat.id_)
-
-        # Create the Ollama messages
-        messages = []
-        for exchange in conversation['exchanges']:
-            messages.append({'role': 'user', 'content': exchange['user']})
-            messages.append({'role': 'assistant', 'content': exchange['model']})
+        # Create the Ollama messages from the conversation
+        with chat.app.config.get_config() as config:
+            conversation = next(conv for conv in config['conversations'] if conv['id'] == chat.id_)
+            model = conversation['model']
+            messages = []
+            for exchange in conversation['exchanges']:
+                messages.append({'role': 'user', 'content': exchange['user']})
+                messages.append({'role': 'assistant', 'content': exchange['model']})
 
         # Start the chat
-        stream = ollama.chat(model=conversation['model'], messages=messages, stream=True)
+        stream = ollama.chat(model=model, messages=messages, stream=True)
 
         # Stream the chat response
-        exchange = conversation['exchanges'][-1]
         for chunk in stream:
             if chat.completed:
                 break
-            exchange['model'] += chunk['message']['content']
+
+            # Update the conversation
+            with chat.app.config.get_config(save=True) as config:
+                conversation = next(conv for conv in config['conversations'] if conv['id'] == chat.id_)
+                exchange = conversation['exchanges'][-1]
+                exchange['model'] += chunk['message']['content']
 
         # Mark the chat completed
         if not chat.completed:
