@@ -102,7 +102,7 @@ class ConfigManager:
 
 
     @contextmanager
-    def get_config(self, save=False):
+    def __call__(self, save=False):
         self.config_lock.acquire()
         try:
             yield self.config
@@ -133,19 +133,19 @@ def get_models(unused_ctx, unused_req):
 
 @chisel.action(name='getModel', types=OLLAMA_CHAT_TYPES)
 def get_model(ctx, unused_req):
-    with ctx.app.config.get_config() as config:
+    with ctx.app.config() as config:
         return {'model': config['model']}
 
 
 @chisel.action(name='setModel', types=OLLAMA_CHAT_TYPES)
 def set_model(ctx, req):
-    with ctx.app.config.get_config(save=True) as config:
+    with ctx.app.config(save=True) as config:
         config['model'] = req['model']
 
 
 @chisel.action(name='startConversation', types=OLLAMA_CHAT_TYPES)
 def start_conversation(ctx, req):
-    with ctx.app.config.get_config(save=True) as config:
+    with ctx.app.config() as config:
         # Create the new conversation object
         id_ = str(uuid.uuid4())
         model = config['model']
@@ -173,7 +173,7 @@ def start_conversation(ctx, req):
 
 @chisel.action(name='getConversation', types=OLLAMA_CHAT_TYPES)
 def get_conversation(ctx, req):
-    with ctx.app.config.get_config() as config:
+    with ctx.app.config() as config:
         id_ = req['id']
         conversation = _get_conversation(config, id_)
         if conversation is None:
@@ -188,7 +188,7 @@ def get_conversation(ctx, req):
 
 @chisel.action(name='replyConversation', types=OLLAMA_CHAT_TYPES)
 def reply_conversation(ctx, req):
-    with ctx.app.config.get_config(save=True) as config:
+    with ctx.app.config() as config:
         id_ = req['id']
         conversation = _get_conversation(config, id_)
         if conversation is None:
@@ -210,7 +210,7 @@ def reply_conversation(ctx, req):
 
 @chisel.action(name='stopConversation', types=OLLAMA_CHAT_TYPES)
 def stop_conversation(ctx, req):
-    with ctx.app.config.get_config() as config:
+    with ctx.app.config() as config:
         id_ = req['id']
         conversation = _get_conversation(config, id_)
         if conversation is None:
@@ -227,7 +227,7 @@ def stop_conversation(ctx, req):
 
 @chisel.action(name='deleteConversation', types=OLLAMA_CHAT_TYPES)
 def delete_conversation(ctx, req):
-    with ctx.app.config.get_config(save=True) as config:
+    with ctx.app.config(save=True) as config:
         id_ = req['id']
         conversation = _get_conversation(config, id_)
         if conversation is None:
@@ -244,7 +244,7 @@ def delete_conversation(ctx, req):
 @chisel.action(name='getConversations', types=OLLAMA_CHAT_TYPES)
 def get_conversations(ctx, unused_req):
     conversations = []
-    with ctx.app.config.get_config() as config:
+    with ctx.app.config() as config:
         for conversation in config['conversations']:
             info = dict(conversation)
             del info['exchanges']

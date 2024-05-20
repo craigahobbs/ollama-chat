@@ -36,7 +36,7 @@ class OllamaChat():
     @staticmethod
     def chat_thread_fn(chat):
         # Create the Ollama messages from the conversation
-        with chat.app.config.get_config() as config:
+        with chat.app.config() as config:
             conversation = next(conv for conv in config['conversations'] if conv['id'] == chat.id_)
             model = conversation['model']
             messages = []
@@ -53,10 +53,14 @@ class OllamaChat():
                 break
 
             # Update the conversation
-            with chat.app.config.get_config(save=True) as config:
+            with chat.app.config() as config:
                 conversation = next(conv for conv in config['conversations'] if conv['id'] == chat.id_)
                 exchange = conversation['exchanges'][-1]
                 exchange['model'] += chunk['message']['content']
+
+        # Write the config
+        with chat.app.config(save=True):
+            pass
 
         # Mark the chat completed
         if not chat.completed:
