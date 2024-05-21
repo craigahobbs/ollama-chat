@@ -243,7 +243,7 @@ def delete_conversation(ctx, req):
             raise chisel.ActionError('ConversationBusy')
 
         # Delete the conversation
-        del config['conversations'][id_]
+        config['conversations'] = [conversation for conversation in config['conversations'] if conversation['id'] != id_]
 
 
 @chisel.action(name='getConversations', types=OLLAMA_CHAT_TYPES)

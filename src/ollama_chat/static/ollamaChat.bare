@@ -25,8 +25,8 @@ endfunction
 ollamaChatArguments = argsValidate(arrayNew( \
     objectNew('name', 'view'), \
     objectNew('name', 'id'), \
-    objectNew('name', 'action'), \
-    objectNew('name', 'actionId') \
+    objectNew('name', 'action', 'explicit', true), \
+    objectNew('name', 'actionId', 'explicit', true) \
 ))
 
 
@@ -53,6 +53,9 @@ endfunction
 
 # The Ollama Chat index page
 async function ollamaChatIndexPage(args):
+    action = objectGet(args, 'action')
+    actionId = objectGet(args, 'actionId')
+
     # Render the title
     documentSetTitle(ollamaChatTitle)
     markdownPrint( \
@@ -61,7 +64,6 @@ async function ollamaChatIndexPage(args):
     )
 
     # Get the current model and the conversations list
-    action = objectGet(args, 'action')
     fetchURLs = arrayNew('getModel', 'getConversations')
     if action == 'select':
         arrayPush(fetchURLs, 'getModels')
@@ -106,28 +108,55 @@ async function ollamaChatIndexPage(args):
     conversations = objectGet(conversationsResponse, 'conversations')
     if arrayLength(conversations) != 0:
         markdownPrint('', '## Conversations')
-        conversationData = arrayNew()
+        tableRows = arrayNew( \
+            objectNew('html', 'tr', 'elem', arrayNew( \
+                objectNew('html', 'th', 'elem', objectNew('text', 'Title')), \
+                objectNew('html', 'th', 'elem', objectNew('text', 'Model')), \
+                objectNew('html', 'th', 'elem', objectNew('text', 'Action')) \
+            )) \
+        )
+        tableElements = objectNew('html', 'table', 'elem', tableRows)
+        deleteIndent = stringFromCharCode(160, 160, 160, 160)
         for conversation in conversations:
-            arrayPush(conversationData, objectNew( \
-                'Title', argsLink(ollamaChatArguments, objectGet(conversation, 'title'), objectNew( \
-                    'view', 'chat', \
-                    'id', objectGet(conversation, 'id') \
-                )), \
-                'Model', objectGet(conversation, 'model') \
-            ))
+            conversationId = objectGet(conversation, 'id')
+            conversationURL = argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', conversationId))
+            deleteURL = argsURL(ollamaChatArguments, objectNew('action', 'delete', 'actionId', conversationId))
+            arrayPush(tableRows, objectNew('html', 'tr', 'elem', arrayNew( \
+                objectNew('html', 'td', 'elem', formsLinkElements(objectGet(conversation, 'title'), conversationURL)), \
+                objectNew('html', 'td', 'elem', objectNew('text', objectGet(conversation, 'model'))), \
+                objectNew('html', 'td', 'elem', formsLinkElements('Delete', deleteURL)) \
+            )))
+            if action == 'delete' && actionId == conversationId:
+                arrayPush(tableRows, objectNew('html', 'tr', 'elem', arrayNew( \
+                    objectNew('html', 'td', 'attr', objectNew('colspan', '3'), 'elem', arrayNew( \
+                        objectNew('text', deleteIndent), \
+                        objectNew('html', 'b', 'elem', objectNew('text', 'Delete? ')), \
+                        formsLinkButtonElements('Continue', systemPartial(ollamaChatOnDelete, conversationId)), \
+                        objectNew('text', ' | '), \
+                        formsLinkElements('Cancel', argsURL(ollamaChatArguments, null, true)) \
+                    )) \
+                )))
+            endif
         endfor
-        dataTable(conversationData, objectNew( \
-            'fields', arrayNew('Title', 'Model'), \
-            'formats', objectNew('Title', objectNew('markdown', true)) \
-        ))
+        elementModelRender(tableElements)
     endif
 endfunction
 
 
-# Stop on-click event handler
+# Select model on-click event handler
 async function ollamaChatOnSelect(model):
     # Set the model (ignore errors)
     systemFetch(objectNew('url', 'setModel', 'body', jsonStringify(objectNew('model', model))))
+
+    # Set location to the index page
+    windowSetLocation(argsURL(ollamaChatArguments, null, true))
+endfunction
+
+
+# Delete conversation on-click event handler
+async function ollamaChatOnDelete(conversationId):
+    # Set the model (ignore errors)
+    systemFetch(objectNew('url', 'deleteConversation', 'body', jsonStringify(objectNew('id', conversationId))))
 
     # Set location to the index page
     windowSetLocation(argsURL(ollamaChatArguments, null, true))
