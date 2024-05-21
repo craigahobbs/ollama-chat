@@ -116,23 +116,24 @@ async function ollamaChatIndexPage(args):
             )) \
         )
         tableElements = objectNew('html', 'table', 'elem', tableRows)
-        deleteIndent = stringFromCharCode(160, 160, 160, 160)
+        deleteSpace = stringFromCharCode(160, 160)
         for conversation in conversations:
             conversationId = objectGet(conversation, 'id')
             conversationURL = argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', conversationId))
+            isDeleting = action == 'delete' && actionId == conversationId
             deleteURL = argsURL(ollamaChatArguments, objectNew('action', 'delete', 'actionId', conversationId))
             arrayPush(tableRows, objectNew('html', 'tr', 'elem', arrayNew( \
                 objectNew('html', 'td', 'elem', formsLinkElements(objectGet(conversation, 'title'), conversationURL)), \
                 objectNew('html', 'td', 'elem', objectNew('text', objectGet(conversation, 'model'))), \
-                objectNew('html', 'td', 'elem', formsLinkElements('Delete', deleteURL)) \
+                objectNew('html', 'td', 'elem', if(isDeleting, null, formsLinkElements('Delete', deleteURL))) \
             )))
-            if action == 'delete' && actionId == conversationId:
+            if isDeleting:
                 arrayPush(tableRows, objectNew('html', 'tr', 'elem', arrayNew( \
                     objectNew('html', 'td', 'attr', objectNew('colspan', '3'), 'elem', arrayNew( \
-                        objectNew('text', deleteIndent), \
-                        objectNew('html', 'b', 'elem', objectNew('text', 'Delete? ')), \
+                        objectNew('text', deleteSpace + deleteSpace), \
+                        objectNew('html', 'b', 'elem', objectNew('text', 'Delete?' + deleteSpace)), \
                         formsLinkButtonElements('Continue', systemPartial(ollamaChatOnDelete, conversationId)), \
-                        objectNew('text', ' | '), \
+                        objectNew('text', deleteSpace), \
                         formsLinkElements('Cancel', argsURL(ollamaChatArguments, null, true)) \
                     )) \
                 )))
