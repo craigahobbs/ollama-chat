@@ -10,12 +10,6 @@ async function ollamaChatMain():
     args = argsParse(ollamaChatArguments)
     view = objectGet(args, 'view')
 
-    # Select the model?
-    if view == 'select':
-        ollamaChatSelectPage(args)
-        return
-    endif
-
     # Render the chat page
     if view == 'chat':
         ollamaChatPage(args)
@@ -23,14 +17,16 @@ async function ollamaChatMain():
     endif
 
     # Render the index page
-    ollamaChatIndexPage()
+    ollamaChatIndexPage(args)
 endfunction
 
 
 # The Ollama Chat application URL arguments
 ollamaChatArguments = argsValidate(arrayNew( \
     objectNew('name', 'view'), \
-    objectNew('name', 'id', 'type', 'string') \
+    objectNew('name', 'id'), \
+    objectNew('name', 'action'), \
+    objectNew('name', 'actionId') \
 ))
 
 
@@ -46,7 +42,7 @@ ollamaChatTimeoutMs = 500
 function ollamaChatErrorPage(message):
     documentSetTitle(ollamaChatTitle)
     markdownPrint( \
-        argsLink(ollamaChatArguments, 'Back', objectNew('view', null, 'id', null)), \
+        argsLink(ollamaChatArguments, 'Back', null, true), \
         '', \
         '# ' + ollamaChatTitle, \
         '', \
@@ -56,7 +52,7 @@ endfunction
 
 
 # The Ollama Chat index page
-async function ollamaChatIndexPage():
+async function ollamaChatIndexPage(args):
     # Render the title
     documentSetTitle(ollamaChatTitle)
     markdownPrint( \
@@ -65,30 +61,51 @@ async function ollamaChatIndexPage():
     )
 
     # Get the current model and the conversations list
-    responses = systemFetch(arrayNew('getModel', 'getConversations'))
+    action = objectGet(args, 'action')
+    fetchURLs = arrayNew('getModel', 'getConversations')
+    if action == 'select':
+        arrayPush(fetchURLs, 'getModels')
+    endif
+    responses = systemFetch(fetchURLs)
     modelResponse = if(responses != null && arrayGet(responses, 0) != null, jsonParse(arrayGet(responses, 0)))
     conversationsResponse = if(responses != null && arrayGet(responses, 1) != null, jsonParse(arrayGet(responses, 1)))
-    if modelResponse == null || conversationsResponse == null:
+    modelsResponse = if(responses != null && action == 'select' && arrayGet(responses, 2) != null, jsonParse(arrayGet(responses, 2)))
+    if modelResponse == null || conversationsResponse == null || (action == 'select' && modelsResponse == null):
         ollamaChatErrorPage('Failed to load model and conversations')
         return
     endif
 
-    # Render the start new chat link
-    markdownPrint( \
-        '**Model:** ' + objectGet(modelResponse, 'model') + '&nbsp;', \
-        argsLink(ollamaChatArguments, '(select)', objectNew('view', 'select')), \
-        '', \
-        argsLink(ollamaChatArguments, 'Start New Conversation', objectNew('view', 'chat')) \
-    )
+    # Render the model selection
+    markdownPrint('**Model:** ' + objectGet(modelResponse, 'model') + '&nbsp;')
+    if action == 'select':
+        selectIndent = stringFromCharCode(160, 160, 160, 160)
+        markdownPrint( \
+            '(' + argsLink(ollamaChatArguments, 'Cancel', objectNew('action', null)) + ')', \
+            '', \
+            selectIndent + '**Select a model:**' \
+        )
+        for modelInfo in objectGet(modelsResponse, 'models'):
+            model = objectGet(modelInfo, 'model')
+            elementModelRender( \
+                objectNew('html', 'p', 'elem', arrayNew( \
+                    objectNew('text', selectIndent), \
+                    formsLinkButtonElements(model, systemPartial(ollamaChatOnSelect, model)) \
+                )) \
+            )
+        endfor
+    else:
+        # Render the start new chat link
+        markdownPrint( \
+            '(' + argsLink(ollamaChatArguments, 'Select', objectNew('action', 'select')) + ')', \
+            '', \
+            argsLink(ollamaChatArguments, 'Start New Conversation', objectNew('view', 'chat')) \
+        )
+    endif
 
     # Render the sample links
     conversations = objectGet(conversationsResponse, 'conversations')
     if arrayLength(conversations) != 0:
-        markdownPrint( \
-            '', \
-            '## Conversations', \
-            '' \
-        )
+        markdownPrint('', '## Conversations')
         conversationData = arrayNew()
         for conversation in conversations:
             arrayPush(conversationData, objectNew( \
@@ -107,46 +124,13 @@ async function ollamaChatIndexPage():
 endfunction
 
 
-# The Ollama Chat select-model page
-async function ollamaChatSelectPage():
-    # Render the title
-    documentSetTitle(ollamaChatTitle)
-    markdownPrint( \
-        argsLink(ollamaChatArguments, 'Back', objectNew('view', null, 'id', null)), \
-        '', \
-        '# ' + ollamaChatTitle, \
-        '' \
-    )
-
-    # Render the model selection links
-    modelsResponse = systemFetch('getModels')
-    modelsResponse = if(modelsResponse != null, jsonParse(modelsResponse))
-    if modelsResponse == null:
-        ollamaChatErrorPage('Failed to download models')
-        return
-    endif
-
-    # Render the model selection links
-    markdownPrint( \
-        '**Select a model:**', \
-        '' \
-    )
-    for modelInfo in objectGet(modelsResponse, 'models'):
-        model = objectGet(modelInfo, 'model')
-        elementModelRender( \
-            objectNew('html', 'p', 'elem', formsLinkButtonElements(model, systemPartial(ollamaChatOnSelect, model))) \
-        )
-    endfor
-endfunction
-
-
 # Stop on-click event handler
 async function ollamaChatOnSelect(model):
     # Set the model (ignore errors)
     systemFetch(objectNew('url', 'setModel', 'body', jsonStringify(objectNew('model', model))))
 
     # Set location to the index page
-    windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', null)))
+    windowSetLocation(argsURL(ollamaChatArguments, null, true))
 endfunction
 
 
@@ -180,7 +164,7 @@ async function ollamaChatPage(args):
     # Render the chat title
     documentSetTitle(title)
     markdownPrint( \
-        argsLink(ollamaChatArguments, 'Back', objectNew('view', null, 'id', null)), \
+        argsLink(ollamaChatArguments, 'Back', null, true), \
         '', \
         '# ' + title, \
         '', \
