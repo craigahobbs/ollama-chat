@@ -20,6 +20,13 @@ import schema_markdown
 from .ollama import OllamaChat
 
 
+# The default config
+DEFAULT_CONFIG = {
+    'model': 'llama3:latest',
+    'conversations': []
+}
+
+
 class OllamaChatApplication(chisel.Application):
     """
     The ollama-chat back-end API WSGI application class
@@ -28,20 +35,9 @@ class OllamaChatApplication(chisel.Application):
     __slots__ = ('config', 'chats')
 
 
-    # The config filename
-    CONFIG_PATH = 'ollama-chat.json'
-
-
-    # The default config
-    DEFAULT_CONFIG = {
-        'model': 'llama3',
-        'conversations': []
-    }
-
-
-    def __init__(self):
+    def __init__(self, config_path):
         super().__init__()
-        self.config = ConfigManager(self.CONFIG_PATH, self.DEFAULT_CONFIG)
+        self.config = ConfigManager(config_path, DEFAULT_CONFIG)
         self.chats = {}
 
         # Add the chisel documentation application
@@ -113,7 +109,7 @@ class ConfigManager:
             self.config_lock.release()
 
 
-# Parse the Ollama Chat schema
+# The Ollama Chat type model
 with pkg_resources.open_text('ollama_chat.static', 'ollamaChat.smd') as cm_smd:
     OLLAMA_CHAT_TYPES = schema_markdown.parse_schema_markdown(cm_smd.read())
 
@@ -146,13 +142,22 @@ def set_model(ctx, req):
 @chisel.action(name='startConversation', types=OLLAMA_CHAT_TYPES)
 def start_conversation(ctx, req):
     with ctx.app.config() as config:
+        # Compute the conversation title
+        user_prompt = req['user']
+        max_title_len = 50
+        if len(user_prompt) <= max_title_len:
+            title = user_prompt
+        else:
+            title_suffix = '...'
+            title = f'{user_prompt[:max_title_len - len(title_suffix)]}{title_suffix}'
+
         # Create the new conversation object
         id_ = str(uuid.uuid4())
         model = config['model']
         conversation = {
             'id': id_,
             'model': model,
-            'title': _get_conversation_title(req['user']),
+            'title': title,
             'exchanges': [
                 {
                     'user': req['user'],
@@ -257,15 +262,3 @@ def get_conversations(ctx, unused_req):
 # Helper to find a conversation by ID
 def _get_conversation(config, id_):
     return next((conv for conv in config['conversations'] if conv['id'] == id_), None)
-
-
-# Helper to compute a conversation title
-def _get_conversation_title(user_prompt):
-    # User prompt of reasonable size?
-    max_title_len = 50
-    if len(user_prompt) <= max_title_len:
-        return user_prompt
-
-    # Trim the user prompt
-    title_suffix = '...'
-    return f'{user_prompt[:max_title_len - len(title_suffix)]}{title_suffix}'

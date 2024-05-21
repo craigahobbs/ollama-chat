@@ -21,6 +21,8 @@ def main(argv=None):
 
     # Command line arguments
     parser = argparse.ArgumentParser(prog='ollama-chat')
+    parser.add_argument('-c', metavar='FILE', dest='config', default='ollama-chat.json',
+                        help='the configuration file (default is "ollama-chat.json")')
     parser.add_argument('-p', metavar='N', dest='port', type=int, default=8080,
                         help='the application port (default is 8080)')
     parser.add_argument('-n', dest='no_browser', action='store_true',
@@ -40,7 +42,7 @@ def main(argv=None):
         webbrowser_thread.start()
 
     # Create the WSGI application
-    wsgiapp = OllamaChatApplication()
+    wsgiapp = OllamaChatApplication(args.config)
 
     # Wrap the WSGI application and the start_response function so we can log status and environ
     def wsgiapp_wrap(environ, start_response):
