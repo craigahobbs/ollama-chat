@@ -78,19 +78,19 @@ async function ollamaChatIndexPage(args):
     endif
 
     # Render the model selection
-    markdownPrint('**Model:** ' + objectGet(modelResponse, 'model') + '&nbsp;')
+    indent = stringFromCharCode(160, 160)
+    markdownPrint('**Model:** ' + objectGet(modelResponse, 'model') + indent)
     if action == 'select':
-        selectIndent = stringFromCharCode(160, 160, 160, 160)
         markdownPrint( \
-            '(' + argsLink(ollamaChatArguments, 'Cancel', objectNew('action', null)) + ')', \
+            argsLink(ollamaChatArguments, 'Cancel', objectNew('action', null)), \
             '', \
-            selectIndent + '**Select a model:**' \
+            indent + indent + '**Select a model:**' \
         )
         for modelInfo in objectGet(modelsResponse, 'models'):
             model = objectGet(modelInfo, 'model')
             elementModelRender( \
                 objectNew('html', 'p', 'elem', arrayNew( \
-                    objectNew('text', selectIndent), \
+                    objectNew('text', indent + indent), \
                     formsLinkButtonElements(model, systemPartial(ollamaChatOnSelect, model)) \
                 )) \
             )
@@ -98,7 +98,7 @@ async function ollamaChatIndexPage(args):
     else:
         # Render the start new chat link
         markdownPrint( \
-            '(' + argsLink(ollamaChatArguments, 'Select', objectNew('action', 'select')) + ')', \
+            argsLink(ollamaChatArguments, 'Select', objectNew('action', 'select')), \
             '', \
             argsLink(ollamaChatArguments, 'Start New Conversation', objectNew('view', 'chat')) \
         )
@@ -116,7 +116,6 @@ async function ollamaChatIndexPage(args):
             )) \
         )
         tableElements = objectNew('html', 'table', 'elem', tableRows)
-        deleteSpace = stringFromCharCode(160, 160)
         for conversation in conversations:
             conversationId = objectGet(conversation, 'id')
             conversationURL = argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', conversationId))
@@ -130,10 +129,10 @@ async function ollamaChatIndexPage(args):
             if isDeleting:
                 arrayPush(tableRows, objectNew('html', 'tr', 'elem', arrayNew( \
                     objectNew('html', 'td', 'attr', objectNew('colspan', '3'), 'elem', arrayNew( \
-                        objectNew('text', deleteSpace + deleteSpace), \
-                        objectNew('html', 'b', 'elem', objectNew('text', 'Delete?' + deleteSpace)), \
+                        objectNew('text', indent + indent), \
+                        objectNew('html', 'b', 'elem', objectNew('text', 'Delete?' + indent)), \
                         formsLinkButtonElements('Continue', systemPartial(ollamaChatOnDelete, conversationId)), \
-                        objectNew('text', deleteSpace), \
+                        objectNew('text', indent), \
                         formsLinkElements('Cancel', argsURL(ollamaChatArguments, null, true)) \
                     )) \
                 )))
