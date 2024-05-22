@@ -45,10 +45,12 @@ class OllamaChatApplication(chisel.Application):
 
         # Add the APIs
         self.add_request(delete_conversation)
+        self.add_request(delete_conversation_exchange)
         self.add_request(get_conversation)
         self.add_request(get_conversations)
         self.add_request(get_model)
         self.add_request(get_models)
+        self.add_request(regenerate_conversation_exchange)
         self.add_request(reply_conversation)
         self.add_request(set_model)
         self.add_request(start_conversation)
@@ -139,6 +141,19 @@ def set_model(ctx, req):
         config['model'] = req['model']
 
 
+@chisel.action(name='getConversations', types=OLLAMA_CHAT_TYPES)
+def get_conversations(ctx, unused_req):
+    conversations = []
+    with ctx.app.config() as config:
+        for conversation in config['conversations']:
+            info = dict(conversation)
+            del info['exchanges']
+            conversations.append(info)
+    return {
+        'conversations': conversations
+    }
+
+
 @chisel.action(name='startConversation', types=OLLAMA_CHAT_TYPES)
 def start_conversation(ctx, req):
     with ctx.app.config() as config:
@@ -174,6 +189,24 @@ def start_conversation(ctx, req):
 
         # Return the new conversation ID
         return {'id': id_}
+
+
+@chisel.action(name='stopConversation', types=OLLAMA_CHAT_TYPES)
+def stop_conversation(ctx, req):
+    with ctx.app.config() as config:
+        id_ = req['id']
+        conversation = config_conversation(config, id_)
+        if conversation is None:
+            raise chisel.ActionError('UnknownConversationID')
+
+        # Not generating?
+        chat = ctx.app.chats.get(id_)
+        if chat is None:
+            return
+
+        # Stop the conversation
+        chat.stop = True
+        del ctx.app.chats[id_]
 
 
 @chisel.action(name='getConversation', types=OLLAMA_CHAT_TYPES)
@@ -213,24 +246,6 @@ def reply_conversation(ctx, req):
         ctx.app.chats[id_] = OllamaChat(ctx.app, id_)
 
 
-@chisel.action(name='stopConversation', types=OLLAMA_CHAT_TYPES)
-def stop_conversation(ctx, req):
-    with ctx.app.config() as config:
-        id_ = req['id']
-        conversation = config_conversation(config, id_)
-        if conversation is None:
-            raise chisel.ActionError('UnknownConversationID')
-
-        # Not generating?
-        chat = ctx.app.chats.get(id_)
-        if chat is None:
-            return
-
-        # Stop the conversation
-        chat.stop = True
-        del ctx.app.chats[id_]
-
-
 @chisel.action(name='deleteConversation', types=OLLAMA_CHAT_TYPES)
 def delete_conversation(ctx, req):
     with ctx.app.config(save=True) as config:
@@ -247,14 +262,39 @@ def delete_conversation(ctx, req):
         config['conversations'] = [conversation for conversation in config['conversations'] if conversation['id'] != id_]
 
 
-@chisel.action(name='getConversations', types=OLLAMA_CHAT_TYPES)
-def get_conversations(ctx, unused_req):
-    conversations = []
-    with ctx.app.config() as config:
-        for conversation in config['conversations']:
-            info = dict(conversation)
-            del info['exchanges']
-            conversations.append(info)
-    return {
-        'conversations': conversations
-    }
+@chisel.action(name='deleteConversationExchange', types=OLLAMA_CHAT_TYPES)
+def delete_conversation_exchange(ctx, req):
+    with ctx.app.config(save=True) as config:
+        id_ = req['id']
+        conversation = config_conversation(config, id_)
+        if conversation is None:
+            raise chisel.ActionError('UnknownConversationID')
+
+        # Busy?
+        if id_ in ctx.app.chats:
+            raise chisel.ActionError('ConversationBusy')
+
+        # Delete the most recent exchange (but not the last one)
+        exchanges = conversation['exchanges']
+        if len(exchanges) > 1:
+            del exchanges[-1]
+
+
+@chisel.action(name='regenerateConversationExchange', types=OLLAMA_CHAT_TYPES)
+def regenerate_conversation_exchange(ctx, req):
+    with ctx.app.config(save=True) as config:
+        id_ = req['id']
+        conversation = config_conversation(config, id_)
+        if conversation is None:
+            raise chisel.ActionError('UnknownConversationID')
+
+        # Busy?
+        if id_ in ctx.app.chats:
+            raise chisel.ActionError('ConversationBusy')
+
+        # Reset the most recent exchange's model response
+        exchanges = conversation['exchanges']
+        exchanges[-1]['model'] = ''
+
+        # Start the model chat
+        ctx.app.chats[id_] = OllamaChat(ctx.app, id_)

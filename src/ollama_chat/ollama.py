@@ -39,7 +39,8 @@ class OllamaChat():
                 model = conversation['model']
                 for exchange in conversation['exchanges']:
                     messages.append({'role': 'user', 'content': exchange['user']})
-                    messages.append({'role': 'assistant', 'content': exchange['model']})
+                    if exchange['model'] != '':
+                        messages.append({'role': 'assistant', 'content': exchange['model']})
 
             # Start the chat
             stream = ollama.chat(model=model, messages=messages, stream=True)

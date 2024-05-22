@@ -112,6 +112,19 @@ action startConversation
         string id
 
 
+# Stop a generating conversation
+action stopConversation
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+    errors
+        UnknownConversationID
+
+
 # Get a conversation
 action getConversation
     urls
@@ -149,8 +162,8 @@ action replyConversation
         ConversationBusy
 
 
-# Stop a generating conversation
-action stopConversation
+# Delete a conversation
+action deleteConversation
     urls
         POST
 
@@ -160,10 +173,25 @@ action stopConversation
 
     errors
         UnknownConversationID
+        ConversationBusy
 
 
-# Delete a conversation
-action deleteConversation
+# Delete the most recent exchange of a conversation
+action deleteConversationExchange
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+    errors
+        UnknownConversationID
+        ConversationBusy
+
+
+# Regnerate the model's response of the most recent exchange of a conversation
+action regenerateConversationExchange
     urls
         POST
 
