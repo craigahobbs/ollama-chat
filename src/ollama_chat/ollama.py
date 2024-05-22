@@ -49,7 +49,7 @@ class OllamaChat():
                 # If stopped, return immediately. The chat is deleted by the stopper.
                 if chat.stop:
                     stream.close()
-                    return
+                    break
 
                 # Update the conversation
                 with chat.app.config() as config:
