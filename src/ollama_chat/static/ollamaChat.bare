@@ -104,9 +104,9 @@ async function ollamaChatIndexPage(args):
         )
     endif
 
-    # Render the sample links
+    # Render the conversations
     conversations = objectGet(conversationsResponse, 'conversations')
-    if arrayLength(conversations) != 0:
+    if conversations:
         markdownPrint('', '## Conversations')
         tableRows = arrayNew( \
             objectNew('html', 'tr', 'elem', arrayNew( \
@@ -254,8 +254,10 @@ async function ollamaChatOnConversationTimeout(args, conversationResponse):
     endif
     conversation = objectGet(conversationResponse, 'conversation')
     generating = objectGet(conversationResponse, 'generating')
+    model = objectGet(conversation, 'model')
 
     # Render the exchanges
+    modelName = stringUpper(stringSlice(model, 0, 1)) + stringSlice(model, 1)
     exchanges = objectGet(conversation, 'exchanges')
     for exchange in exchanges:
         markdownPrint( \
@@ -264,7 +266,7 @@ async function ollamaChatOnConversationTimeout(args, conversationResponse):
             '', \
             objectGet(exchange, 'user'), \
             '', \
-            '## ' + markdownEscape(objectGet(conversation, 'model')) + ':', \
+            '## ' + markdownEscape(modelName) + ':', \
             '', \
             objectGet(exchange, 'model') \
         )
