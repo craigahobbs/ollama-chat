@@ -213,14 +213,15 @@ async function ollamaChatPage(args):
         elementModelRender( \
             objectNew('html', 'p', 'elem', arrayNew( \
                 objectNew('text', 'Generating... '), \
-                formsLinkButtonElements('Stop', systemPartial(ollamaChatOnStop, id)) \
+                formsLinkButtonElements('Stop', systemPartial(ollamaChatOnConversation, id, 'stopConversation')) \
             )) \
         )
     endif
 
     # Render the exchanges
+    exchanges = objectGet(conversation, 'exchanges')
     if conversation != null:
-        for exchange in objectGet(conversation, 'exchanges'):
+        for exchange in exchanges:
             markdownPrint( \
                 '', \
                 '## User:', \
@@ -234,6 +235,20 @@ async function ollamaChatPage(args):
         endfor
     endif
 
+    # Regenerate and delete links
+    if !generating:
+        indent = stringFromCharCode(160, 160)
+        elementModelRender( \
+            objectNew('html', 'p', 'elem', arrayNew( \
+                if(arrayLength(exchanges) > 1, arrayNew( \
+                    formsLinkButtonElements('Delete', systemPartial(ollamaChatOnConversation, id, 'deleteConversationExchange')), \
+                    objectNew('text', indent) \
+                )), \
+                formsLinkButtonElements('Regenerate', systemPartial(ollamaChatOnConversation, id, 'regenerateConversationExchange')) \
+            )) \
+        )
+    endif
+
     # Set the chat timeout
     if generating:
         windowSetTimeout(ollamaChatMain, ollamaChatTimeoutMs)
@@ -241,11 +256,11 @@ async function ollamaChatPage(args):
 endfunction
 
 
-# Stop on-click event handler
-async function ollamaChatOnStop(id):
-    # Stop the chat
-    stopRequest = jsonStringify(objectNew('id', id))
-    systemFetch(objectNew('url', 'stopConversation', 'body', stopRequest))
+# Conversation action on-click event handler
+async function ollamaChatOnConversation(id, url):
+    # Perform the conversation acgtion
+    actionRequest = jsonStringify(objectNew('id', id))
+    systemFetch(objectNew('url', url, 'body', actionRequest))
 
     # Render the page
     ollamaChatMain()
