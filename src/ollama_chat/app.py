@@ -17,7 +17,7 @@ import chisel
 import ollama
 import schema_markdown
 
-from .ollama import OllamaChat
+from .ollama import OllamaChat, config_conversation
 
 
 # The default config
@@ -180,7 +180,7 @@ def start_conversation(ctx, req):
 def get_conversation(ctx, req):
     with ctx.app.config() as config:
         id_ = req['id']
-        conversation = _get_conversation(config, id_)
+        conversation = config_conversation(config, id_)
         if conversation is None:
             raise chisel.ActionError('UnknownConversationID')
 
@@ -195,7 +195,7 @@ def get_conversation(ctx, req):
 def reply_conversation(ctx, req):
     with ctx.app.config() as config:
         id_ = req['id']
-        conversation = _get_conversation(config, id_)
+        conversation = config_conversation(config, id_)
         if conversation is None:
             raise chisel.ActionError('UnknownConversationID')
 
@@ -217,7 +217,7 @@ def reply_conversation(ctx, req):
 def stop_conversation(ctx, req):
     with ctx.app.config() as config:
         id_ = req['id']
-        conversation = _get_conversation(config, id_)
+        conversation = config_conversation(config, id_)
         if conversation is None:
             raise chisel.ActionError('UnknownConversationID')
 
@@ -227,14 +227,15 @@ def stop_conversation(ctx, req):
             return
 
         # Stop the conversation
-        chat.stop()
+        chat.stop = True
+        del ctx.app.chats[id_]
 
 
 @chisel.action(name='deleteConversation', types=OLLAMA_CHAT_TYPES)
 def delete_conversation(ctx, req):
     with ctx.app.config(save=True) as config:
         id_ = req['id']
-        conversation = _get_conversation(config, id_)
+        conversation = config_conversation(config, id_)
         if conversation is None:
             raise chisel.ActionError('UnknownConversationID')
 
@@ -257,8 +258,3 @@ def get_conversations(ctx, unused_req):
     return {
         'conversations': conversations
     }
-
-
-# Helper to find a conversation by ID
-def _get_conversation(config, id_):
-    return next((conv for conv in config['conversations'] if conv['id'] == id_), None)
