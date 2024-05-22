@@ -169,6 +169,8 @@ async function ollamaChatPage(args):
 
     # Fetch the conversation
     title = ollamaChatTitle
+    conversation = null
+    generating = False
     if id != null:
         conversationResponse = systemFetch('getConversation?id=' + id)
         conversationResponse = if(conversationResponse != null, jsonParse(conversationResponse))
@@ -213,27 +215,60 @@ async function ollamaChatPage(args):
         elementModelRender( \
             objectNew('html', 'p', 'elem', arrayNew( \
                 objectNew('text', 'Generating... '), \
-                formsLinkButtonElements('Stop', systemPartial(ollamaChatOnConversation, id, 'stopConversation')) \
+                formsLinkButtonElements('Stop', systemPartial(ollamaChatOnConversationClick, id, 'stopConversation')) \
             )) \
         )
     endif
 
+    # Render the document reset ID
+    elementModelRender(objectNew('html', 'div', 'attr', objectNew('id', ollamaChatDocumentResetID, 'style', 'display: none;')))
+
+    # Render the conversation
+    if conversation != null:
+        ollamaChatOnConversationTimeout(args, conversationResponse)
+    endif
+endfunction
+
+
+# The Ollama Chat chat page
+async function ollamaChatOnConversationTimeout(args, conversationResponse):
+    id = objectGet(args, 'id')
+
+    # Fetch the conversation
+    if !conversationResponse:
+        conversationResponse = systemFetch('getConversation?id=' + id)
+        conversationResponse = if(conversationResponse != null, jsonParse(conversationResponse))
+        if conversationResponse == null:
+            ollamaChatErrorPage('Unknown conversation ID')
+            return
+        endif
+
+        # Did the model's reply just finish?
+        if !objectGet(conversationResponse, 'generating'):
+            ollamaChatPage(args)
+            return
+        endif
+
+        # This is a conversation update so set the document reset ID
+        documentSetReset(ollamaChatDocumentResetID)
+    endif
+    conversation = objectGet(conversationResponse, 'conversation')
+    generating = objectGet(conversationResponse, 'generating')
+
     # Render the exchanges
     exchanges = objectGet(conversation, 'exchanges')
-    if conversation != null:
-        for exchange in exchanges:
-            markdownPrint( \
-                '', \
-                '## User:', \
-                '', \
-                objectGet(exchange, 'user'), \
-                '', \
-                '## ' + markdownEscape(objectGet(conversation, 'model')) + ':', \
-                '', \
-                objectGet(exchange, 'model') \
-            )
-        endfor
-    endif
+    for exchange in exchanges:
+        markdownPrint( \
+            '', \
+            '## User:', \
+            '', \
+            objectGet(exchange, 'user'), \
+            '', \
+            '## ' + markdownEscape(objectGet(conversation, 'model')) + ':', \
+            '', \
+            objectGet(exchange, 'model') \
+        )
+    endfor
 
     # Regenerate and delete links
     if !generating:
@@ -241,23 +276,27 @@ async function ollamaChatPage(args):
         elementModelRender( \
             objectNew('html', 'p', 'elem', arrayNew( \
                 if(arrayLength(exchanges) > 1, arrayNew( \
-                    formsLinkButtonElements('Delete', systemPartial(ollamaChatOnConversation, id, 'deleteConversationExchange')), \
+                    formsLinkButtonElements('Delete', systemPartial(ollamaChatOnConversationClick, id, 'deleteConversationExchange')), \
                     objectNew('text', indent) \
                 )), \
-                formsLinkButtonElements('Regenerate', systemPartial(ollamaChatOnConversation, id, 'regenerateConversationExchange')) \
+                formsLinkButtonElements('Regenerate', systemPartial(ollamaChatOnConversationClick, id, 'regenerateConversationExchange')) \
             )) \
         )
     endif
 
     # Set the chat timeout
     if generating:
-        windowSetTimeout(ollamaChatMain, ollamaChatTimeoutMs)
+        windowSetTimeout(systemPartial(ollamaChatOnConversationTimeout, args), ollamaChatTimeoutMs)
     endif
 endfunction
 
 
+# The Ollama Chat document reset ID
+ollamaChatDocumentResetID = 'ollamaChatDocumentResetID'
+
+
 # Conversation action on-click event handler
-async function ollamaChatOnConversation(id, url):
+async function ollamaChatOnConversationClick(id, url):
     # Perform the conversation acgtion
     actionRequest = jsonStringify(objectNew('id', id))
     systemFetch(objectNew('url', url, 'body', actionRequest))
