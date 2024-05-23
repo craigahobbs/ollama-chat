@@ -112,7 +112,7 @@ async function ollamaChatIndexPage(args):
             objectNew('html', 'tr', 'elem', arrayNew( \
                 objectNew('html', 'th', 'elem', objectNew('text', 'Title')), \
                 objectNew('html', 'th', 'elem', objectNew('text', 'Model')), \
-                objectNew('html', 'th', 'elem', objectNew('text', 'Action')) \
+                objectNew('html', 'th') \
             )) \
         )
         tableElements = objectNew('html', 'table', 'elem', tableRows)

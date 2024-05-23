@@ -20,13 +20,6 @@ import schema_markdown
 from .ollama import OllamaChat, config_conversation
 
 
-# The default config
-DEFAULT_CONFIG = {
-    'model': 'llama3:latest',
-    'conversations': []
-}
-
-
 class OllamaChatApplication(chisel.Application):
     """
     The ollama-chat back-end API WSGI application class
@@ -37,7 +30,7 @@ class OllamaChatApplication(chisel.Application):
 
     def __init__(self, config_path):
         super().__init__()
-        self.config = ConfigManager(config_path, DEFAULT_CONFIG)
+        self.config = ConfigManager(config_path)
         self.chats = {}
 
         # Add the chisel documentation application
@@ -87,27 +80,42 @@ class ConfigManager:
     __slots__ = ('config_path', 'config_lock', 'config')
 
 
-    def __init__(self, config_path, default_config):
+    DEFAULT_MODEL = 'llama3:latest'
+
+
+    def __init__(self, config_path):
         self.config_path = config_path
         self.config_lock = threading.Lock()
 
         # Ensure the config file exists with default config if it doesn't exist
         if os.path.isfile(config_path):
             with open(config_path, 'r', encoding='utf-8') as fh_config:
-                self.config = schema_markdown.validate_type(OLLAMA_CHAT_TYPES, 'OllamaChat', json.loads(fh_config.read()))
+                self.config = schema_markdown.validate_type(OLLAMA_CHAT_TYPES, 'OllamaChatConfig', json.loads(fh_config.read()))
         else:
-            self.config = default_config
+            self.config = {'model': ConfigManager.DEFAULT_MODEL, 'conversations': []}
 
 
     @contextmanager
     def __call__(self, save=False):
+        # Acquire the config lock
         self.config_lock.acquire()
+
         try:
+            # If no model is set, set the default model
+            is_saving = save
+            if 'model' not in self.config:
+                self.config['model'] = ConfigManager.DEFAULT_MODEL
+                is_saving = True
+
+            # Yield the config on context entry
             yield self.config
-            if save:
+
+            # Save the config file on context exit, if requested
+            if is_saving and not self.config.get('noSave'):
                 with open(self.config_path, 'w', encoding='utf-8') as fh_config:
-                    json.dump(self.config, fh_config, indent=4)
+                    json.dump(self.config, fh_config, indent=4, sort_keys = True)
         finally:
+            # Release the config lock
             self.config_lock.release()
 
 

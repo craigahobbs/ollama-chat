@@ -5,14 +5,17 @@
 group "Ollama Chat JSON"
 
 
-# The Ollama Chat file format
-struct OllamaChat
+# The Ollama Chat config file format
+struct OllamaChatConfig
 
     # The current model name
-    string model
+    optional string model
 
     # The saved conversations
     Conversation[] conversations
+
+    # If true, don't save the config file
+    optional bool noSave
 
 
 # The user-model conversation info
