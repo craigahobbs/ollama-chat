@@ -17,6 +17,10 @@ $(eval $(call WGET, https://raw.githubusercontent.com/craigahobbs/python-build/m
 include Makefile.base
 
 
+# Set the coverage limit
+COVERAGE_REPORT_ARGS := $(COVERAGE_REPORT_ARGS) --fail-under 27
+
+
 # Disable pylint docstring warnings
 PYLINT_ARGS := $(PYLINT_ARGS) --disable=missing-class-docstring --disable=missing-function-docstring --disable=missing-module-docstring
 
