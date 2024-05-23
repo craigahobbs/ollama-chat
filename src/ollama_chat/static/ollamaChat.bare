@@ -193,33 +193,17 @@ async function ollamaChatPage(args):
         model = objectGet(modelResponse, 'model')
     endif
 
+    # Render the floating controls
+    elementModelRender(ollamaChatPageFloatingElements(id, generating))
+    documentSetFocus(ollamaChatPromptInputID)
+
     # Render the chat title
     documentSetTitle(title)
     markdownPrint( \
-        argsLink(ollamaChatArguments, 'Back', null, true), \
-        '', \
         '# ' + title, \
         '', \
-        '**Model:** ' + markdownEscape(model), \
-        '' \
+        '**Model:** ' + markdownEscape(model) \
     )
-
-    # Generating?
-    if !generating:
-        # Render the prompt input
-        elementModelRender(arrayNew( \
-            objectNew('html', 'p', 'elem', formsTextElements(ollamaChatPromptInputID, '', 50, systemPartial(ollamaChatOnPrompt, id))), \
-            objectNew('html', 'p', 'elem', formsLinkButtonElements('Submit', systemPartial(ollamaChatOnPrompt, id))) \
-        ))
-        documentSetFocus(ollamaChatPromptInputID)
-    else:
-        elementModelRender( \
-            objectNew('html', 'p', 'elem', arrayNew( \
-                objectNew('text', 'Generating... '), \
-                formsLinkButtonElements('Stop', systemPartial(ollamaChatOnConversationClick, id, 'stopConversation')) \
-            )) \
-        )
-    endif
 
     # No conversation yet?
     if conversation == null:
@@ -263,6 +247,9 @@ async function ollamaChatPage(args):
         )
     endif
 
+    # Render the bottom space
+    elementModelRender(ollamaChatPageFloatingBottomElements())
+
     # Set the conversation update timeout
     if generating:
         windowSetTimeout(systemPartial(ollamaChatOnConversationTimeout, args), ollamaChatTimeoutMs)
@@ -270,7 +257,7 @@ async function ollamaChatPage(args):
 endfunction
 
 
-# The Ollama Chat chat page
+# The Ollama Chat chat page conversation-update timeout handler
 async function ollamaChatOnConversationTimeout(args):
     id = objectGet(args, 'id')
 
@@ -283,7 +270,6 @@ async function ollamaChatOnConversationTimeout(args):
     endif
     conversation = objectGet(conversationResponse, 'conversation')
     generating = objectGet(conversationResponse, 'generating')
-    systemLog('*** ' + id + ', ' + generating)
 
     # Did the model's reply just finish?
     if !generating:
@@ -295,6 +281,9 @@ async function ollamaChatOnConversationTimeout(args):
     exchanges = objectGet(conversation, 'exchanges')
     markdownPrint(objectGet(arrayGet(exchanges, arrayLength(exchanges) - 1), 'model'))
     documentSetReset(ollamaChatDocumentResetID)
+
+    # Render the bottom space
+    elementModelRender(ollamaChatPageFloatingBottomElements())
 
     # Set the conversation update timeout
     windowSetTimeout(systemPartial(ollamaChatOnConversationTimeout, args), ollamaChatTimeoutMs)
@@ -354,4 +343,109 @@ async function ollamaChatOnPrompt(id):
 
     # Set the chat timeout
     windowSetTimeout(ollamaChatMain, ollamaChatTimeoutMs)
+endfunction
+
+
+# The Ollama chat pages floating controls element model
+function ollamaChatPageFloatingElements(id, generating):
+    elements = arrayNew()
+
+    # The top space
+    arrayPush(elements, objectNew('html', 'div', 'attr', objectNew('style', 'height: 20px')))
+
+    # The menu controls
+    arrayPush(elements, objectNew( \
+        'html', 'div', \
+        'attr', objectNew( \
+            'style', arrayJoin(arrayNew( \
+                'align-items: left', \
+                'background-color: #e0e0e0', \
+                'border-radius: 5px', \
+                'display: flex', \
+                'left: 10px', \
+                'padding: 10px', \
+                'position: fixed', \
+                'top: 10px' \
+            ), '; ') \
+        ), \
+        'elem', arrayNew( \
+            formsLinkElements('Back', argsURL(ollamaChatArguments, null, true)) \
+        ) \
+    ))
+
+    # The prompt controls
+    arrayPush(elements, objectNew( \
+        'html', 'div', \
+        'attr', objectNew( \
+            'style', arrayJoin(arrayNew( \
+                'align-items: center', \
+                'background-color: #c0c0c0', \
+                'border-radius: 10px', \
+                'bottom: 10px', \
+                'display: flex', \
+                'left: 50px', \
+                'padding: 15px', \
+                'position: fixed', \
+                'right: 50px' \
+            ), '; ') \
+        ), \
+        'elem', arrayNew( \
+            objectNew( \
+                'html', 'input', \
+                'attr', objectNew( \
+                    'type', 'text', \
+                    'id', ollamaChatPromptInputID, \
+                    'placeholder', 'Type your message...', \
+                    'style', arrayJoin(arrayNew( \
+                        'background-color: white', \
+                        'border: none', \
+                        'flex: 1', \
+                        'font-size: inherit', \
+                        'margin-right: 10px', \
+                        'outline: none', \
+                        'padding: 10px' \
+                    ), '; ') \
+                ), \
+                'callback', objectNew('keyup', systemPartial(formsTextOnKeyup, systemPartial(ollamaChatOnPrompt, id))) \
+            ), \
+            if(!generating, objectNew( \
+                'html', 'button', \
+                'attr', objectNew( \
+                    'style', arrayJoin(arrayNew( \
+                        'background-color: #4dff4d', \
+                        'border-radius: 4px', \
+                        'border: none', \
+                        'color: black', \
+                        'font-size: inherit', \
+                        'padding: 10px 20px' \
+                    ), '; ') \
+                ), \
+                'elem', objectNew('text', 'Go'), \
+                'callback', objectNew('click', systemPartial(ollamaChatOnPrompt, id)) \
+            )), \
+            if(generating, objectNew( \
+                'html', 'button', \
+                'attr', objectNew( \
+                    'style', arrayJoin(arrayNew( \
+                        'background-color: #ff4d4d', \
+                        'border-radius: 4px', \
+                        'border: none', \
+                        'color: white', \
+                        'font-size: inherit', \
+                        'padding: 10px 20px' \
+                    ), '; ') \
+                ), \
+                'elem', objectNew('text', 'Stop'), \
+                'callback', objectNew('click', systemPartial(ollamaChatOnConversationClick, id, 'stopConversation')) \
+            )) \
+        ) \
+    ))
+
+    return elements
+endfunction
+
+
+# The Ollama chat pages floating controls bottom-of-the-window space div element model
+function ollamaChatPageFloatingBottomElements():
+    return objectNew('html', 'div', 'attr', objectNew('style', 'height: 80px'))
 endfunction
