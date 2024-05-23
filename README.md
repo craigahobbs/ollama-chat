@@ -5,49 +5,51 @@
 [![GitHub](https://img.shields.io/github/license/craigahobbs/ollama-chat)](https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ollama-chat)](https://pypi.org/project/ollama-chat/)
 
-Coming soon!
+**Ollama Chat** is a simple yet useful web chat client for
+[Ollama](https://ollama.com)
+that allows you to chat locally (and privately) with
+[open-source LLMs](https://ollama.com/library).
 
 
-## Features
+# Installation
 
-- Index page
+To get up and running with Ollama Chat follows these steps:
 
-  - Current model: <model> [Select]
+1. Install and start [Ollama](https://ollama.com)
 
-    - Selection page lists downloaded models with select and delete links
+2. Install Ollama Chat
 
-    - Model selection page allows downloading models and reports status of downloads
+   ~~~
+   pip install ollama-chat
+   ~~~
 
-    - Model download page lists models available to download
 
-      - https://huggingface.co/api/models
+# Starting Ollama Chat
 
-   - Start new chat link
+To start Ollama Chat, open a terminal prompt and run the Ollama Chat application:
 
-   - List of conversation links with delete links
+~~~
+ollama-chat
+~~~
 
-- Conversation page
+A web browser is launched and opens the Ollama Chat web application.
 
-  - Chat title with edit title link
-
-  - Chat model: <model>
-
-  - Chat messages in scrollable region
-
-    - Latest message has delete and regenerate buttons
-
-  - Message input and send/stop button rendered at top and positioned below messages
-
-  - Link to download conversation as Markdown file
-
-- Details
-
-  - Selected model and conversations are save to the ollama-chat.json file in the current directory
+By default, a configuration file, "ollama-chat.json", is created in the current directory to save
+your conversations.
 
 
 ## Future Features
 
-- Message review prompt and sanity check response buttons
+In no particular order...
+
+- Save conversation as Markdown file
+
+- Conversation title edit
+
+- File / Directory / URL text inclusion in prompt
+
+- Local model management (pull, rm)
+  - [Models JSON](https://huggingface.co/api/models)
 
 - Prompt library
 
