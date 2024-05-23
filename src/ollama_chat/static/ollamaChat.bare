@@ -273,7 +273,11 @@ async function ollamaChatOnConversationTimeout(args):
 
     # Did the model's reply just finish?
     if !generating:
+        # Render the full page
         ollamaChatPage(args)
+
+        # Scroll to the bottom of the conversation
+        windowSetLocation(argsURL(ollamaChatArguments, null, false, ollamaChatBottomID))
         return
     endif
 
@@ -285,6 +289,9 @@ async function ollamaChatOnConversationTimeout(args):
     # Render the bottom space
     elementModelRender(ollamaChatPageFloatingBottomElements())
 
+    # Scroll to the bottom of the conversation
+    windowSetLocation(argsURL(ollamaChatArguments, null, false, ollamaChatBottomID))
+
     # Set the conversation update timeout
     windowSetTimeout(systemPartial(ollamaChatOnConversationTimeout, args), ollamaChatTimeoutMs)
 endfunction
@@ -295,7 +302,11 @@ ollamaChatPromptInputID = 'ollama-chat-prompt'
 
 
 # The Ollama Chat document reset ID
-ollamaChatDocumentResetID = 'ollamaChatDocumentResetID'
+ollamaChatDocumentResetID = 'ollama-chat-document-reset-id'
+
+
+# The Ollama Chat scroll-to bottom ID
+ollamaChatBottomID = 'ollama-chat-bottom-id'
 
 
 # Conversation action on-click event handler
@@ -354,6 +365,7 @@ function ollamaChatPageFloatingElements(id, generating):
     arrayPush(elements, objectNew('html', 'div', 'attr', objectNew('style', 'height: 20px')))
 
     # The menu controls
+    separator = stringFromCharCode(160) + '|' + stringFromCharCode(160)
     arrayPush(elements, objectNew( \
         'html', 'div', \
         'attr', objectNew( \
@@ -361,6 +373,7 @@ function ollamaChatPageFloatingElements(id, generating):
                 'align-items: left', \
                 'background-color: #e0e0e0', \
                 'border-radius: 5px', \
+                'color: black', \
                 'display: flex', \
                 'left: 10px', \
                 'padding: 10px', \
@@ -369,7 +382,11 @@ function ollamaChatPageFloatingElements(id, generating):
             ), '; ') \
         ), \
         'elem', arrayNew( \
-            formsLinkElements('Back', argsURL(ollamaChatArguments, null, true)) \
+            formsLinkElements('Back', argsURL(ollamaChatArguments, null, true)), \
+            objectNew('text', separator), \
+            formsLinkElements('Top', argsURL(ollamaChatArguments, null, false, '_top')), \
+            objectNew('text', separator), \
+            formsLinkElements('Bottom', argsURL(ollamaChatArguments, null, false, ollamaChatBottomID)) \
         ) \
     ))
 
@@ -447,5 +464,14 @@ endfunction
 
 # The Ollama chat pages floating controls bottom-of-the-window space div element model
 function ollamaChatPageFloatingBottomElements():
-    return objectNew('html', 'div', 'attr', objectNew('style', 'height: 80px'))
+    elements = arrayNew()
+
+    # Add the bottom space
+    arrayPush(elements, objectNew('html', 'div', 'attr', objectNew('style', 'height: 80px')))
+
+    # Add the bottom document ID
+    bottomElementId = stringSlice(argsURL(ollamaChatArguments, null, false, ollamaChatBottomID), 1)
+    arrayPush(elements, objectNew('html', 'div', 'attr', objectNew('id', bottomElementId)))
+
+    return elements
 endfunction
