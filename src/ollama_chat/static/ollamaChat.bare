@@ -119,12 +119,13 @@ async function ollamaChatIndexPage(args):
         for conversation in conversations:
             conversationId = objectGet(conversation, 'id')
             conversationURL = argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', conversationId))
+            isGenerating = objectGet(conversation, 'generating')
             isDeleting = action == 'delete' && actionId == conversationId
             deleteURL = argsURL(ollamaChatArguments, objectNew('action', 'delete', 'actionId', conversationId))
             arrayPush(tableRows, objectNew('html', 'tr', 'elem', arrayNew( \
                 objectNew('html', 'td', 'elem', formsLinkElements(objectGet(conversation, 'title'), conversationURL)), \
                 objectNew('html', 'td', 'elem', objectNew('text', objectGet(conversation, 'model'))), \
-                objectNew('html', 'td', 'elem', if(isDeleting, null, formsLinkElements('Delete', deleteURL))) \
+                objectNew('html', 'td', 'elem', if(!isGenerating && !isDeleting, formsLinkElements('Delete', deleteURL))) \
             )))
             if isDeleting:
                 arrayPush(tableRows, objectNew('html', 'tr', 'elem', arrayNew( \

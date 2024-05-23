@@ -95,7 +95,14 @@ action getConversations
 
     output
         # The conversations
-        ConversationInfo[] conversations
+        ConversationInfoEx[] conversations
+
+
+# Conversation information struct with generating state
+struct ConversationInfoEx (ConversationInfo)
+
+    # If True, the latest exchange is actively generating
+    bool generating
 
 
 # Start a conversation

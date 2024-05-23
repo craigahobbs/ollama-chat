@@ -148,6 +148,7 @@ def get_conversations(ctx, unused_req):
         for conversation in config['conversations']:
             info = dict(conversation)
             del info['exchanges']
+            info['generating'] = conversation['id'] in ctx.app.chats
             conversations.append(info)
     return {
         'conversations': conversations
