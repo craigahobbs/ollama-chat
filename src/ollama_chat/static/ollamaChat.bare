@@ -207,10 +207,10 @@ async function ollamaChatPage(args):
     if !generating:
         # Render the prompt input
         elementModelRender(arrayNew( \
-            objectNew('html', 'p', 'elem', formsTextElements('ollama-chat-prompt', '', 50, systemPartial(ollamaChatOnPrompt, id))), \
+            objectNew('html', 'p', 'elem', formsTextElements(ollamaChatPromptInputID, '', 50, systemPartial(ollamaChatOnPrompt, id))), \
             objectNew('html', 'p', 'elem', formsLinkButtonElements('Submit', systemPartial(ollamaChatOnPrompt, id))) \
         ))
-        documentSetFocus('ollama-chat-prompt')
+        documentSetFocus(ollamaChatPromptInputID)
     else:
         elementModelRender( \
             objectNew('html', 'p', 'elem', arrayNew( \
@@ -220,46 +220,16 @@ async function ollamaChatPage(args):
         )
     endif
 
-    # Render the document reset ID
-    elementModelRender(objectNew('html', 'div', 'attr', objectNew('id', ollamaChatDocumentResetID, 'style', 'display: none;')))
-
-    # Render the conversation
-    if conversation != null:
-        ollamaChatOnConversationTimeout(args, conversationResponse)
+    # No conversation yet?
+    if conversation == null:
+        return
     endif
-endfunction
-
-
-# The Ollama Chat chat page
-async function ollamaChatOnConversationTimeout(args, conversationResponse):
-    id = objectGet(args, 'id')
-
-    # Fetch the conversation
-    if !conversationResponse:
-        conversationResponse = systemFetch('getConversation?id=' + id)
-        conversationResponse = if(conversationResponse != null, jsonParse(conversationResponse))
-        if conversationResponse == null:
-            ollamaChatErrorPage('Unknown conversation ID')
-            return
-        endif
-
-        # Did the model's reply just finish?
-        if !objectGet(conversationResponse, 'generating'):
-            ollamaChatPage(args)
-            return
-        endif
-
-        # This is a conversation update so set the document reset ID
-        documentSetReset(ollamaChatDocumentResetID)
-    endif
-    conversation = objectGet(conversationResponse, 'conversation')
-    generating = objectGet(conversationResponse, 'generating')
-    model = objectGet(conversation, 'model')
 
     # Render the exchanges
     modelName = stringUpper(stringSlice(model, 0, 1)) + stringSlice(model, 1)
     exchanges = objectGet(conversation, 'exchanges')
-    for exchange in exchanges:
+    ixExchangeLast = arrayLength(exchanges) - 1
+    for exchange, ixExchange in exchanges:
         markdownPrint( \
             '', \
             '## User:', \
@@ -268,11 +238,17 @@ async function ollamaChatOnConversationTimeout(args, conversationResponse):
             '', \
             '## ' + markdownEscape(modelName) + ':', \
             '', \
-            objectGet(exchange, 'model') \
+            if(ixExchange != ixExchangeLast, objectGet(exchange, 'model')) \
         )
     endfor
 
-    # Regenerate and delete links
+    # Render the document reset ID
+    elementModelRender(objectNew('html', 'div', 'attr', objectNew('id', ollamaChatDocumentResetID, 'style', 'display: none;')))
+
+    # Render the final exchange's model response (after reset ID for updating)
+    markdownPrint(objectGet(exchange, 'model'))
+
+    # Render the regenerate and delete links
     if !generating:
         indent = stringFromCharCode(160, 160)
         elementModelRender( \
@@ -286,11 +262,46 @@ async function ollamaChatOnConversationTimeout(args, conversationResponse):
         )
     endif
 
-    # Set the chat timeout
+    # Set the conversation update timeout
     if generating:
         windowSetTimeout(systemPartial(ollamaChatOnConversationTimeout, args), ollamaChatTimeoutMs)
     endif
 endfunction
+
+
+# The Ollama Chat chat page
+async function ollamaChatOnConversationTimeout(args):
+    id = objectGet(args, 'id')
+
+    # Fetch the conversation
+    conversationResponse = systemFetch('getConversation?id=' + id)
+    conversationResponse = if(conversationResponse != null, jsonParse(conversationResponse))
+    if conversationResponse == null:
+        ollamaChatErrorPage('Unknown conversation ID')
+        return
+    endif
+    conversation = objectGet(conversationResponse, 'conversation')
+    generating = objectGet(conversationResponse, 'generating')
+    systemLog('*** ' + id + ', ' + generating)
+
+    # Did the model's reply just finish?
+    if !generating:
+        ollamaChatPage(args)
+        return
+    endif
+
+    # Render the model reply
+    exchanges = objectGet(conversation, 'exchanges')
+    markdownPrint(objectGet(arrayGet(exchanges, arrayLength(exchanges) - 1), 'model'))
+    documentSetReset(ollamaChatDocumentResetID)
+
+    # Set the conversation update timeout
+    windowSetTimeout(systemPartial(ollamaChatOnConversationTimeout, args), ollamaChatTimeoutMs)
+endfunction
+
+
+# The Ollama Chat prompt input ID
+ollamaChatPromptInputID = 'ollama-chat-prompt'
 
 
 # The Ollama Chat document reset ID
@@ -311,7 +322,7 @@ endfunction
 # Prompt on-enter/on-click event handler
 async function ollamaChatOnPrompt(id):
     # Get the prompt text
-    prompt = stringTrim(documentInputValue('ollama-chat-prompt'))
+    prompt = stringTrim(documentInputValue(ollamaChatPromptInputID))
     if prompt == '':
         return
     endif
