@@ -58,17 +58,17 @@ ollama-chat -m "Why is the sky blue?"
 
 ## Future
 
-- Prompts part 1
-  - Prompts config collection (name, title, prompt)
-  - Index links start new conversation with current model
-  - `-p` command-line argument starts prompt by name
+- Save conversation as Markdown file
+  - Save link on index/conversation page
 
 - Auto-title task on start conversation
   - Update conversation title API
   - Update title link on index/conversation page
 
-- Save conversation as Markdown file
-  - Save link on index/conversation page
+- Prompts part 1
+  - Prompts config collection (name, title, prompt)
+  - Index links start new conversation with current model
+  - `-p` command-line argument starts prompt by name
 
 - File / Directory / URL text inclusion in prompt
 
