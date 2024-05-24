@@ -17,14 +17,9 @@ import chisel
 import ollama
 import schema_markdown
 
-from .ollama import OllamaChat, config_conversation
 
-
+# The ollama-chat back-end API WSGI application class
 class OllamaChatApplication(chisel.Application):
-    """
-    The ollama-chat back-end API WSGI application class
-    """
-
     __slots__ = ('config', 'chats')
 
 
@@ -76,6 +71,7 @@ class OllamaChatApplication(chisel.Application):
             ))
 
 
+# The ollama-chat configuration context manager
 class ConfigManager:
     __slots__ = ('config_path', 'config_lock', 'config')
 
@@ -119,7 +115,76 @@ class ConfigManager:
             self.config_lock.release()
 
 
-# The Ollama Chat type model
+# The ollama chat manager class
+class OllamaChat():
+    __slots__ = ('app', 'conversation_id', 'stop')
+
+
+    def __init__(self, app, conversation_id):
+        self.app = app
+        self.conversation_id = conversation_id
+        self.stop = False
+
+        # Start the chat thread
+        chat_thread = threading.Thread(target=OllamaChat.chat_thread_fn, args=(self,))
+        chat_thread.daemon = True
+        chat_thread.start()
+
+
+    @staticmethod
+    def chat_thread_fn(chat):
+        try:
+            # Create the Ollama messages from the conversation
+            messages = []
+            with chat.app.config() as config:
+                conversation = config_conversation(config, chat.conversation_id)
+                model = conversation['model']
+                for exchange in conversation['exchanges']:
+                    messages.append({'role': 'user', 'content': exchange['user']})
+                    if exchange['model'] != '':
+                        messages.append({'role': 'assistant', 'content': exchange['model']})
+
+            # Start the chat
+            stream = ollama.chat(model=model, messages=messages, stream=True)
+
+            # Stream the chat response
+            for chunk in stream:
+                # If stopped, return immediately. The chat is deleted by the stopper.
+                if chat.stop:
+                    stream.close()
+                    break
+
+                # Update the conversation
+                with chat.app.config() as config:
+                    conversation = config_conversation(config, chat.conversation_id)
+                    exchange = conversation['exchanges'][-1]
+                    exchange['model'] += chunk['message']['content']
+
+        except Exception as exc: # pylint: disable=broad-exception-caught
+            # Communicate the error
+            with chat.app.config() as config:
+                conversation = config_conversation(config, chat.conversation_id)
+                exchange = conversation['exchanges'][-1]
+                exchange['model'] += f'\n**ERROR:** {exc}'
+
+        # Save the conversation
+        with chat.app.config(save=True):
+            # Delete the application's chat entry
+            if chat.conversation_id in chat.app.chats:
+                del chat.app.chats[chat.conversation_id]
+
+
+# Helper to find a conversation by ID
+def config_conversation(config, id_):
+    return next((conv for conv in config['conversations'] if conv['id'] == id_), None)
+
+
+#
+# The Ollama Chat API
+#
+
+
+# The Ollama Chat API type model
 with pkg_resources.open_text('ollama_chat.static', 'ollamaChat.smd') as cm_smd:
     OLLAMA_CHAT_TYPES = schema_markdown.parse_schema_markdown(cm_smd.read())
 
