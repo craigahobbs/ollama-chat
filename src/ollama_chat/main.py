@@ -6,12 +6,21 @@ ollama-chat command-line script main module
 """
 
 import argparse
+import os
 import threading
 import webbrowser
 
 import waitress
 
 from .app import OllamaChatApplication
+
+
+# The default config path environment variable
+CONFIG_ENVIRONMENT = 'OLLAMA_CHAT_CONFIG'
+
+
+# The default config file name
+CONFIG_FILENAME = 'ollama-chat.json'
 
 
 def main(argv=None):
@@ -40,6 +49,12 @@ def main(argv=None):
         webbrowser_thread = threading.Thread(target=webbrowser.open, args=(url,))
         webbrowser_thread.daemon = True
         webbrowser_thread.start()
+
+    # Determine the config path
+    if args.config is None:
+        args.config = os.getenv(CONFIG_ENVIRONMENT)
+        if args.config is None:
+            args.config = os.path.join(os.path.expanduser('~'), CONFIG_FILENAME)
 
     # Create the WSGI application
     wsgiapp = OllamaChatApplication(args.config)

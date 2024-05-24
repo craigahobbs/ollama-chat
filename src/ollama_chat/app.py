@@ -28,7 +28,7 @@ class OllamaChatApplication(chisel.Application):
     __slots__ = ('config', 'chats')
 
 
-    def __init__(self, config_path=None):
+    def __init__(self, config_path):
         super().__init__()
         self.config = ConfigManager(config_path)
         self.chats = {}
@@ -80,20 +80,12 @@ class ConfigManager:
     __slots__ = ('config_path', 'config_lock', 'config')
 
 
-    DEFAULT_NAME = 'ollama-chat.json'
-    DEFAULT_ENV = 'OLLAMA_CHAT_CONFIG'
     DEFAULT_MODEL = 'llama3:latest'
 
 
-    def __init__(self, config_path=None):
+    def __init__(self, config_path):
         self.config_path = config_path
         self.config_lock = threading.Lock()
-
-        # Determine the config path
-        if self.config_path is None:
-            self.config_path = os.getenv(ConfigManager.DEFAULT_ENV)
-            if self.config_path is None:
-                self.config_path = os.path.join(os.path.expanduser('~'), ConfigManager.DEFAULT_NAME)
 
         # Ensure the config file exists with default config if it doesn't exist
         if os.path.isfile(self.config_path):
