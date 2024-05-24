@@ -26,7 +26,7 @@ PYLINT_ARGS := $(PYLINT_ARGS) --disable=missing-class-docstring --disable=missin
 
 
 clean:
-	rm -rf Makefile.base pylintrc ollama-chat.json
+	rm -rf Makefile.base pylintrc
 
 
 .PHONY: run

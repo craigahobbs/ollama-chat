@@ -21,8 +21,8 @@ def main(argv=None):
 
     # Command line arguments
     parser = argparse.ArgumentParser(prog='ollama-chat')
-    parser.add_argument('-c', metavar='FILE', dest='config', default='ollama-chat.json',
-                        help='the configuration file (default is "ollama-chat.json")')
+    parser.add_argument('-c', metavar='FILE', dest='config',
+                        help='the configuration file (default is "$HOME/ollama-chat.json")')
     parser.add_argument('-p', metavar='N', dest='port', type=int, default=8080,
                         help='the application port (default is 8080)')
     parser.add_argument('-n', dest='no_browser', action='store_true',

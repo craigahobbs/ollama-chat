@@ -49,9 +49,6 @@ your conversations.
 
 ## Future
 
-- Default to $HOME/ollama-chat.json
-  - OLLAMA_CHAT_CONFIG environment variable override
-
 - `-m` command-line argument starts conversation with message
 
 - Prompts part 1
