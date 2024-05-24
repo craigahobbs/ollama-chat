@@ -383,10 +383,12 @@ function ollamaChatPageFloatingElements(id, generating):
         ), \
         'elem', arrayNew( \
             formsLinkElements('Back', argsURL(ollamaChatArguments, null, true)), \
-            objectNew('text', separator), \
-            formsLinkElements('Top', argsURL(ollamaChatArguments, null, false, '_top')), \
-            objectNew('text', separator), \
-            formsLinkElements('Bottom', argsURL(ollamaChatArguments, null, false, ollamaChatBottomID)) \
+            if(!generating, arrayNew( \
+                objectNew('text', separator), \
+                formsLinkElements('Top', argsURL(ollamaChatArguments, null, false, '_top')), \
+                objectNew('text', separator), \
+                formsLinkElements('Bottom', argsURL(ollamaChatArguments, null, false, ollamaChatBottomID)) \
+            )) \
         ) \
     ))
 
