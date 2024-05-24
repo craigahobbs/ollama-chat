@@ -11,7 +11,7 @@ that allows you to chat locally (and privately) with
 [open-source LLMs](https://ollama.com/library).
 
 
-# Installation
+## Installation
 
 To get up and running with Ollama Chat follows these steps:
 
@@ -24,7 +24,16 @@ To get up and running with Ollama Chat follows these steps:
    ~~~
 
 
-# Starting Ollama Chat
+### Updating
+
+To update Ollama Chat:
+
+~~~
+pip install -U ollama-chat
+~~~
+
+
+## Start Ollama Chat
 
 To start Ollama Chat, open a terminal prompt and run the Ollama Chat application:
 
@@ -38,20 +47,35 @@ By default, a configuration file, "ollama-chat.json", is created in the current 
 your conversations.
 
 
-## Future Features
+## Future
 
-In no particular order...
+- Default to $HOME/ollama-chat.json
+  - OLLAMA_CHAT_CONFIG environment variable override
+
+- `-m` command-line argument starts conversation with message
+
+- Prompts part 1
+  - Prompts config collection (name, title, prompt)
+  - Index links start new conversation with current model
+  - `-p` command-line argument starts prompt by name
+
+- Auto-title task on start conversation
+  - Update conversation title API
+  - Update title link on index/conversation page
 
 - Save conversation as Markdown file
-
-- Conversation title edit
+  - Save link on index/conversation page
 
 - File / Directory / URL text inclusion in prompt
 
+- Prompts part 2
+  - Prompt editor
+  - Create link on index page
+  - Delete links on index page
+  - Index links open template editor if any template markers (e.g. "{Name}")
+
 - Local model management (pull, rm)
   - [Models JSON](https://huggingface.co/api/models)
-
-- Prompt library
 
 
 ## Development
