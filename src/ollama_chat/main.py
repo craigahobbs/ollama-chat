@@ -10,6 +10,7 @@ import os
 import threading
 import webbrowser
 
+from schema_markdown import encode_query_string
 import waitress
 
 from .app import OllamaChatApplication
@@ -32,6 +33,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog='ollama-chat')
     parser.add_argument('-c', metavar='FILE', dest='config',
                         help='the configuration file (default is "$HOME/ollama-chat.json")')
+    parser.add_argument('-m', metavar='MESSAGE', dest='message',
+                        help='start a conversation')
     parser.add_argument('-p', metavar='N', dest='port', type=int, default=8080,
                         help='the application port (default is 8080)')
     parser.add_argument('-n', dest='no_browser', action='store_true',
@@ -43,6 +46,11 @@ def main(argv=None):
     # Construct the URL
     host = '127.0.0.1'
     url = f'http://{host}:{args.port}/'
+    if args.message is not None:
+        message = args.message.strip()
+        if message:
+            message_vars = encode_query_string({'var': {'vView': "'chat'", 'vMessage': repr(message)}})
+            url += f'#{message_vars}'
 
     # Launch the web browser on a thread so the WSGI application can startup first
     if not args.no_browser:

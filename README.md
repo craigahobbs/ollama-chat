@@ -47,9 +47,16 @@ By default, a configuration file, "ollama-chat.json", is created in the current 
 your conversations.
 
 
-## Future
+## Start Conversation from CLI
 
-- `-m` command-line argument starts conversation with message
+To start a conversation from the command line, use the `-m` argument:
+
+~~~
+ollama-chat -m "Why is the sky blue?"
+~~~
+
+
+## Future
 
 - Prompts part 1
   - Prompts config collection (name, title, prompt)

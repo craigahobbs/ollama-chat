@@ -26,7 +26,8 @@ ollamaChatArguments = argsValidate(arrayNew( \
     objectNew('name', 'view'), \
     objectNew('name', 'id'), \
     objectNew('name', 'action', 'explicit', true), \
-    objectNew('name', 'actionId', 'explicit', true) \
+    objectNew('name', 'actionId', 'explicit', true), \
+    objectNew('name', 'message', 'explicit', true) \
 ))
 
 
@@ -167,6 +168,13 @@ endfunction
 # The Ollama Chat chat page
 async function ollamaChatPage(args):
     id = objectGet(args, 'id')
+
+    # Message argument?
+    message = objectGet(args, 'message')
+    if message != null:
+        ollamaChatOnPrompt(null, message)
+        return
+    endif
 
     # Fetch the conversation
     title = ollamaChatTitle
@@ -321,9 +329,9 @@ endfunction
 
 
 # Prompt on-enter/on-click event handler
-async function ollamaChatOnPrompt(id):
+async function ollamaChatOnPrompt(id, message):
     # Get the prompt text
-    prompt = stringTrim(documentInputValue(ollamaChatPromptInputID))
+    prompt = if(message != null, message, stringTrim(documentInputValue(ollamaChatPromptInputID)))
     if prompt == '':
         return
     endif
