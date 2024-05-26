@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.6 (2024-05-26)
+
+- [ccd972f](https://github.com/craigahobbs/ollama-chat/commit/ccd972f) - fix ollama_chat.static subpackage for Python 3.9
+
 ## 0.9.5 (2024-05-26)
 
 - [93dc286](https://github.com/craigahobbs/ollama-chat/commit/93dc286) - fix package_data under Python 3.9 and before
