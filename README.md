@@ -43,8 +43,7 @@ ollama-chat
 
 A web browser is launched and opens the Ollama Chat web application.
 
-By default, a configuration file, "ollama-chat.json", is created in the current directory to save
-your conversations.
+By default, a configuration file, "ollama-chat.json", is created in the user's home directory.
 
 
 ## Start Conversation from CLI
