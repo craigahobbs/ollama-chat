@@ -59,13 +59,17 @@ def main(argv=None):
         webbrowser_thread.start()
 
     # Determine the config path
-    if args.config is None:
-        args.config = os.getenv(CONFIG_ENVIRONMENT)
-        if args.config is None:
-            args.config = os.path.join(os.path.expanduser('~'), CONFIG_FILENAME)
+    config_path = args.config or os.getenv(CONFIG_ENVIRONMENT)
+    if config_path is None:
+        if os.path.isfile(CONFIG_FILENAME):
+            config_path = CONFIG_FILENAME
+        else:
+            config_path = os.path.join(os.path.expanduser('~'), CONFIG_FILENAME)
+    elif config_path.endswith(os.sep) or os.path.isdir(config_path):
+        config_path = os.path.join(config_path, CONFIG_FILENAME)
 
     # Create the WSGI application
-    wsgiapp = OllamaChatApplication(args.config)
+    wsgiapp = OllamaChatApplication(config_path)
 
     # Wrap the WSGI application and the start_response function so we can log status and environ
     def wsgiapp_wrap(environ, start_response):
