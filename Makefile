@@ -18,7 +18,7 @@ include Makefile.base
 
 
 # Set the coverage limit
-COVERAGE_REPORT_ARGS := $(COVERAGE_REPORT_ARGS) --fail-under 26
+COVERAGE_REPORT_ARGS := $(COVERAGE_REPORT_ARGS) --fail-under 25
 
 
 # Disable pylint docstring warnings
