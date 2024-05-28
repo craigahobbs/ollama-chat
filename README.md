@@ -64,10 +64,10 @@ ollama-chat -m "Why is the sky blue?"
 
 ## Future
 
-- Multi-line text input
-
 - Save conversation as Markdown file
   - Save link on index/conversation page
+
+- Markdown text view on conversation page
 
 - Auto-title task on start conversation
   - Update conversation title API
@@ -79,6 +79,8 @@ ollama-chat -m "Why is the sky blue?"
   - `-t` command-line argument starts prompt by name
 
 - File / Directory / URL text inclusion in prompt
+
+- Multi-line text input
 
 - Prompts part 2
   - Prompt editor
