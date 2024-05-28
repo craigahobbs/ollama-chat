@@ -2,22 +2,6 @@
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
 
-group "Ollama Chat JSON"
-
-
-# The Ollama Chat config file format
-struct OllamaChatConfig
-
-    # The current model name
-    optional string model
-
-    # The saved conversations
-    Conversation[] conversations
-
-    # If true, don't save the config file
-    optional bool noSave
-
-
 # The user-model conversation info
 struct ConversationInfo
 
@@ -29,6 +13,13 @@ struct ConversationInfo
 
     # The conversation title
     string title
+
+
+# Conversation information struct with generating state
+struct ConversationInfoEx (ConversationInfo)
+
+    # If True, the latest exchange is actively generating
+    bool generating
 
 
 # A user-model conversation
@@ -48,6 +39,32 @@ struct ConversationExchange
     string model
 
 
+# Model information struct
+struct ModelInfo
+
+    # The current model name
+    string model
+
+    # The model size, in bytes
+    int size
+
+
+group "Ollama Chat JSON"
+
+
+# The Ollama Chat config file format
+struct OllamaChatConfig
+
+    # The current model name
+    optional string model
+
+    # The saved conversations
+    Conversation[] conversations
+
+    # If true, don't save the config file
+    optional bool noSave
+
+
 group "Ollama Chat API"
 
 
@@ -59,16 +76,6 @@ action getModels
     output
         # The local models
         ModelInfo[] models
-
-
-# Model information struct
-struct ModelInfo
-
-    # The current model name
-    string model
-
-    # The model size, in bytes
-    int size
 
 
 # Get the current model name
@@ -99,13 +106,6 @@ action getConversations
     output
         # The conversations
         ConversationInfoEx[] conversations
-
-
-# Conversation information struct with generating state
-struct ConversationInfoEx (ConversationInfo)
-
-    # If True, the latest exchange is actively generating
-    bool generating
 
 
 # Start a conversation
