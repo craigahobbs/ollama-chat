@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.7 (2024-05-28)
+
+- [c386dc1](https://github.com/craigahobbs/ollama-chat/commit/c386dc1) - improve conversation page floating control styling
+
+- [f8701c0](https://github.com/craigahobbs/ollama-chat/commit/f8701c0) - add file format and api documentation
+
 ## 0.9.6 (2024-05-26)
 
 - [ccd972f](https://github.com/craigahobbs/ollama-chat/commit/ccd972f) - fix ollama_chat.static subpackage for Python 3.9
