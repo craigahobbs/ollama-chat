@@ -369,8 +369,20 @@ endfunction
 function ollamaChatPageFloatingElements(id, generating):
     elements = arrayNew()
 
+    # Compute spacing
+    fontSizePx = documentFontSize()
+    topSpacePx = mathFloor(1.5 * fontSizePx)
+    borderRadiusPx = mathFloor(0.5 * fontSizePx)
+    menuPadPx = mathFloor(0.75 * fontSizePx)
+    inputPadPx = fontSizePx
+    textPadPx = mathFloor(0.5 * fontSizePx)
+    buttonLeftRightPx = mathFloor(0.5 * fontSizePx)
+    buttonTopBottomPx = fontSizePx
+    topBottomPx = fontSizePx
+    leftRightPx = 2 * fontSizePx
+
     # The top space
-    arrayPush(elements, objectNew('html', 'div', 'attr', objectNew('style', 'height: 20px')))
+    arrayPush(elements, objectNew('html', 'div', 'attr', objectNew('style', 'height: ' + topSpacePx + 'px')))
 
     # The menu controls
     separator = stringFromCharCode(160) + '|' + stringFromCharCode(160)
@@ -380,13 +392,13 @@ function ollamaChatPageFloatingElements(id, generating):
             'style', arrayJoin(arrayNew( \
                 'align-items: left', \
                 'background-color: #e0e0e0', \
-                'border-radius: 5px', \
+                'border-radius: ' + borderRadiusPx + 'px', \
                 'color: black', \
                 'display: flex', \
-                'left: 10px', \
-                'padding: 10px', \
+                'left: ' + topBottomPx + 'px', \
+                'padding: ' + menuPadPx + 'px', \
                 'position: fixed', \
-                'top: 10px' \
+                'top: ' + topBottomPx + 'px' \
             ), '; ') \
         ), \
         'elem', arrayNew( \
@@ -407,13 +419,13 @@ function ollamaChatPageFloatingElements(id, generating):
             'style', arrayJoin(arrayNew( \
                 'align-items: center', \
                 'background-color: #c0c0c0', \
-                'border-radius: 10px', \
-                'bottom: 30px', \
+                'border-radius: ' + borderRadiusPx + 'px', \
+                'bottom: ' + topBottomPx + 'px', \
                 'display: flex', \
-                'left: 50px', \
-                'padding: 15px', \
+                'left: ' + leftRightPx + 'px', \
+                'padding: ' + inputPadPx + 'px', \
                 'position: fixed', \
-                'right: 50px' \
+                'right: ' + leftRightPx + 'px' \
             ), '; ') \
         ), \
         'elem', arrayNew( \
@@ -428,9 +440,10 @@ function ollamaChatPageFloatingElements(id, generating):
                         'border: none', \
                         'flex: 1', \
                         'font-size: inherit', \
-                        'margin-right: 10px', \
+                        'margin-right: ' + textPadPx + 'px', \
+                        'min-width: 0', \
                         'outline: none', \
-                        'padding: 10px' \
+                        'padding: ' + textPadPx + 'px' \
                     ), '; ') \
                 ), \
                 'callback', objectNew('keyup', systemPartial(formsTextOnKeyup, systemPartial(ollamaChatOnPrompt, id))) \
@@ -440,11 +453,11 @@ function ollamaChatPageFloatingElements(id, generating):
                 'attr', objectNew( \
                     'style', arrayJoin(arrayNew( \
                         'background-color: #4dff4d', \
-                        'border-radius: 4px', \
+                        'border-radius: ' + borderRadiusPx + 'px', \
                         'border: none', \
                         'color: black', \
                         'font-size: inherit', \
-                        'padding: 10px 20px' \
+                        'padding: ' + buttonLeftRightPx + 'px ' + buttonTopBottomPx + 'px' \
                     ), '; ') \
                 ), \
                 'elem', objectNew('text', 'Go'), \
@@ -455,11 +468,11 @@ function ollamaChatPageFloatingElements(id, generating):
                 'attr', objectNew( \
                     'style', arrayJoin(arrayNew( \
                         'background-color: #ff4d4d', \
-                        'border-radius: 4px', \
+                        'border-radius: ' + borderRadiusPx + 'px', \
                         'border: none', \
                         'color: white', \
                         'font-size: inherit', \
-                        'padding: 10px 20px' \
+                        'padding: ' + buttonLeftRightPx + 'px ' + buttonTopBottomPx + 'px' \
                     ), '; ') \
                 ), \
                 'elem', objectNew('text', 'Stop'), \
@@ -472,12 +485,16 @@ function ollamaChatPageFloatingElements(id, generating):
 endfunction
 
 
-# The Ollama chat pages floating controls bottom-of-the-window space div element model
+# The Ollama Chat page's bottom-of-the-window space div element model
 function ollamaChatPageFloatingBottomElements():
     elements = arrayNew()
 
+    # Compute spacing
+    fontSizePx = documentFontSize()
+    bottomSpacePx = mathFloor(4.5 * fontSizePx)
+
     # Add the bottom space
-    arrayPush(elements, objectNew('html', 'div', 'attr', objectNew('style', 'height: 90px')))
+    arrayPush(elements, objectNew('html', 'div', 'attr', objectNew('style', 'height: ' + bottomSpacePx + 'px')))
 
     # Add the bottom document ID
     bottomElementId = stringSlice(argsURL(ollamaChatArguments, null, false, ollamaChatBottomID), 1)
