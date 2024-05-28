@@ -13,6 +13,10 @@ $(eval $(call WGET, https://raw.githubusercontent.com/craigahobbs/python-build/m
 $(eval $(call WGET, https://raw.githubusercontent.com/craigahobbs/python-build/main/pylintrc))
 
 
+# Set gh-pages source
+GHPAGES_SRC := build/doc/
+
+
 # Include python-build
 include Makefile.base
 
@@ -27,6 +31,15 @@ PYLINT_ARGS := $(PYLINT_ARGS) --disable=missing-class-docstring --disable=missin
 
 clean:
 	rm -rf Makefile.base pylintrc
+
+
+doc:
+	mkdir -p $(GHPAGES_SRC)
+	cp -R \
+		README.md \
+		static/* \
+		src/ollama_chat/static/ollamaChat.smd \
+		$(GHPAGES_SRC)
 
 
 .PHONY: run

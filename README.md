@@ -55,6 +55,13 @@ ollama-chat -m "Why is the sky blue?"
 ~~~
 
 
+## File Format and API Documentation
+
+[Ollama Chat File Format](https://craigahobbs.github.io/api.html/#url=api.html#var.vName='OllamaChatConfig'&_top)
+
+[Ollama Chat API](https://craigahobbs.github.io/api.html/#url=api.html)
+
+
 ## Future
 
 - Multi-line text input
