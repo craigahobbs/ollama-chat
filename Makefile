@@ -34,6 +34,7 @@ clean:
 
 
 doc:
+	rm -rf $(GHPAGES_SRC)
 	mkdir -p $(GHPAGES_SRC)
 	cp -R \
 		README.md \
