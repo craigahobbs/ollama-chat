@@ -1,0 +1,214 @@
+# Licensed under the MIT License
+# https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
+
+
+group "Ollama Chat JSON"
+
+
+# The Ollama Chat config file format
+struct OllamaChatConfig
+
+    # The current model name
+    optional string model
+
+    # The saved conversations
+    Conversation[] conversations
+
+    # If true, don't save the config file
+    optional bool noSave
+
+
+# The user-model conversation info
+struct ConversationInfo
+
+    # The conversation identifier
+    string id
+
+    # The model name
+    string model
+
+    # The conversation title
+    string title
+
+
+# A user-model conversation
+struct Conversation (ConversationInfo)
+
+    # The conversation's exchanges
+    ConversationExchange[len > 0] exchanges
+
+
+# A conversation user-model exchange
+struct ConversationExchange
+
+    # The user prompt
+    string(len > 0) user
+
+    # The model response
+    string model
+
+
+group "Ollama Chat API"
+
+
+# Get the current model name
+action getModels
+    urls
+        GET
+
+    output
+        # The local models
+        ModelInfo[] models
+
+
+# Model information struct
+struct ModelInfo
+
+    # The current model name
+    string model
+
+    # The model size, in bytes
+    int size
+
+
+# Get the current model name
+action getModel
+    urls
+        GET
+
+    output
+        # The current model name
+        string model
+
+
+# Set the current model name
+action setModel
+    urls
+        POST
+
+    input
+        # The model name
+        string model
+
+
+# Get the list of conversations
+action getConversations
+    urls
+        GET
+
+    output
+        # The conversations
+        ConversationInfoEx[] conversations
+
+
+# Conversation information struct with generating state
+struct ConversationInfoEx (ConversationInfo)
+
+    # If True, the latest exchange is actively generating
+    bool generating
+
+
+# Start a conversation
+action startConversation
+    urls
+        POST
+
+    input
+        # The user prompt
+        string(len > 0) user
+
+    output
+        # The new conversation ID
+        string id
+
+
+# Stop a generating conversation
+action stopConversation
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+    errors
+        UnknownConversationID
+
+
+# Get a conversation
+action getConversation
+    urls
+        GET
+
+    query
+        # The conversation identifier
+        string id
+
+    output
+        # The conversation
+        Conversation conversation
+
+        # If True, the latest exchange is actively generating
+        bool generating
+
+    errors
+        UnknownConversationID
+
+
+# Reply to a conversation
+action replyConversation
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+        # The user reply prompt
+        string(len > 0) user
+
+    errors
+        UnknownConversationID
+        ConversationBusy
+
+
+# Delete a conversation
+action deleteConversation
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+    errors
+        UnknownConversationID
+        ConversationBusy
+
+
+# Delete the most recent exchange of a conversation
+action deleteConversationExchange
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+    errors
+        UnknownConversationID
+        ConversationBusy
+
+
+# Regnerate the model's response of the most recent exchange of a conversation
+action regenerateConversationExchange
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+    errors
+        UnknownConversationID
+        ConversationBusy
