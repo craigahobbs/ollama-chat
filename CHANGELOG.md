@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.8 (2024-05-29)
+
+- [dafc1ab](https://github.com/craigahobbs/ollama-chat/commit/dafc1ab) - fix conversation timeout issue
+
+- [d79a030](https://github.com/craigahobbs/ollama-chat/commit/d79a030) - fix conversation page bugs
+
 ## 0.9.7 (2024-05-28)
 
 - [c386dc1](https://github.com/craigahobbs/ollama-chat/commit/c386dc1) - improve conversation page floating control styling
