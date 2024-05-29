@@ -294,6 +294,7 @@ async function ollamaChatOnConversationTimeout(args):
     # Done generating? Re-render the page to update the floating controls
     if !generating:
         ollamaChatConversationPage(args)
+        return
     endif
 
     # Render the page bottom
