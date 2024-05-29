@@ -12,7 +12,7 @@ async function ollamaChatMain():
 
     # Render the chat page
     if view == 'chat':
-        ollamaChatPage(args)
+        ollamaChatConversationPage(args)
         return
     endif
 
@@ -33,10 +33,6 @@ ollamaChatArguments = argsValidate(arrayNew( \
 
 # The application title
 ollamaChatTitle = 'Ollama Chat'
-
-
-# The chat refresh period, in milliseconds
-ollamaChatTimeoutMs = 500
 
 
 # The Ollama Chat error page
@@ -165,8 +161,8 @@ async function ollamaChatOnDelete(conversationId):
 endfunction
 
 
-# The Ollama Chat chat page
-async function ollamaChatPage(args):
+# The Ollama Chat conversation page
+async function ollamaChatConversationPage(args):
     id = objectGet(args, 'id')
 
     # Message argument?
@@ -238,8 +234,18 @@ async function ollamaChatPage(args):
     # Render the document reset ID
     elementModelRender(objectNew('html', 'div', 'attr', objectNew('id', ollamaChatDocumentResetID, 'style', 'display: none;')))
 
-    # Render the final exchange's model response (after reset ID for updating)
-    markdownPrint(objectGet(exchange, 'model'))
+    # Render the bottom of the conversation page
+    ollamaChatConversationPageBottom(args, conversation, generating)
+endfunction
+
+
+# Helper to render the bottom of Ollama Chat conversation page
+async function ollamaChatConversationPageBottom(args, conversation, generating):
+    id = objectGet(args, 'id')
+
+    # Render the model reply
+    exchanges = objectGet(conversation, 'exchanges')
+    markdownPrint(objectGet(arrayGet(exchanges, arrayLength(exchanges) - 1), 'model'))
 
     # Render the regenerate and delete links
     if !generating:
@@ -256,7 +262,13 @@ async function ollamaChatPage(args):
     endif
 
     # Render the bottom space
-    elementModelRender(ollamaChatPageFloatingBottomElements())
+    fontSizePx = documentFontSize()
+    bottomSpacePx = mathFloor(4.5 * fontSizePx)
+    bottomElementId = stringSlice(argsURL(ollamaChatArguments, null, false, ollamaChatBottomID), 1)
+    elementModelRender(arrayNew( \
+        objectNew('html', 'div', 'attr', objectNew('style', 'height: ' + bottomSpacePx + 'px')), \
+        objectNew('html', 'div', 'attr', objectNew('id', bottomElementId)) \
+    ))
 
     # Set the conversation update timeout
     if generating:
@@ -279,30 +291,19 @@ async function ollamaChatOnConversationTimeout(args):
     conversation = objectGet(conversationResponse, 'conversation')
     generating = objectGet(conversationResponse, 'generating')
 
-    # Did the model's reply just finish?
+    # Done generating? Re-render the page to update the floating controls
     if !generating:
-        # Render the full page
-        ollamaChatPage(args)
-
-        # Scroll to the bottom of the conversation
-        windowSetLocation(argsURL(ollamaChatArguments, null, false, ollamaChatBottomID))
-        return
+        ollamaChatConversationPage(args)
     endif
 
-    # Render the model reply
-    exchanges = objectGet(conversation, 'exchanges')
-    markdownPrint(objectGet(arrayGet(exchanges, arrayLength(exchanges) - 1), 'model'))
+    # Render the page bottom
     documentSetReset(ollamaChatDocumentResetID)
-
-    # Render the bottom space
-    elementModelRender(ollamaChatPageFloatingBottomElements())
-
-    # Scroll to the bottom of the conversation
-    windowSetLocation(argsURL(ollamaChatArguments, null, false, ollamaChatBottomID))
-
-    # Set the conversation update timeout
-    windowSetTimeout(systemPartial(ollamaChatOnConversationTimeout, args), ollamaChatTimeoutMs)
+    ollamaChatConversationPageBottom(args, conversation, generating)
 endfunction
+
+
+# The chat refresh period, in milliseconds
+ollamaChatTimeoutMs = 500
 
 
 # The Ollama Chat prompt input ID
@@ -354,14 +355,10 @@ async function ollamaChatOnPrompt(id, message):
 
     # Reply to that chat
     replyRequest = jsonStringify(objectNew('id', id, 'user', prompt))
-    replyResponse = systemFetch(objectNew('url', 'replyConversation', 'body', replyRequest))
-    replyResponse = if(replyResponse != null, jsonParse(replyResponse))
-    if replyResponse == null:
-        return
-    endif
+    systemFetch(objectNew('url', 'replyConversation', 'body', replyRequest))
 
-    # Set the chat timeout
-    windowSetTimeout(ollamaChatMain, ollamaChatTimeoutMs)
+    # Render the conversation page
+    ollamaChatMain()
 endfunction
 
 
@@ -446,7 +443,7 @@ function ollamaChatPageFloatingElements(id, generating):
                         'padding: ' + textPadPx + 'px' \
                     ), '; ') \
                 ), \
-                'callback', objectNew('keyup', systemPartial(formsTextOnKeyup, systemPartial(ollamaChatOnPrompt, id))) \
+                'callback', if(!generating, objectNew('keyup', systemPartial(formsTextOnKeyup, systemPartial(ollamaChatOnPrompt, id)))) \
             ), \
             if(!generating, objectNew( \
                 'html', 'button', \
@@ -480,25 +477,6 @@ function ollamaChatPageFloatingElements(id, generating):
             )) \
         ) \
     ))
-
-    return elements
-endfunction
-
-
-# The Ollama Chat page's bottom-of-the-window space div element model
-function ollamaChatPageFloatingBottomElements():
-    elements = arrayNew()
-
-    # Compute spacing
-    fontSizePx = documentFontSize()
-    bottomSpacePx = mathFloor(4.5 * fontSizePx)
-
-    # Add the bottom space
-    arrayPush(elements, objectNew('html', 'div', 'attr', objectNew('style', 'height: ' + bottomSpacePx + 'px')))
-
-    # Add the bottom document ID
-    bottomElementId = stringSlice(argsURL(ollamaChatArguments, null, false, ollamaChatBottomID), 1)
-    arrayPush(elements, objectNew('html', 'div', 'attr', objectNew('id', bottomElementId)))
 
     return elements
 endfunction
