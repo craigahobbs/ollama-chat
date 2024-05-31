@@ -64,8 +64,6 @@ ollama-chat -m "Why is the sky blue?"
 
 ## Future
 
-- Multi-line text input
-
 - Save conversation as Markdown file
   - Save link on index/conversation page
 
