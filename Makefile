@@ -17,6 +17,10 @@ $(eval $(call WGET, https://raw.githubusercontent.com/craigahobbs/python-build/m
 GHPAGES_SRC := build/doc/
 
 
+# Development dependencies
+TESTS_REQUIRE := bare-script
+
+
 # Include python-build
 include Makefile.base
 
@@ -27,6 +31,10 @@ COVERAGE_REPORT_ARGS := $(COVERAGE_REPORT_ARGS) --fail-under 25
 
 # Disable pylint docstring warnings
 PYLINT_ARGS := $(PYLINT_ARGS) --disable=missing-class-docstring --disable=missing-function-docstring --disable=missing-module-docstring
+
+
+help:
+	@echo "            [run|test-app]"
 
 
 clean:
@@ -41,6 +49,12 @@ doc:
 		static/* \
 		src/ollama_chat/static/ollamaChat.smd \
 		$(GHPAGES_SRC)
+
+
+.PHONY: test-app
+commit: test-app
+test-app: $(DEFAULT_VENV_BUILD)
+	$(DEFAULT_VENV_BIN)/bare -s src/ollama_chat/static/*.bare
 
 
 .PHONY: run
