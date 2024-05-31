@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.9 (2024-05-31)
+
+- [003ee5c](https://github.com/craigahobbs/ollama-chat/commit/003ee5c) - add multiline conversation text prompt mode
+
 ## 0.9.8 (2024-05-29)
 
 - [dafc1ab](https://github.com/craigahobbs/ollama-chat/commit/dafc1ab) - fix conversation timeout issue
