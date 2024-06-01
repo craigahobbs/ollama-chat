@@ -191,13 +191,14 @@ with pkg_resources.open_text('ollama_chat.static', 'ollamaChat.smd') as cm_smd:
 
 @chisel.action(name='getModels', types=OLLAMA_CHAT_TYPES)
 def get_models(unused_ctx, unused_req):
+    models = ollama.list()['models'] or ()
     return {
         'models': [
             {
                 'model': model['name'],
                 'size': model['size']
             }
-            for model in ollama.list()['models']
+            for model in models
         ]
     }
 

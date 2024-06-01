@@ -79,20 +79,22 @@ async function ollamaChatIndexPage(args):
     indent = stringFromCharCode(160, 160)
     markdownPrint('**Model:** ' + objectGet(modelResponse, 'model') + indent)
     if action == 'select':
-        markdownPrint( \
-            argsLink(ollamaChatArguments, 'Cancel', objectNew('action', null)), \
-            '', \
-            indent + indent + '**Select a model:**' \
-        )
-        for modelInfo in objectGet(modelsResponse, 'models'):
-            model = objectGet(modelInfo, 'model')
-            elementModelRender( \
-                objectNew('html', 'p', 'elem', arrayNew( \
-                    objectNew('text', indent + indent), \
-                    formsLinkButtonElements(model, systemPartial(ollamaChatOnSelect, model)) \
-                )) \
-            )
-        endfor
+        markdownPrint(argsLink(ollamaChatArguments, 'Cancel', objectNew('action', null)), '')
+        modelInfos = objectGet(modelsResponse, 'models')
+        if !modelInfos:
+            markdownPrint(indent + indent + '**Error:** No local models - download with `ollama pull <model>`')
+        else:
+            markdownPrint(indent + indent + '**Select a model:**')
+            for modelInfo in modelInfos:
+                model = objectGet(modelInfo, 'model')
+                elementModelRender( \
+                    objectNew('html', 'p', 'elem', arrayNew( \
+                        objectNew('text', indent + indent), \
+                        formsLinkButtonElements(model, systemPartial(ollamaChatOnSelect, model)) \
+                    )) \
+                )
+            endfor
+        endif
     else:
         # Render the start new chat link
         markdownPrint( \
