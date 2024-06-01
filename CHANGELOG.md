@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.10 (2024-05-31)
+
+- [e560dc5](https://github.com/craigahobbs/ollama-chat/commit/e560dc5) - handle no-model case on index page
+
 ## 0.9.9 (2024-05-31)
 
 - [003ee5c](https://github.com/craigahobbs/ollama-chat/commit/003ee5c) - add multiline conversation text prompt mode
