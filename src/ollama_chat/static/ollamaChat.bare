@@ -207,7 +207,7 @@ async function ollamaChatConversationPage(args):
     # Render the chat title
     documentSetTitle(title)
     markdownPrint( \
-        '# ' + title, \
+        '# ' + markdownEscape(title), \
         '', \
         '**Model:** ' + markdownEscape(model) \
     )

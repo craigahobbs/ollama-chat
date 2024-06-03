@@ -10,6 +10,7 @@ import copy
 import json
 import os
 import importlib.resources as pkg_resources
+import re
 import threading
 import uuid
 
@@ -235,11 +236,10 @@ def start_conversation(ctx, req):
         # Compute the conversation title
         user_prompt = req['user']
         max_title_len = 50
-        if len(user_prompt) <= max_title_len:
-            title = user_prompt
-        else:
+        title = re.sub(r'\s+', ' ', user_prompt).strip()
+        if len(title) > max_title_len:
             title_suffix = '...'
-            title = f'{user_prompt[:max_title_len - len(title_suffix)]}{title_suffix}'
+            title = f'{title[:max_title_len - len(title_suffix)]}{title_suffix}'
 
         # Create the new conversation object
         id_ = str(uuid.uuid4())
