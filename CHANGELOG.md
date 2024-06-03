@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.11 (2024-06-03)
+
+- [5208001](https://github.com/craigahobbs/ollama-chat/commit/5208001) - improve conversation title generation and rendering
+
 ## 0.9.10 (2024-05-31)
 
 - [e560dc5](https://github.com/craigahobbs/ollama-chat/commit/e560dc5) - handle no-model case on index page
