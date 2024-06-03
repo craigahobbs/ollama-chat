@@ -57,7 +57,7 @@ async function ollamaChatIndexPage(args):
     # Render the title
     documentSetTitle(ollamaChatTitle)
     markdownPrint( \
-        '# ' + ollamaChatTitle, \
+        '# ' + markdownEscape(ollamaChatTitle), \
         '' \
     )
 
@@ -468,7 +468,7 @@ function ollamaChatPageFloatingElements(args, generating):
             objectNew( \
                 'html', if(multiline, 'textarea', 'input'), \
                 'attr', objectNew( \
-                    'type', if(!multiline, 'text'), \
+                    'autocomplete', 'off', \
                     'id', ollamaChatPromptInputID, \
                     'placeholder', 'Type your message...', \
                     'rows', if(multiline, 8), \
@@ -485,6 +485,7 @@ function ollamaChatPageFloatingElements(args, generating):
                         'padding: ' + numberToFixed(textPadPx, ollamaChatPrecision) + 'px', \
                         'resize: none' \
                     ), '; '), \
+                    'type', if(!multiline, 'text'), \
                     'value', if(!multiline, prompt) \
                 ), \
                 'elem', if(multiline && prompt != null, objectNew('text', prompt)), \
