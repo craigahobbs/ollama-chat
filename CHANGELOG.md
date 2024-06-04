@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.12 (2024-06-04)
+
+- [14cc468](https://github.com/craigahobbs/ollama-chat/commit/14cc468)
+  - download conversation as a Markdown file
+  - view conversation prompts/responses as Markdown text
+
+- [6c4b9ee](https://github.com/craigahobbs/ollama-chat/commit/6c4b9ee) - disable autocomplete for conversation text input
+
 ## 0.9.11 (2024-06-03)
 
 - [5208001](https://github.com/craigahobbs/ollama-chat/commit/5208001) - improve conversation title generation and rendering
