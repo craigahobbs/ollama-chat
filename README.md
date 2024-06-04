@@ -64,11 +64,6 @@ ollama-chat -m "Why is the sky blue?"
 
 ## Future
 
-- Save conversation as Markdown file
-  - Save link on index/conversation page
-
-- Markdown text view on conversation page
-
 - Auto-title task on start conversation
   - Update conversation title API
   - Update title link on index/conversation page
