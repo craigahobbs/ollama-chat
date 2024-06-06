@@ -439,7 +439,10 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
             formsLinkElements('Bottom', argsURL(ollamaChatArguments, null, false, ollamaChatBottomID)), \
             if(!generating, arrayNew( \
                 objectNew('text', separator), \
-                formsLinkElements(if(action != 'menu', '>>', '<<'), argsURL(ollamaChatArguments, objectNew('action', if(action != 'menu', 'menu')))), \
+                formsLinkElements( \
+                    if(action != 'menu', '>>', '<<'), \
+                    argsURL(ollamaChatArguments, objectNew('action', if(action != 'menu', 'menu'))) \
+                ), \
                 if(action == 'menu', arrayNew( \
                     objectNew('text', separator), \
                     formsLinkElements(if(!textView, 'Text', 'Markdown'), argsURL(ollamaChatArguments, objectNew('text', !textView))), \
