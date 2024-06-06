@@ -42,7 +42,7 @@ function ollamaChatErrorPage(message):
     markdownPrint( \
         argsLink(ollamaChatArguments, 'Back', null, true), \
         '', \
-        '# ' + ollamaChatTitle, \
+        '# ' + markdownEscape(ollamaChatTitle), \
         '', \
         '**ERROR:** ' + message \
     )
@@ -197,11 +197,7 @@ async function ollamaChatConversationPage(args):
     ixExchangeLast = arrayLength(exchanges) - 1
     for exchange, ixExchange in exchanges:
         elementModelRender(objectNew('html', 'h2', 'elem', objectNew('text', 'User:')))
-        if textView:
-            elementModelRender(objectNew('html', 'pre', 'elem', objectNew('text', objectGet(exchange, 'user'))))
-        else:
-            markdownPrint('', objectGet(exchange, 'user'))
-        endif
+        markdownPrint('', markdownEscape(objectGet(exchange, 'user')))
         elementModelRender(objectNew('html', 'h2', 'elem', objectNew('text', 'Model:')))
         if ixExchange != ixExchangeLast:
             if textView:
@@ -402,17 +398,21 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
         'attr', objectNew('style', 'height: ' + numberToFixed(topSpacePx, ollamaChatPrecision) + 'px')) \
     )
 
-    # Generate the download URL
-    markdownParts = arrayNew('# ' + markdownEscape(title), '', '**Model:** ' + markdownEscape(objectGet(conversation, 'model')))
-    for exchange in objectGet(conversation, 'exchanges'):
-        arrayPush(markdownParts, '', '## User:', '', objectGet(exchange, 'user'), '', '## Model:', '', objectGet(exchange, 'model'))
-    endfor
-    markdownText = arrayJoin(markdownParts, stringFromCharCode(10))
-    markdownDownloadURL = urlObjectCreate(markdownText, 'text/markdown')
-    markdownFilename = regexReplace(regexNew('[\'"]'), stringLower(title), '')
-    markdownFilename = regexReplace(regexNew('[^a-z]+'), markdownFilename, '-')
-    markdownFilename = regexReplace(regexNew('^-'), markdownFilename, '')
-    markdownFilename = regexReplace(regexNew('-$'), markdownFilename, '') + '.md'
+    # Generate the download URL, if necessary
+    markdownDownloadURL = null
+    markdownFilename = null
+    if !generating && action == 'menu':
+        markdownParts = arrayNew('# ' + markdownEscape(title), '', '**Model:** ' + markdownEscape(objectGet(conversation, 'model')))
+        for exchange in objectGet(conversation, 'exchanges'):
+            arrayPush(markdownParts, '', '## User:', '', objectGet(exchange, 'user'), '', '## Model:', '', objectGet(exchange, 'model'))
+        endfor
+        markdownText = arrayJoin(markdownParts, stringFromCharCode(10))
+        markdownDownloadURL = urlObjectCreate(markdownText, 'text/markdown')
+        markdownFilename = regexReplace(regexNew('[\'"]'), stringLower(title), '')
+        markdownFilename = regexReplace(regexNew('[^a-z]+'), markdownFilename, '-')
+        markdownFilename = regexReplace(regexNew('^-'), markdownFilename, '')
+        markdownFilename = regexReplace(regexNew('-$'), markdownFilename, '') + '.md'
+    endif
 
     # The menu controls
     separator = stringFromCharCode(160) + '|' + stringFromCharCode(160)
@@ -439,8 +439,8 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
             formsLinkElements('Bottom', argsURL(ollamaChatArguments, null, false, ollamaChatBottomID)), \
             if(!generating, arrayNew( \
                 objectNew('text', separator), \
-                formsLinkElements(if(action == null, '>>', '<<'), argsURL(ollamaChatArguments, objectNew('action', if(action == null, 'menu')))), \
-                if(action != null, arrayNew( \
+                formsLinkElements(if(action != 'menu', '>>', '<<'), argsURL(ollamaChatArguments, objectNew('action', if(action != 'menu', 'menu')))), \
+                if(action == 'menu', arrayNew( \
                     objectNew('text', separator), \
                     formsLinkElements(if(!textView, 'Text', 'Markdown'), argsURL(ollamaChatArguments, objectNew('text', !textView))), \
                     objectNew('text', separator), \
