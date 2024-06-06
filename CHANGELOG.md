@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.14 (2024-06-06)
+
+- [76ee0ab](https://github.com/craigahobbs/ollama-chat/commit/76ee0ab) - markdown-escape user prompts
+
 ## 0.9.13 (2024-06-04)
 
 - [1e28ed6](https://github.com/craigahobbs/ollama-chat/commit/1e28ed6) - avoid invalid response markdown contamination
