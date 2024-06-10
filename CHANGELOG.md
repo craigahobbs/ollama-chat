@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.16 (2024-06-10)
+
+- [53bcbdd](https://github.com/craigahobbs/ollama-chat/commit/53bcbdd) - save prompt across conversastion commands
+
 ## 0.9.15 (2024-06-10)
 
 - [09c3cc8](https://github.com/craigahobbs/ollama-chat/commit/09c3cc8) - render user prompt using pre-wrap
