@@ -196,9 +196,15 @@ async function ollamaChatConversationPage(args):
     exchanges = objectGet(conversation, 'exchanges')
     ixExchangeLast = arrayLength(exchanges) - 1
     for exchange, ixExchange in exchanges:
-        elementModelRender(objectNew('html', 'h2', 'elem', objectNew('text', 'User:')))
-        markdownPrint('', markdownEscape(objectGet(exchange, 'user')))
-        elementModelRender(objectNew('html', 'h2', 'elem', objectNew('text', 'Model:')))
+        elementModelRender(arrayNew( \
+            objectNew('html', 'h2', 'elem', objectNew('text', 'User:')), \
+            objectNew( \
+                'html', 'p', \
+                'attr', objectNew('style', 'white-space: pre-wrap;'), \
+                'elem', objectNew('text', objectGet(exchange, 'user')) \
+            ), \
+            objectNew('html', 'h2', 'elem', objectNew('text', 'Model:')) \
+        ))
         if ixExchange != ixExchangeLast:
             if textView:
                 elementModelRender(objectNew('html', 'pre', 'elem', objectNew('text', objectGet(exchange, 'model'))))
