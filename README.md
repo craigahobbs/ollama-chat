@@ -5,10 +5,22 @@
 [![GitHub](https://img.shields.io/github/license/craigahobbs/ollama-chat)](https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ollama-chat)](https://pypi.org/project/ollama-chat/)
 
-**Ollama Chat** is a simple yet useful web chat client for
+**Ollama Chat** is a web chat client for
 [Ollama](https://ollama.com)
 that allows you to chat locally (and privately) with
-[open-source LLMs](https://ollama.com/library).
+[Large Language Models (LLMs)](https://ollama.com/library).
+
+
+## Features
+
+- Select local model to chat with
+- Saves conversations for later viewing and interaction
+- Enter single or multiline prompts
+- Regnerate the most recent conversation response
+- Delete the most recent conversation exchange
+- View responses as Markdown text
+- Save conversations as Markdown text
+- Multiple concurrent chat responses (with proper Ollama configuration)
 
 
 ## Installation
@@ -60,29 +72,6 @@ ollama-chat -m "Why is the sky blue?"
 [Ollama Chat File Format](https://craigahobbs.github.io/ollama-chat/api.html#var.vName='OllamaChatConfig')
 
 [Ollama Chat API](https://craigahobbs.github.io/ollama-chat/api.html)
-
-
-## Future
-
-- Auto-title task on start conversation
-  - Update conversation title API
-  - Update title link on index/conversation page
-
-- Prompts part 1
-  - Prompts config collection (name, title, prompt)
-  - Index links start new conversation with current model
-  - `-t` command-line argument starts prompt by name
-
-- File / Directory / URL text inclusion in prompt
-
-- Prompts part 2
-  - Prompt editor
-  - Create link on index page
-  - Delete links on index page
-  - Index links open template editor if any template markers (e.g. "{Name}")
-
-- Local model management (pull, rm)
-  - [Models JSON](https://huggingface.co/api/models)
 
 
 ## Development
