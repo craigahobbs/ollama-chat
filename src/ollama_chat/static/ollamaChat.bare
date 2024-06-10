@@ -222,7 +222,6 @@ endfunction
 
 # Helper to render the bottom of Ollama Chat conversation page
 async function ollamaChatConversationPageBottom(args, conversation, generating):
-    id = objectGet(args, 'id')
     multiline = objectGet(args, 'multiline')
     textView = objectGet(args, 'text')
 
@@ -240,10 +239,10 @@ async function ollamaChatConversationPageBottom(args, conversation, generating):
         elementModelRender( \
             objectNew('html', 'p', 'elem', arrayNew( \
                 if(arrayLength(exchanges) > 1, arrayNew( \
-                    formsLinkButtonElements('Delete', systemPartial(ollamaChatOnConversationClick, id, 'deleteConversationExchange')), \
+                    formsLinkButtonElements('Delete', systemPartial(ollamaChatOnConversationClick, args, 'deleteConversationExchange')), \
                     objectNew('text', stringFromCharCode(160, 160)) \
                 )), \
-                formsLinkButtonElements('Regenerate', systemPartial(ollamaChatOnConversationClick, id, 'regenerateConversationExchange')) \
+                formsLinkButtonElements('Regenerate', systemPartial(ollamaChatOnConversationClick, args, 'regenerateConversationExchange')) \
             )) \
         )
     endif
@@ -280,6 +279,7 @@ async function ollamaChatOnConversationTimeout(args):
 
     # Done generating? Re-render the page to update the floating controls
     if !generating:
+        ollamaChatSavePrompt()
         ollamaChatConversationPage(args)
         return
     endif
@@ -315,7 +315,9 @@ ollamaChatPrecision = 3
 
 
 # Generic conversation button on-click event handler
-async function ollamaChatOnConversationClick(id, url):
+async function ollamaChatOnConversationClick(args, url):
+    id = objectGet(args, 'id')
+
     # Perform the conversation acgtion
     systemFetch(objectNew('url', url, 'body', jsonStringify(objectNew('id', id))))
 
@@ -323,21 +325,17 @@ async function ollamaChatOnConversationClick(id, url):
     if url == 'deleteConversation':
         windowSetLocation(argsURL(ollamaChatArguments, null, true))
     else:
-        ollamaChatMain()
+        ollamaChatSavePrompt()
+        ollamaChatConversationPage(args)
     endif
 endfunction
 
 
 # Conversation multiline button on-click event handler
 async function ollamaChatOnConversationMultiline(args):
-    # If there is prompt text save it in session storage
-    prompt = stringTrim(documentInputValue(ollamaChatPromptInputID))
-    if prompt != '':
-        sessionStorageSet(ollamaChatSessionKey, prompt)
-    endif
-
     # Toggle multiline prompt mode
     multiline = objectGet(args, 'multiline')
+    ollamaChatSavePrompt()
     windowSetLocation(argsURL(ollamaChatArguments, objectNew('multiline', !multiline)))
 endfunction
 
@@ -372,6 +370,15 @@ async function ollamaChatOnConversationPrompt(id, message):
 
     # Render the conversation page
     ollamaChatMain()
+endfunction
+
+
+# Helper to save the prompt to session storage prior to a full re-render
+function ollamaChatSavePrompt():
+    prompt = stringTrim(documentInputValue(ollamaChatPromptInputID))
+    if prompt != '':
+        sessionStorageSet(ollamaChatSessionKey, prompt)
+    endif
 endfunction
 
 
@@ -456,7 +463,7 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
                         'elem', objectNew('text', 'Download') \
                     ), \
                     objectNew('text', separator), \
-                    formsLinkButtonElements('Delete', systemPartial(ollamaChatOnConversationClick, id, 'deleteConversation')) \
+                    formsLinkButtonElements('Delete', systemPartial(ollamaChatOnConversationClick, args, 'deleteConversation')) \
                 )) \
             )) \
         ) \
@@ -521,7 +528,7 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
             ), \
             if(generating, \
                 ollamaChatSVGButton(buttonSize, buttonSize, 24, 'M8,8 H16 V16 H8 Z', 'black', 'white', \
-                    systemPartial(ollamaChatOnConversationClick, id, 'stopConversation')) \
+                    systemPartial(ollamaChatOnConversationClick, args, 'stopConversation')) \
             ) \
         ) \
     ))
