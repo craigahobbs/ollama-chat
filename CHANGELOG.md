@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.15 (2024-06-10)
+
+- [09c3cc8](https://github.com/craigahobbs/ollama-chat/commit/09c3cc8) - render user prompt using pre-wrap
+
 ## 0.9.14 (2024-06-06)
 
 - [76ee0ab](https://github.com/craigahobbs/ollama-chat/commit/76ee0ab) - markdown-escape user prompts
