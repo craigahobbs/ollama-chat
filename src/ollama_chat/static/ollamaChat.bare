@@ -75,20 +75,19 @@ async function ollamaChatIndexPage(args):
     endif
 
     # Render the model selection
-    indent = stringFromCharCode(160, 160)
-    markdownPrint('**Model:** ' + objectGet(modelResponse, 'model') + indent)
+    modelReport = '**Model:** ' + objectGet(modelResponse, 'model') + '&nbsp;&nbsp;'
     if action == 'select':
-        markdownPrint(argsLink(ollamaChatArguments, 'Cancel', objectNew('action', null)), '')
+        markdownPrint(modelReport + argsLink(ollamaChatArguments, 'Cancel', objectNew('action', null)), '')
         modelInfos = objectGet(modelsResponse, 'models')
         if !modelInfos:
-            markdownPrint(indent + indent + '**Error:** No local models - download with `ollama pull <model>`')
+            markdownPrint('&nbsp;&nbsp;&nbsp;&nbsp;**Error:** No local models - download with `ollama pull <model>`')
         else:
-            markdownPrint(indent + indent + '**Select a model:**')
+            markdownPrint('&nbsp;&nbsp;&nbsp;&nbsp;**Select a model:**')
             for modelInfo in modelInfos:
                 model = objectGet(modelInfo, 'model')
                 elementModelRender( \
                     objectNew('html', 'p', 'elem', arrayNew( \
-                        objectNew('text', indent + indent), \
+                        objectNew('text', stringFromCharCode(160, 160, 160, 160)), \
                         formsLinkButtonElements(model, systemPartial(ollamaChatOnSelect, model)) \
                     )) \
                 )
@@ -97,7 +96,7 @@ async function ollamaChatIndexPage(args):
     else:
         # Render the start new chat link
         markdownPrint( \
-            argsLink(ollamaChatArguments, 'Select', objectNew('action', 'select')), \
+            modelReport + argsLink(ollamaChatArguments, 'Select', objectNew('action', 'select')), \
             '', \
             argsLink(ollamaChatArguments, 'Start New Conversation', objectNew('view', 'chat')) \
         )
@@ -110,8 +109,7 @@ async function ollamaChatIndexPage(args):
         tableRows = arrayNew( \
             objectNew('html', 'tr', 'elem', arrayNew( \
                 objectNew('html', 'th', 'elem', objectNew('text', 'Title')), \
-                objectNew('html', 'th', 'elem', objectNew('text', 'Model')), \
-                objectNew('html', 'th') \
+                objectNew('html', 'th', 'elem', objectNew('text', 'Model')) \
             )) \
         )
         tableElements = objectNew('html', 'table', 'elem', tableRows)
@@ -239,12 +237,11 @@ async function ollamaChatConversationPageBottom(args, conversation, generating):
 
     # Render the regenerate and delete links
     if !generating:
-        indent = stringFromCharCode(160, 160)
         elementModelRender( \
             objectNew('html', 'p', 'elem', arrayNew( \
                 if(arrayLength(exchanges) > 1, arrayNew( \
                     formsLinkButtonElements('Delete', systemPartial(ollamaChatOnConversationClick, id, 'deleteConversationExchange')), \
-                    objectNew('text', indent) \
+                    objectNew('text', stringFromCharCode(160, 160)) \
                 )), \
                 formsLinkButtonElements('Regenerate', systemPartial(ollamaChatOnConversationClick, id, 'regenerateConversationExchange')) \
             )) \

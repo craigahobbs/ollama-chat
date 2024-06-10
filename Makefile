@@ -55,6 +55,7 @@ doc:
 commit: test-app
 test-app: $(DEFAULT_VENV_BUILD)
 	$(DEFAULT_VENV_BIN)/bare -s src/ollama_chat/static/*.bare
+	$(DEFAULT_VENV_BIN)/bare -c 'include <markdownUp.bare>' src/ollama_chat/static/test/runTests.bare$(if $(DEBUG), -d)$(if $(TEST), -v vTest "'$(TEST)'")
 
 
 .PHONY: run

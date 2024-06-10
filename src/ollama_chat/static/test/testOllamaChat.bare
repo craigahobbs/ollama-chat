@@ -1,0 +1,71 @@
+# Licensed under the MIT License
+# https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
+
+include '../ollamaChat.bare'
+
+
+async function testOllamaChatIndex():
+    unittestMockAll(objectNew( \
+        'systemFetch', objectNew( \
+            'getConversations', jsonStringify(objectNew( \
+                'conversations', arrayNew( \
+                    objectNew( \
+                        'id', 'ID', \
+                        'model', 'llama3:latest', \
+                        'title', 'Hello', \
+                        'generating', false \
+                    ) \
+                ) \
+            )), \
+            'getModel', jsonStringify(objectNew( \
+                'model', 'llama3:latest' \
+            )) \
+        ) \
+    ))
+
+    ollamaChatMain()
+
+    unittestDeepEqual( \
+        unittestMockEnd(), \
+        arrayNew( \
+            arrayNew('documentSetTitle', arrayNew('Ollama Chat')), \
+            arrayNew('markdownPrint', arrayNew('# Ollama Chat', '')), \
+            arrayNew('systemFetch', arrayNew(arrayNew('getModel', 'getConversations'))), \
+            arrayNew('markdownPrint', arrayNew( \
+                '**Model:** llama3:latest&nbsp;&nbsp;' + "[Select](#var.vAction='select')", \
+                '', \
+                "[Start New Conversation](#var.vView='chat')") \
+            ), \
+            arrayNew('markdownPrint', arrayNew('', '## Conversations')), \
+            arrayNew('elementModelRender', arrayNew( \
+                objectNew( \
+                    'html', 'table', \
+                    'elem', arrayNew( \
+                        objectNew( \
+                            'html', 'tr', \
+                            'elem', arrayNew( \
+                                objectNew('html', 'th', 'elem', objectNew('text', 'Title')), \
+                                objectNew('html', 'th', 'elem', objectNew('text', 'Model')) \
+                            ) \
+                        ), \
+                        objectNew( \
+                            'html', 'tr', \
+                            'elem', arrayNew( \
+                                objectNew( \
+                                    'html', 'td', \
+                                    'elem', objectNew( \
+                                        'html', 'a', \
+                                        'attr', objectNew('href',  "#var.vId='ID'&var.vView='chat'"), \
+                                        'elem', objectNew('text', 'Hello') \
+                                    ) \
+                                ), \
+                                objectNew('html', 'td', 'elem', objectNew('text', 'llama3:latest')) \
+                            ) \
+                        ) \
+                    ) \
+                ) \
+            )) \
+        ) \
+    )
+endfunction
+unittestRunTestAsync('testOllamaChatIndex')

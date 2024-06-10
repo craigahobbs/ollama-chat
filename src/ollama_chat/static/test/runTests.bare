@@ -1,0 +1,12 @@
+# Licensed under the MIT License
+# https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
+
+include <unittest.mds>
+include <unittestMock.mds>
+
+
+# Test includes
+include 'testOllamaChat.bare'
+
+# Test report
+return unittestReport()
