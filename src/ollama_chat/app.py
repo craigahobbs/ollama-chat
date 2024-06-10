@@ -150,9 +150,8 @@ class OllamaChat():
 
             # Stream the chat response
             for chunk in stream:
-                # If stopped, return immediately. The chat is deleted by the stopper.
+                # Stop streaming if stopped
                 if chat.stop:
-                    stream.close()
                     break
 
                 # Update the conversation
