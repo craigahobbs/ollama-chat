@@ -144,7 +144,7 @@ async function ollamaChatConversationPage(args):
     # Message argument?
     message = objectGet(args, 'message')
     if message != null:
-        ollamaChatOnConversationPrompt(null, message)
+        ollamaChatOnConversationPrompt(args, message)
         return
     endif
 
@@ -348,7 +348,9 @@ endfunction
 
 
 # Prompt on-enter/on-click event handler
-async function ollamaChatOnConversationPrompt(id, message):
+async function ollamaChatOnConversationPrompt(args, message):
+    id = objectGet(args, 'id')
+
     # Get the prompt text
     prompt = if(message != null, message, stringTrim(documentInputValue(ollamaChatPromptInputID)))
     if prompt == '':
@@ -376,7 +378,10 @@ async function ollamaChatOnConversationPrompt(id, message):
     systemFetch(objectNew('url', 'replyConversation', 'body', replyRequest))
 
     # Render the conversation page
-    ollamaChatMain()
+    ollamaChatConversationPage(args)
+
+    # Scroll to the bottom
+    windowSetLocation(argsURL(ollamaChatArguments, null, false, ollamaChatBottomID))
 endfunction
 
 
@@ -525,12 +530,12 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
                 ), \
                 'elem', if(multiline && prompt != null, objectNew('text', prompt)), \
                 'callback', if(!multiline && !generating, \
-                    objectNew('keyup', systemPartial(formsTextOnKeyup, systemPartial(ollamaChatOnConversationPrompt, id))) \
+                    objectNew('keyup', systemPartial(formsTextOnKeyup, systemPartial(ollamaChatOnConversationPrompt, args))) \
                 ) \
             ), \
             if(!generating, \
                 ollamaChatSVGButton(buttonSize, buttonSize, 24, 'M12,18 V7 M7,12 L12,7 L17,12', 'none', 'white', \
-                    systemPartial(ollamaChatOnConversationPrompt, id)) \
+                    systemPartial(ollamaChatOnConversationPrompt, args)) \
             ), \
             if(generating, \
                 ollamaChatSVGButton(buttonSize, buttonSize, 24, 'M8,8 H16 V16 H8 Z', 'black', 'white', \
