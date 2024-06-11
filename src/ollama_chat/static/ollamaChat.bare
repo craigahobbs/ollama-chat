@@ -234,15 +234,19 @@ async function ollamaChatConversationPageBottom(args, conversation, generating):
         markdownPrint(objectGet(lastExchange, 'model'))
     endif
 
+    # Compute button on-click functions
+    deleteExchangeFn = systemPartial(ollamaChatOnConversationClick, args, 'deleteConversationExchange')
+    regenerateExchangeFn = systemPartial(ollamaChatOnConversationClick, args, 'regenerateConversationExchange')
+
     # Render the regenerate and delete links
     if !generating:
         elementModelRender( \
             objectNew('html', 'p', 'elem', arrayNew( \
                 if(arrayLength(exchanges) > 1, arrayNew( \
-                    formsLinkButtonElements('Delete', systemPartial(ollamaChatOnConversationClick, args, 'deleteConversationExchange')), \
+                    formsLinkButtonElements('Delete', deleteExchangeFn), \
                     objectNew('text', stringFromCharCode(160, 160)) \
                 )), \
-                formsLinkButtonElements('Regenerate', systemPartial(ollamaChatOnConversationClick, args, 'regenerateConversationExchange')) \
+                formsLinkButtonElements('Regenerate', regenerateExchangeFn) \
             )) \
         )
     endif
@@ -314,29 +318,32 @@ ollamaChatBottomID = 'ollama-chat-bottom-id'
 ollamaChatPrecision = 3
 
 
-# Generic conversation button on-click event handler
-async function ollamaChatOnConversationClick(args, url):
-    id = objectGet(args, 'id')
-
-    # Perform the conversation acgtion
-    systemFetch(objectNew('url', url, 'body', jsonStringify(objectNew('id', id))))
-
-    # Update the page
-    if url == 'deleteConversation':
-        windowSetLocation(argsURL(ollamaChatArguments, null, true))
-    else:
-        ollamaChatSavePrompt()
-        ollamaChatConversationPage(args)
+# Helper to save the prompt to session storage prior to a full re-render
+function ollamaChatSavePrompt():
+    prompt = stringTrim(documentInputValue(ollamaChatPromptInputID))
+    if prompt != '':
+        sessionStorageSet(ollamaChatSessionKey, prompt)
     endif
 endfunction
 
 
-# Conversation multiline button on-click event handler
-async function ollamaChatOnConversationMultiline(args):
-    # Toggle multiline prompt mode
-    multiline = objectGet(args, 'multiline')
-    ollamaChatSavePrompt()
-    windowSetLocation(argsURL(ollamaChatArguments, objectNew('multiline', !multiline)))
+# Generic conversation button on-click event handler
+async function ollamaChatOnConversationClick(args, api, url, noSave):
+    # Call the api, if any
+    if api != null:
+        systemFetch(objectNew('url', api, 'body', jsonStringify(objectNew('id', objectGet(args, 'id')))))
+    endif
+
+    # Navigate?
+    if url != null:
+        if !noSave:
+            ollamaChatSavePrompt()
+        endif
+        windowSetLocation(url)
+    else:
+        ollamaChatSavePrompt()
+        ollamaChatConversationPage(args)
+    endif
 endfunction
 
 
@@ -373,15 +380,6 @@ async function ollamaChatOnConversationPrompt(id, message):
 endfunction
 
 
-# Helper to save the prompt to session storage prior to a full re-render
-function ollamaChatSavePrompt():
-    prompt = stringTrim(documentInputValue(ollamaChatPromptInputID))
-    if prompt != '':
-        sessionStorageSet(ollamaChatSessionKey, prompt)
-    endif
-endfunction
-
-
 # The conversation page floating controls element model
 function ollamaChatPageFloatingElements(args, conversation, generating):
     id = objectGet(args, 'id')
@@ -402,16 +400,22 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
     topBottomPx = fontSizePx
     leftRightPx = 2 * fontSizePx
 
-    # The top space
-    arrayPush(elements, objectNew( \
-        'html', 'div', \
-        'attr', objectNew('style', 'height: ' + numberToFixed(topSpacePx, ollamaChatPrecision) + 'px')) \
-    )
+    # Compute button navigation URLs
+    indexURL = argsURL(ollamaChatArguments, null, true)
+    menuURL = argsURL(ollamaChatArguments, objectNew('action', if(action != 'menu', 'menu')))
+    markdownURL = argsURL(ollamaChatArguments, objectNew('text', !textView))
+    multilineURL = argsURL(ollamaChatArguments, objectNew('multiline', !multiline))
+
+    # Compute button on-click functions
+    menuClickFn = systemPartial(ollamaChatOnConversationClick, args, null, menuURL)
+    markdownClickFn = systemPartial(ollamaChatOnConversationClick, args, null, markdownURL)
+    deleteClickFn = systemPartial(ollamaChatOnConversationClick, args, 'deleteConversation', indexURL, true)
+    multilineFn = systemPartial(ollamaChatOnConversationClick, args, null, multilineURL)
 
     # Generate the download URL, if necessary
     markdownDownloadURL = null
     markdownFilename = null
-    if !generating && action == 'menu':
+    if conversation != null && !generating && action == 'menu':
         markdownParts = arrayNew('# ' + markdownEscape(title), '', '**Model:** ' + markdownEscape(objectGet(conversation, 'model')))
         for exchange in objectGet(conversation, 'exchanges'):
             arrayPush(markdownParts, '', '## User:', '', objectGet(exchange, 'user'), '', '## Model:', '', objectGet(exchange, 'model'))
@@ -423,6 +427,18 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
         markdownFilename = regexReplace(regexNew('^-'), markdownFilename, '')
         markdownFilename = regexReplace(regexNew('-$'), markdownFilename, '') + '.md'
     endif
+
+    # Get the saved session prompt, if any
+    prompt = sessionStorageGet(ollamaChatSessionKey)
+    if prompt != null:
+        sessionStorageRemove(ollamaChatSessionKey)
+    endif
+
+    # The top space
+    arrayPush(elements, objectNew( \
+        'html', 'div', \
+        'attr', objectNew('style', 'height: ' + numberToFixed(topSpacePx, ollamaChatPrecision) + 'px')) \
+    )
 
     # The menu controls
     separator = stringFromCharCode(160) + '|' + stringFromCharCode(160)
@@ -442,20 +458,17 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
             ), '; ') \
         ), \
         'elem', arrayNew( \
-            formsLinkElements('Back', argsURL(ollamaChatArguments, null, true)), \
+            formsLinkElements('Back', indexURL), \
             objectNew('text', separator), \
             formsLinkElements('Top', argsURL(ollamaChatArguments, null, false, '_top')), \
             objectNew('text', separator), \
             formsLinkElements('Bottom', argsURL(ollamaChatArguments, null, false, ollamaChatBottomID)), \
-            if(!generating, arrayNew( \
+            if(conversation != null && !generating, arrayNew( \
                 objectNew('text', separator), \
-                formsLinkElements( \
-                    if(action != 'menu', '>>', '<<'), \
-                    argsURL(ollamaChatArguments, objectNew('action', if(action != 'menu', 'menu'))) \
-                ), \
+                formsLinkButtonElements(if(action != 'menu', '>>', '<<'), menuClickFn), \
                 if(action == 'menu', arrayNew( \
                     objectNew('text', separator), \
-                    formsLinkElements(if(!textView, 'Text', 'Markdown'), argsURL(ollamaChatArguments, objectNew('text', !textView))), \
+                    formsLinkButtonElements(if(!textView, 'Text', 'Markdown'), markdownClickFn), \
                     objectNew('text', separator), \
                     objectNew( \
                         'html', 'a', \
@@ -463,17 +476,11 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
                         'elem', objectNew('text', 'Download') \
                     ), \
                     objectNew('text', separator), \
-                    formsLinkButtonElements('Delete', systemPartial(ollamaChatOnConversationClick, args, 'deleteConversation')) \
+                    formsLinkButtonElements('Delete', deleteClickFn) \
                 )) \
             )) \
         ) \
     ))
-
-    # Get the saved session prompt, if any
-    prompt = sessionStorageGet(ollamaChatSessionKey)
-    if prompt != null:
-        sessionStorageRemove(ollamaChatSessionKey)
-    endif
 
     # The prompt controls
     arrayPush(elements, objectNew( \
@@ -492,8 +499,7 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
             ), '; ') \
         ), \
         'elem', arrayNew( \
-            ollamaChatSVGButton(0.75 * buttonSize, buttonSize, 24, 'M4,6 H20 M4,12 H20 M4,18 H20', 'none', 'none', \
-                systemPartial(ollamaChatOnConversationMultiline, args)), \
+            ollamaChatSVGButton(0.75 * buttonSize, buttonSize, 24, 'M4,6 H20 M4,12 H20 M4,18 H20', 'none', 'none', multilineFn), \
             objectNew( \
                 'html', if(multiline, 'textarea', 'input'), \
                 'attr', objectNew( \

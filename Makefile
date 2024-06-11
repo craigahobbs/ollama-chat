@@ -60,4 +60,4 @@ test-app: $(DEFAULT_VENV_BUILD)
 
 .PHONY: run
 run: $(DEFAULT_VENV_BUILD)
-	$(DEFAULT_VENV_BIN)/ollama-chat
+	$(DEFAULT_VENV_BIN)/ollama-chat$(if $(ARGS), $(ARGS))
