@@ -253,7 +253,7 @@ async function ollamaChatConversationPageBottom(args, conversation, generating):
 
     # Render the bottom space
     fontSizePx = documentFontSize()
-    bottomSpacePx = if(multiline, 12, 4) * fontSizePx
+    bottomSpacePx = if(multiline, if(generating, 16, 12), if(generating, 8, 4)) * fontSizePx
     bottomElementId = stringSlice(argsURL(ollamaChatArguments, null, false, ollamaChatBottomID), 1)
     elementModelRender(arrayNew( \
         objectNew('html', 'div', 'attr', objectNew('style', 'height: ' + numberToFixed(bottomSpacePx, ollamaChatPrecision) + 'px')), \
@@ -367,7 +367,7 @@ async function ollamaChatOnConversationPrompt(id, message):
         id = objectGet(startResponse, 'id')
 
         # Navigate to the conversation ID
-        windowSetLocation(argsURL(ollamaChatArguments, objectNew('id', id)))
+        windowSetLocation(argsURL(ollamaChatArguments, objectNew('id', id), false, ollamaChatBottomID))
         return
     endif
 
