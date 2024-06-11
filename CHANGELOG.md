@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.17 (2024-06-11)
+
+- [8543688](https://github.com/craigahobbs/ollama-chat/commit/8543688)
+  - Hide conversation expansion menu for new conversations
+  - Save current prompt text across all conversation commands
+
 ## 0.9.16 (2024-06-10)
 
 - [53bcbdd](https://github.com/craigahobbs/ollama-chat/commit/53bcbdd) - save prompt across conversastion commands
