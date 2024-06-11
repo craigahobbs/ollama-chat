@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.18 (2024-06-11)
+
+- [db02676](https://github.com/craigahobbs/ollama-chat/commit/db02676) - scroll to bottom on non-initial prompts
+
+- [eb20151](https://github.com/craigahobbs/ollama-chat/commit/eb20151)
+  - add extra bottom space when generating the response
+  - scroll to bottom on prompt submit
+
 ## 0.9.17 (2024-06-11)
 
 - [8543688](https://github.com/craigahobbs/ollama-chat/commit/8543688)
