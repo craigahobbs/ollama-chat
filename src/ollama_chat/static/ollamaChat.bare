@@ -387,7 +387,6 @@ endfunction
 
 # The conversation page floating controls element model
 function ollamaChatPageFloatingElements(args, conversation, generating):
-    id = objectGet(args, 'id')
     action = objectGet(args, 'action')
     multiline = objectGet(args, 'multiline')
     textView = objectGet(args, 'text')
