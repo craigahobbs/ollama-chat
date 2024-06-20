@@ -44,7 +44,7 @@ function ollamaChatErrorPage(message):
         '', \
         '# ' + markdownEscape(ollamaChatTitle), \
         '', \
-        '**ERROR:** ' + message \
+        '**ERROR:** ' + markdownEscape(message) \
     )
 endfunction
 
@@ -53,42 +53,34 @@ endfunction
 async function ollamaChatIndexPage(args):
     action = objectGet(args, 'action')
 
-    # Render the title
-    documentSetTitle(ollamaChatTitle)
-    markdownPrint( \
-        '# ' + markdownEscape(ollamaChatTitle), \
-        '' \
-    )
-
-    # Get the current model and the conversations list
-    fetchURLs = arrayNew('getModel', 'getConversations')
-    if action == 'select':
-        arrayPush(fetchURLs, 'getModels')
-    endif
-    responses = systemFetch(fetchURLs)
-    modelResponse = if(responses != null && arrayGet(responses, 0) != null, jsonParse(arrayGet(responses, 0)))
-    conversationsResponse = if(responses != null && arrayGet(responses, 1) != null, jsonParse(arrayGet(responses, 1)))
-    modelsResponse = if(responses != null && action == 'select' && arrayGet(responses, 2) != null, jsonParse(arrayGet(responses, 2)))
-    if modelResponse == null || conversationsResponse == null || (action == 'select' && modelsResponse == null):
-        ollamaChatErrorPage('Failed to load model and conversations')
+    # Get the conversations
+    conversationsResponse = systemFetch('getConversations')
+    conversationsResponse = if(conversationsResponse != null, jsonParse(conversationsResponse))
+    if conversationsResponse == null:
+        ollamaChatErrorPage('Failed to get conversations')
         return
     endif
 
-    # Render the model selection
-    modelReport = '**Model:** ' + objectGet(modelResponse, 'model') + '&nbsp;&nbsp;'
+    # Render the title
+    documentSetTitle(ollamaChatTitle)
+    markdownPrint('# ' + markdownEscape(ollamaChatTitle))
+
+    # Model selection?
+    modelReport = '**Model:** ' + objectGet(conversationsResponse, 'model') + '&nbsp;&nbsp;'
     if action == 'select':
+        # Render the model selection links
         markdownPrint(modelReport + argsLink(ollamaChatArguments, 'Cancel', objectNew('action', null)), '')
-        modelInfos = objectGet(modelsResponse, 'models')
+        modelInfos = objectGet(conversationsResponse, 'models')
         if !modelInfos:
-            markdownPrint('&nbsp;&nbsp;&nbsp;&nbsp;**Error:** No local models - download with `ollama pull <model>`')
+            markdownPrint('', '&nbsp;&nbsp;&nbsp;&nbsp;**Error:** No local models - download with `ollama pull <model>`')
         else:
-            markdownPrint('&nbsp;&nbsp;&nbsp;&nbsp;**Select a model:**')
+            markdownPrint('', '&nbsp;&nbsp;&nbsp;&nbsp;**Select a model:**')
             for modelInfo in modelInfos:
                 model = objectGet(modelInfo, 'model')
                 elementModelRender( \
                     objectNew('html', 'p', 'elem', arrayNew( \
                         objectNew('text', stringFromCharCode(160, 160, 160, 160)), \
-                        formsLinkButtonElements(model, systemPartial(ollamaChatOnSelect, model)) \
+                        formsLinkButtonElements(model, systemPartial(ollamaChatOnModelSelect, model)) \
                     )) \
                 )
             endfor
@@ -96,6 +88,7 @@ async function ollamaChatIndexPage(args):
     else:
         # Render the start new chat link
         markdownPrint( \
+            '', \
             modelReport + argsLink(ollamaChatArguments, 'Select', objectNew('action', 'select')), \
             '', \
             argsLink(ollamaChatArguments, 'Start New Conversation', objectNew('view', 'chat')) \
@@ -104,30 +97,29 @@ async function ollamaChatIndexPage(args):
 
     # Render the conversations
     conversations = objectGet(conversationsResponse, 'conversations')
-    if conversations:
-        markdownPrint('', '## Conversations')
-        tableRows = arrayNew( \
-            objectNew('html', 'tr', 'elem', arrayNew( \
-                objectNew('html', 'th', 'elem', objectNew('text', 'Title')), \
-                objectNew('html', 'th', 'elem', objectNew('text', 'Model')) \
-            )) \
-        )
-        tableElements = objectNew('html', 'table', 'elem', tableRows)
+    markdownPrint('', '## Conversations')
+    if !conversations:
+        markdownPrint('', '*No conversations*')
+    else:
+        conversationData = arrayNew()
         for conversation in conversations:
-            conversationId = objectGet(conversation, 'id')
-            conversationURL = argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', conversationId))
-            arrayPush(tableRows, objectNew('html', 'tr', 'elem', arrayNew( \
-                objectNew('html', 'td', 'elem', formsLinkElements(objectGet(conversation, 'title'), conversationURL)), \
-                objectNew('html', 'td', 'elem', objectNew('text', objectGet(conversation, 'model'))) \
-            )))
+            id = objectGet(conversation, 'id')
+            title = objectGet(conversation, 'title')
+            arrayPush(conversationData, objectNew( \
+                'Title', argsLink(ollamaChatArguments, title, objectNew('view', 'chat', 'id', id)), \
+                'Model', objectGet(conversation, 'model') \
+            ))
         endfor
-        elementModelRender(tableElements)
+        dataTable(conversationData, objectNew( \
+            'fields', arrayNew('Title', 'Model'), \
+            'formats', objectNew('Title', objectNew('markdown', true)) \
+        ))
     endif
 endfunction
 
 
 # Select model on-click event handler
-async function ollamaChatOnSelect(model):
+async function ollamaChatOnModelSelect(model):
     # Set the model (ignore errors)
     systemFetch(objectNew('url', 'setModel', 'body', jsonStringify(objectNew('model', model))))
 
@@ -149,9 +141,6 @@ async function ollamaChatConversationPage(args):
     endif
 
     # Fetch the conversation
-    title = ollamaChatTitle
-    conversation = null
-    generating = False
     if id != null:
         conversationResponse = systemFetch('getConversation?id=' + id)
         conversationResponse = if(conversationResponse != null, jsonParse(conversationResponse))
@@ -164,13 +153,16 @@ async function ollamaChatConversationPage(args):
         title = objectGet(conversation, 'title')
         model = objectGet(conversation, 'model')
     else:
-        modelResponse = systemFetch('getModel')
-        modelResponse = if(modelResponse != null, jsonParse(modelResponse))
-        if modelResponse == null:
-            ollamaChatErrorPage('Failed to get current model')
+        conversationsResponse = systemFetch('getConversations')
+        conversationsResponse = if(conversationsResponse != null, jsonParse(conversationsResponse))
+        if conversationsResponse == null:
+            ollamaChatErrorPage('Failed to get conversations')
             return
         endif
-        model = objectGet(modelResponse, 'model')
+        conversation = null
+        generating = False
+        title = ollamaChatTitle
+        model = objectGet(conversationsResponse, 'model')
     endif
 
     # Render the floating controls

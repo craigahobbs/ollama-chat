@@ -8,6 +8,7 @@ async function testOllamaChatIndex():
     unittestMockAll(objectNew( \
         'systemFetch', objectNew( \
             'getConversations', jsonStringify(objectNew( \
+                'model', 'llama3:latest', \
                 'conversations', arrayNew( \
                     objectNew( \
                         'id', 'ID', \
@@ -16,9 +17,6 @@ async function testOllamaChatIndex():
                         'generating', false \
                     ) \
                 ) \
-            )), \
-            'getModel', jsonStringify(objectNew( \
-                'model', 'llama3:latest' \
             )) \
         ) \
     ))
@@ -28,42 +26,21 @@ async function testOllamaChatIndex():
     unittestDeepEqual( \
         unittestMockEnd(), \
         arrayNew( \
+            arrayNew('systemFetch', arrayNew('getConversations')), \
             arrayNew('documentSetTitle', arrayNew('Ollama Chat')), \
-            arrayNew('markdownPrint', arrayNew('# Ollama Chat', '')), \
-            arrayNew('systemFetch', arrayNew(arrayNew('getModel', 'getConversations'))), \
+            arrayNew('markdownPrint', arrayNew('# Ollama Chat')), \
             arrayNew('markdownPrint', arrayNew( \
-                '**Model:** llama3:latest&nbsp;&nbsp;' + "[Select](#var.vAction='select')", \
+                '', \
+                "**Model:** llama3:latest&nbsp;&nbsp;[Select](#var.vAction='select')", \
                 '', \
                 "[Start New Conversation](#var.vView='chat')") \
             ), \
             arrayNew('markdownPrint', arrayNew('', '## Conversations')), \
-            arrayNew('elementModelRender', arrayNew( \
-                objectNew( \
-                    'html', 'table', \
-                    'elem', arrayNew( \
-                        objectNew( \
-                            'html', 'tr', \
-                            'elem', arrayNew( \
-                                objectNew('html', 'th', 'elem', objectNew('text', 'Title')), \
-                                objectNew('html', 'th', 'elem', objectNew('text', 'Model')) \
-                            ) \
-                        ), \
-                        objectNew( \
-                            'html', 'tr', \
-                            'elem', arrayNew( \
-                                objectNew( \
-                                    'html', 'td', \
-                                    'elem', objectNew( \
-                                        'html', 'a', \
-                                        'attr', objectNew('href',  "#var.vId='ID'&var.vView='chat'"), \
-                                        'elem', objectNew('text', 'Hello') \
-                                    ) \
-                                ), \
-                                objectNew('html', 'td', 'elem', objectNew('text', 'llama3:latest')) \
-                            ) \
-                        ) \
-                    ) \
-                ) \
+            arrayNew('dataTable', arrayNew( \
+                arrayNew( \
+                    objectNew('Model', 'llama3:latest', 'Title', "[Hello](#var.vId='ID'&var.vView='chat')") \
+                ), \
+                objectNew('fields', arrayNew('Title', 'Model'), 'formats', objectNew('Title', objectNew('markdown', true))) \
             )) \
         ) \
     )

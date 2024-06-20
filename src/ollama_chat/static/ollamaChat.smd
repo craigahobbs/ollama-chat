@@ -68,24 +68,20 @@ struct OllamaChatConfig
 group "Ollama Chat API"
 
 
-# Get the current model name
-action getModels
-    urls
-        GET
-
-    output
-        # The local models
-        ModelInfo[] models
-
-
-# Get the current model name
-action getModel
+# Get information for the index page
+action getConversations
     urls
         GET
 
     output
         # The current model name
         string model
+
+        # The available models
+        ModelInfo[] models
+
+        # The conversations
+        ConversationInfoEx[] conversations
 
 
 # Set the current model name
@@ -96,16 +92,6 @@ action setModel
     input
         # The model name
         string model
-
-
-# Get the list of conversations
-action getConversations
-    urls
-        GET
-
-    output
-        # The conversations
-        ConversationInfoEx[] conversations
 
 
 # Start a conversation

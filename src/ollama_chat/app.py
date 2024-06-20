@@ -37,8 +37,6 @@ class OllamaChatApplication(chisel.Application):
         self.add_request(delete_conversation_exchange)
         self.add_request(get_conversation)
         self.add_request(get_conversations)
-        self.add_request(get_model)
-        self.add_request(get_models)
         self.add_request(regenerate_conversation_exchange)
         self.add_request(reply_conversation)
         self.add_request(set_model)
@@ -189,44 +187,35 @@ with pkg_resources.open_text('ollama_chat.static', 'ollamaChat.smd') as cm_smd:
     OLLAMA_CHAT_TYPES = schema_markdown.parse_schema_markdown(cm_smd.read())
 
 
-@chisel.action(name='getModels', types=OLLAMA_CHAT_TYPES)
-def get_models(unused_ctx, unused_req):
+@chisel.action(name='getConversations', types=OLLAMA_CHAT_TYPES)
+def get_conversations(ctx, unused_req):
     models = ollama.list()['models'] or ()
-    return {
-        'models': [
-            {
-                'model': model['name'],
-                'size': model['size']
-            }
-            for model in models
-        ]
-    }
-
-
-@chisel.action(name='getModel', types=OLLAMA_CHAT_TYPES)
-def get_model(ctx, unused_req):
     with ctx.app.config() as config:
-        return {'model': config['model']}
+        return {
+            'model': config['model'],
+            'models': [
+                {
+                    'model': model['name'],
+                    'size': model['size']
+                }
+                for model in models
+            ],
+            'conversations': [
+                {
+                    'id': conversation['id'],
+                    'model': conversation['model'],
+                    'title': conversation['title'],
+                    'generating': conversation['id'] in ctx.app.chats
+                }
+                for conversation in config['conversations']
+            ]
+        }
 
 
 @chisel.action(name='setModel', types=OLLAMA_CHAT_TYPES)
 def set_model(ctx, req):
     with ctx.app.config(save=True) as config:
         config['model'] = req['model']
-
-
-@chisel.action(name='getConversations', types=OLLAMA_CHAT_TYPES)
-def get_conversations(ctx, unused_req):
-    conversations = []
-    with ctx.app.config() as config:
-        for conversation in config['conversations']:
-            info = dict(conversation)
-            del info['exchanges']
-            info['generating'] = conversation['id'] in ctx.app.chats
-            conversations.append(info)
-    return {
-        'conversations': conversations
-    }
 
 
 @chisel.action(name='startConversation', types=OLLAMA_CHAT_TYPES)
