@@ -13,12 +13,13 @@ that allows you to chat locally (and privately) with
 
 ## Features
 
-- Select local model to chat with
-- Saves conversations for later viewing and interaction
-- Enter single or multiline prompts
-- Regnerate the most recent conversation response
+- Platform independent - tested on macOS, Windows, and Linux
+- Chat with any local Ollama model
+- Save conversations for later viewing and interaction
+- Single and multiline prompts
+- Regenerate the most recent conversation response
 - Delete the most recent conversation exchange
-- View responses as Markdown text
+- View responses as Markdown or text
 - Save conversations as Markdown text
 - Multiple concurrent chat responses (with proper Ollama configuration)
 
