@@ -9,6 +9,7 @@ async function testOllamaChatIndex():
         'systemFetch', objectNew( \
             'getConversations', jsonStringify(objectNew( \
                 'model', 'llama3:latest', \
+                'models', arrayNew('llama3:latest'), \
                 'conversations', arrayNew( \
                     objectNew( \
                         'id', 'ID', \
