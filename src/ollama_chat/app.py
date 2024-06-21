@@ -193,13 +193,7 @@ def get_conversations(ctx, unused_req):
     with ctx.app.config() as config:
         return {
             'model': config['model'],
-            'models': [
-                {
-                    'model': model['name'],
-                    'size': model['size']
-                }
-                for model in models
-            ],
+            'models': sorted(model['name'] for model in models),
             'conversations': [
                 {
                     'id': conversation['id'],
@@ -282,8 +276,10 @@ def get_conversation(ctx, req):
 
         # Return the conversation
         return {
-            'conversation': copy.deepcopy(conversation),
-            'generating': id_ in ctx.app.chats
+            'conversation': {
+                **copy.deepcopy(conversation),
+                'generating': id_ in ctx.app.chats
+            }
         }
 
 

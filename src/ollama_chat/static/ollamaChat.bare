@@ -70,13 +70,12 @@ async function ollamaChatIndexPage(args):
     if action == 'select':
         # Render the model selection links
         markdownPrint(modelReport + argsLink(ollamaChatArguments, 'Cancel', objectNew('action', null)), '')
-        modelInfos = objectGet(conversationsResponse, 'models')
-        if !modelInfos:
+        models = objectGet(conversationsResponse, 'models')
+        if !models:
             markdownPrint('', '&nbsp;&nbsp;&nbsp;&nbsp;**Error:** No local models - download with `ollama pull <model>`')
         else:
             markdownPrint('', '&nbsp;&nbsp;&nbsp;&nbsp;**Select a model:**')
-            for modelInfo in modelInfos:
-                model = objectGet(modelInfo, 'model')
+            for model in models:
                 elementModelRender( \
                     objectNew('html', 'p', 'elem', arrayNew( \
                         objectNew('text', stringFromCharCode(160, 160, 160, 160)), \
@@ -149,9 +148,9 @@ async function ollamaChatConversationPage(args):
             return
         endif
         conversation = objectGet(conversationResponse, 'conversation')
-        generating = objectGet(conversationResponse, 'generating')
         title = objectGet(conversation, 'title')
         model = objectGet(conversation, 'model')
+        generating = objectGet(conversation, 'generating')
     else:
         conversationsResponse = systemFetch('getConversations')
         conversationsResponse = if(conversationsResponse != null, jsonParse(conversationsResponse))
@@ -160,9 +159,9 @@ async function ollamaChatConversationPage(args):
             return
         endif
         conversation = null
-        generating = False
         title = ollamaChatTitle
         model = objectGet(conversationsResponse, 'model')
+        generating = False
     endif
 
     # Render the floating controls
@@ -271,7 +270,7 @@ async function ollamaChatOnConversationTimeout(args):
         return
     endif
     conversation = objectGet(conversationResponse, 'conversation')
-    generating = objectGet(conversationResponse, 'generating')
+    generating = objectGet(conversation, 'generating')
 
     # Done generating? Re-render the page to update the floating controls
     if !generating:
