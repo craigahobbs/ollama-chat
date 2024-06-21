@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.19 (2024-06-21)
+
+- [eaa7817](https://github.com/craigahobbs/ollama-chat/commit/eaa7817) - improve conversation modelling
+
+- [9278791](https://github.com/craigahobbs/ollama-chat/commit/9278791) - code review
+
+- [b14231a](https://github.com/craigahobbs/ollama-chat/commit/b14231a) - remove unused variable
+
 ## 0.9.18 (2024-06-11)
 
 - [db02676](https://github.com/craigahobbs/ollama-chat/commit/db02676) - scroll to bottom on non-initial prompts
