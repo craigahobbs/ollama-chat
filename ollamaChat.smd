@@ -3,7 +3,7 @@
 
 
 # The user-model conversation info
-struct ConversationInfo
+struct ConversationBase
 
     # The conversation identifier
     string id
@@ -15,18 +15,26 @@ struct ConversationInfo
     string title
 
 
-# Conversation information struct with generating state
-struct ConversationInfoEx (ConversationInfo)
+# The user-model conversation generating state
+struct ConversationGeneratingBase
 
     # If True, the latest exchange is actively generating
     bool generating
 
 
+# Conversation information struct with generating state
+struct ConversationInfo (ConversationBase, ConversationGeneratingBase)
+
+
 # A user-model conversation
-struct Conversation (ConversationInfo)
+struct Conversation (ConversationBase)
 
     # The conversation's exchanges
     ConversationExchange[len > 0] exchanges
+
+
+# A user-model conversation with generating state
+struct ConversationGenerating (Conversation, ConversationGeneratingBase)
 
 
 # A conversation user-model exchange
@@ -37,16 +45,6 @@ struct ConversationExchange
 
     # The model response
     string model
-
-
-# Model information struct
-struct ModelInfo
-
-    # The current model name
-    string model
-
-    # The model size, in bytes
-    int size
 
 
 group "Ollama Chat JSON"
@@ -78,10 +76,10 @@ action getConversations
         string model
 
         # The available models
-        ModelInfo[] models
+        string[] models
 
         # The conversations
-        ConversationInfoEx[] conversations
+        ConversationInfo[] conversations
 
 
 # Set the current model name
@@ -132,10 +130,7 @@ action getConversation
 
     output
         # The conversation
-        Conversation conversation
-
-        # If True, the latest exchange is actively generating
-        bool generating
+        ConversationGenerating conversation
 
     errors
         UnknownConversationID
