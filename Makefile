@@ -21,6 +21,10 @@ GHPAGES_SRC := build/doc/
 TESTS_REQUIRE := bare-script
 
 
+# Exclude incompatible Python versions
+PYTHON_IMAGES_EXCLUDE := python:3.8
+
+
 # Include python-build
 include Makefile.base
 
