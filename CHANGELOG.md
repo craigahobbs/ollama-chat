@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.20 (2024-07-11)
+
+- [fd767b6](https://github.com/craigahobbs/ollama-chat/commit/fd767b6) - fix importlib.resources.open_binary deprecation warning
+
 ## 0.9.19 (2024-06-21)
 
 - [eaa7817](https://github.com/craigahobbs/ollama-chat/commit/eaa7817) - improve conversation modelling
