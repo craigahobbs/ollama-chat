@@ -9,7 +9,7 @@ from contextlib import contextmanager
 import copy
 import json
 import os
-import importlib.resources as pkg_resources
+import importlib.resources
 import re
 import threading
 import uuid
@@ -20,7 +20,7 @@ import schema_markdown
 
 
 # The ollama-chat back-end API WSGI application class
-class OllamaChatApplication(chisel.Application):
+class OllamaChat(chisel.Application):
     __slots__ = ('config', 'chats')
 
 
@@ -58,16 +58,9 @@ class OllamaChatApplication(chisel.Application):
         )
 
 
-    def add_static(self, filename, content_type, urls, doc):
-        with pkg_resources.open_binary('ollama_chat.static', filename) as fh:
-            self.add_request(chisel.StaticRequest(
-                filename,
-                fh.read(),
-                content_type=content_type,
-                urls=urls,
-                doc=doc,
-                doc_group='Ollama Chat Statics'
-            ))
+    def add_static(self, filename, content_type, urls, doc, doc_group='Ollama Chat Statics'):
+        with importlib.resources.files('ollama_chat.static').joinpath(filename).open('rb') as fh:
+            self.add_request(chisel.StaticRequest(filename, fh.read(), content_type, urls, doc, doc_group))
 
 
 # The ollama-chat configuration context manager
@@ -115,7 +108,7 @@ class ConfigManager:
 
 
 # The ollama chat manager class
-class OllamaChat():
+class ChatManager():
     __slots__ = ('app', 'conversation_id', 'stop')
 
 
@@ -125,7 +118,7 @@ class OllamaChat():
         self.stop = False
 
         # Start the chat thread
-        chat_thread = threading.Thread(target=OllamaChat.chat_thread_fn, args=(self,))
+        chat_thread = threading.Thread(target=self.chat_thread_fn, args=(self,))
         chat_thread.daemon = True
         chat_thread.start()
 
@@ -183,7 +176,7 @@ def config_conversation(config, id_):
 
 
 # The Ollama Chat API type model
-with pkg_resources.open_text('ollama_chat.static', 'ollamaChat.smd') as cm_smd:
+with importlib.resources.files('ollama_chat.static').joinpath('ollamaChat.smd').open('r') as cm_smd:
     OLLAMA_CHAT_TYPES = schema_markdown.parse_schema_markdown(cm_smd.read())
 
 
@@ -242,7 +235,7 @@ def start_conversation(ctx, req):
         config['conversations'].insert(0, conversation)
 
         # Start the model chat
-        ctx.app.chats[id_] = OllamaChat(ctx.app, id_)
+        ctx.app.chats[id_] = ChatManager(ctx.app, id_)
 
         # Return the new conversation ID
         return {'id': id_}
@@ -302,7 +295,7 @@ def reply_conversation(ctx, req):
         })
 
         # Start the model chat
-        ctx.app.chats[id_] = OllamaChat(ctx.app, id_)
+        ctx.app.chats[id_] = ChatManager(ctx.app, id_)
 
 
 @chisel.action(name='deleteConversation', types=OLLAMA_CHAT_TYPES)
@@ -356,4 +349,4 @@ def regenerate_conversation_exchange(ctx, req):
         exchanges[-1]['model'] = ''
 
         # Start the model chat
-        ctx.app.chats[id_] = OllamaChat(ctx.app, id_)
+        ctx.app.chats[id_] = ChatManager(ctx.app, id_)

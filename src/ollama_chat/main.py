@@ -13,7 +13,7 @@ import webbrowser
 from schema_markdown import encode_query_string
 import waitress
 
-from .app import OllamaChatApplication
+from .app import OllamaChat
 
 
 # The default config path environment variable
@@ -69,7 +69,7 @@ def main(argv=None):
         config_path = os.path.join(config_path, CONFIG_FILENAME)
 
     # Create the WSGI application
-    wsgiapp = OllamaChatApplication(config_path)
+    wsgiapp = OllamaChat(config_path)
 
     # Wrap the WSGI application and the start_response function so we can log status and environ
     def wsgiapp_wrap(environ, start_response):

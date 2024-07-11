@@ -21,7 +21,7 @@ that allows you to chat locally (and privately) with
 - Delete the most recent conversation exchange
 - View responses as Markdown or text
 - Save conversations as Markdown text
-- Multiple concurrent chat responses (with proper Ollama configuration)
+- Multiple concurrent chats
 
 
 ## Installation
