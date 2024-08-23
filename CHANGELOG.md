@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.21 (2024-08-23)
+
+- [cb8b829](https://github.com/craigahobbs/ollama-chat/commit/cb8b829) - add conversation templates
+
 ## 0.9.20 (2024-07-11)
 
 - [fd767b6](https://github.com/craigahobbs/ollama-chat/commit/fd767b6) - fix importlib.resources.open_binary deprecation warning
