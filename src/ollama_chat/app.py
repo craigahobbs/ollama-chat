@@ -37,10 +37,12 @@ class OllamaChat(chisel.Application):
         self.add_request(delete_conversation_exchange)
         self.add_request(get_conversation)
         self.add_request(get_conversations)
+        self.add_request(get_template)
         self.add_request(regenerate_conversation_exchange)
         self.add_request(reply_conversation)
         self.add_request(set_model)
         self.add_request(start_conversation)
+        self.add_request(start_template)
         self.add_request(stop_conversation)
 
         # Add the ollama-chat statics
@@ -68,7 +70,7 @@ class ConfigManager:
     __slots__ = ('config_path', 'config_lock', 'config')
 
 
-    DEFAULT_MODEL = 'llama3:latest'
+    DEFAULT_MODEL = 'llama3.1:latest'
 
 
     def __init__(self, config_path):
@@ -109,12 +111,13 @@ class ConfigManager:
 
 # The ollama chat manager class
 class ChatManager():
-    __slots__ = ('app', 'conversation_id', 'stop')
+    __slots__ = ('app', 'conversation_id', 'extra', 'stop')
 
 
-    def __init__(self, app, conversation_id):
+    def __init__(self, app, conversation_id, extra = None):
         self.app = app
         self.conversation_id = conversation_id
+        self.extra = extra
         self.stop = False
 
         # Start the chat thread
@@ -125,38 +128,52 @@ class ChatManager():
 
     @staticmethod
     def chat_thread_fn(chat):
-        try:
-            # Create the Ollama messages from the conversation
-            messages = []
-            with chat.app.config() as config:
-                conversation = config_conversation(config, chat.conversation_id)
-                model = conversation['model']
-                for exchange in conversation['exchanges']:
-                    messages.append({'role': 'user', 'content': exchange['user']})
-                    if exchange['model'] != '':
-                        messages.append({'role': 'assistant', 'content': exchange['model']})
+        while True:
+            try:
+                # Create the Ollama messages from the conversation
+                messages = []
+                with chat.app.config() as config:
+                    conversation = config_conversation(config, chat.conversation_id)
+                    model = conversation['model']
+                    for exchange in conversation['exchanges']:
+                        messages.append({'role': 'user', 'content': exchange['user']})
+                        if exchange['model'] != '':
+                            messages.append({'role': 'assistant', 'content': exchange['model']})
 
-            # Start the chat
-            stream = ollama.chat(model=model, messages=messages, stream=True)
+                # Start the chat
+                stream = ollama.chat(model=model, messages=messages, stream=True)
 
-            # Stream the chat response
-            for chunk in stream:
-                # Stop streaming if stopped
-                if chat.stop:
+                # Stream the chat response
+                for chunk in stream:
+                    # Stop streaming if stopped
+                    if chat.stop:
+                        break
+
+                    # Update the conversation
+                    with chat.app.config() as config:
+                        conversation = config_conversation(config, chat.conversation_id)
+                        exchange = conversation['exchanges'][-1]
+                        exchange['model'] += chunk['message']['content']
+
+                # Any extra prompts?
+                if not chat.extra:
                     break
 
-                # Update the conversation
+                # Add the next user prompt
+                with chat.app.config() as config:
+                    conversation = config_conversation(config, chat.conversation_id)
+                    conversation['exchanges'].append({
+                        'user': chat.extra[0],
+                        'model': ''
+                    })
+                    del chat.extra[0]
+
+            except Exception as exc: # pylint: disable=broad-exception-caught
+                # Communicate the error
                 with chat.app.config() as config:
                     conversation = config_conversation(config, chat.conversation_id)
                     exchange = conversation['exchanges'][-1]
-                    exchange['model'] += chunk['message']['content']
-
-        except Exception as exc: # pylint: disable=broad-exception-caught
-            # Communicate the error
-            with chat.app.config() as config:
-                conversation = config_conversation(config, chat.conversation_id)
-                exchange = conversation['exchanges'][-1]
-                exchange['model'] += f'\n**ERROR:** {exc}'
+                    exchange['model'] += f'\n**ERROR:** {exc}'
 
         # Save the conversation
         with chat.app.config(save=True):
@@ -184,7 +201,7 @@ with importlib.resources.files('ollama_chat.static').joinpath('ollamaChat.smd').
 def get_conversations(ctx, unused_req):
     models = ollama.list()['models'] or ()
     with ctx.app.config() as config:
-        return {
+        response = {
             'model': config['model'],
             'models': sorted(model['name'] for model in models),
             'conversations': [
@@ -197,12 +214,25 @@ def get_conversations(ctx, unused_req):
                 for conversation in config['conversations']
             ]
         }
+        if 'templates' in config:
+            response['templates'] = [template['title'] for template in config['templates']]
+        return response
 
 
 @chisel.action(name='setModel', types=OLLAMA_CHAT_TYPES)
 def set_model(ctx, req):
     with ctx.app.config(save=True) as config:
         config['model'] = req['model']
+
+
+@chisel.action(name='getTemplate', types=OLLAMA_CHAT_TYPES)
+def get_template(ctx, req):
+    template_index = req['index']
+    with ctx.app.config(save=True) as config:
+        templates = config.get('templates') or []
+        if template_index >= len(templates):
+            raise chisel.ActionError('UnknownTemplateIndex')
+        return copy.deepcopy(templates[template_index])
 
 
 @chisel.action(name='startConversation', types=OLLAMA_CHAT_TYPES)
@@ -236,6 +266,61 @@ def start_conversation(ctx, req):
 
         # Start the model chat
         ctx.app.chats[id_] = ChatManager(ctx.app, id_)
+
+        # Return the new conversation ID
+        return {'id': id_}
+
+
+@chisel.action(name='startTemplate', types=OLLAMA_CHAT_TYPES)
+def start_template(ctx, req):
+    template_index = req['index']
+    variable_values = req.get('variables') or {}
+
+    with ctx.app.config() as config:
+        # Get the conversation template
+        if template_index >= len(config['templates']):
+            raise chisel.ActionError('InvalidTemplateIndex')
+        template = config['templates'][template_index]
+        title = template['title']
+        prompts = template['prompts']
+        variables = template.get('variables') or []
+
+        # Missing template variable values?
+        for variable in variables:
+            if variable['name'] not in variable_values:
+                raise chisel.ActionError('MissingVariable', f'Missing variable value for "{variable["name"]}")')
+
+        # Unknown template variable value
+        for variable_name in sorted(variable_values.keys()):
+            if variable_name not in (variable['name'] for variable in variables):
+                raise chisel.ActionError('UnknownVariable', f'Unknown variable value for "{variable_name}")')
+
+        # Render the prompts (if necessary)
+        if variables:
+            re_variables = re.compile(r'\{\{(' + '|'.join(re.escape(variable['name']) for variable in variables) + r')\}\}')
+            title = re_variables.sub(lambda match: variable_values[match.group(1)], title)
+            prompts = [re_variables.sub(lambda match: variable_values[match.group(1)], prompt) for prompt in prompts]
+
+        # Create the new conversation object
+        id_ = str(uuid.uuid4())
+        model = config['model']
+        conversation = {
+            'id': id_,
+            'model': model,
+            'title': title,
+            'exchanges': [
+                {
+                    'user': prompts[0],
+                    'model': ''
+                }
+            ]
+        }
+
+        # Add the new conversation to the application config
+        config['conversations'].insert(0, conversation)
+
+        # Start the model chat
+        ctx.app.chats[id_] = ChatManager(ctx.app, id_, prompts[1:])
 
         # Return the new conversation ID
         return {'id': id_}

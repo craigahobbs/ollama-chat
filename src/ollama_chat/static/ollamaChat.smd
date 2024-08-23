@@ -59,8 +59,34 @@ struct OllamaChatConfig
     # The saved conversations
     Conversation[] conversations
 
+    # The conversation templates
+    optional ConversationTemplate[len > 0] templates
+
     # If true, don't save the config file
     optional bool noSave
+
+
+# An Ollama Chat conversation template
+struct ConversationTemplate
+
+    # The conversation title
+    string title
+
+    # The user prompts to execute in order
+    string[len > 0] prompts
+
+    # The template variables (e.g. "{{var}}")
+    optional ConversationTemplateVariable[len > 0] variables
+
+
+# An Ollama Chat conversation template variable
+struct ConversationTemplateVariable
+
+    # The variable name (e.g. "CityState")
+    string name
+
+    # The variable's label (e.g. "The City and State (e.g. Seattle, WA)")
+    string label
 
 
 group "Ollama Chat API"
@@ -81,6 +107,9 @@ action getConversations
         # The conversations
         ConversationInfo[] conversations
 
+        # The conversation template titles
+        optional string[len > 0] templates
+
 
 # Set the current model name
 action setModel
@@ -90,6 +119,21 @@ action setModel
     input
         # The model name
         string model
+
+
+# Get a conversation template
+action getTemplate
+    urls
+        GET
+
+    query
+        # The template index
+        int(>= 0) index
+
+    output (ConversationTemplate)
+
+    errors
+        UnknownTemplateIndex
 
 
 # Start a conversation
@@ -104,6 +148,28 @@ action startConversation
     output
         # The new conversation ID
         string id
+
+
+# Start a conversation
+action startTemplate
+    urls
+        POST
+
+    input
+        # The template index
+        int(>= 0) index
+
+        # The template variable values
+        optional string{len > 0} variables
+
+    output
+        # The new conversation ID
+        string id
+
+    errors
+        InvalidTemplateIndex
+        MissingVariable
+        UnknownVariable
 
 
 # Stop a generating conversation

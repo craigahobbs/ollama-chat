@@ -22,6 +22,7 @@ class TestApp(unittest.TestCase):
                 'deleteConversationExchange',
                 'getConversation',
                 'getConversations',
+                'getTemplate',
                 'index.html',
                 'ollamaChat.bare',
                 'redirect_doc',
@@ -29,6 +30,7 @@ class TestApp(unittest.TestCase):
                 'replyConversation',
                 'setModel',
                 'startConversation',
+                'startTemplate',
                 'stopConversation'
             ])
 

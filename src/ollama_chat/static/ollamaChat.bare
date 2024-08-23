@@ -16,6 +16,12 @@ async function ollamaChatMain():
         return
     endif
 
+    # Render the template variables page
+    if view == 'variables':
+        ollamaChatVariablesPage(args)
+        return
+    endif
+
     # Render the index page
     ollamaChatIndexPage(args)
 endfunction
@@ -25,6 +31,7 @@ endfunction
 ollamaChatArguments = argsValidate(arrayNew( \
     objectNew('name', 'action', 'explicit', true), \
     objectNew('name', 'id'), \
+    objectNew('name', 'index', 'type', 'int'), \
     objectNew('name', 'message', 'explicit', true), \
     objectNew('name', 'multiline', 'type', 'bool'), \
     objectNew('name', 'text', 'type', 'bool'), \
@@ -114,6 +121,19 @@ async function ollamaChatIndexPage(args):
             'formats', objectNew('Title', objectNew('markdown', true)) \
         ))
     endif
+
+    # Render the conversation templates
+    templates = objectGet(conversationsResponse, 'templates')
+    if templates:
+        markdownPrint('## Templates')
+        for template, ixTemplate in templates:
+            elementModelRender( \
+                objectNew('html', 'p', 'elem', arrayNew( \
+                    formsLinkButtonElements(template, systemPartial(ollamaChatOnTemplateSelect, ixTemplate)) \
+                )) \
+            )
+        endfor
+    endif
 endfunction
 
 
@@ -124,6 +144,98 @@ async function ollamaChatOnModelSelect(model):
 
     # Set location to the index page
     windowSetLocation(argsURL(ollamaChatArguments, null, true))
+endfunction
+
+
+# Select template on-click event handler
+async function ollamaChatOnTemplateSelect(templateIndex):
+    # Get the template
+    templateResponse = systemFetch('getTemplate?index=' + templateIndex)
+    templateResponse = if(templateResponse != null, jsonParse(templateResponse))
+    if templateResponse == null:
+        return
+    endif
+
+    # Variables?
+    if objectGet(templateResponse, 'variables'):
+        windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', 'variables', 'index', templateIndex)))
+        return
+    endif
+
+    # Start the conversation
+    startRequest = objectNew('index', templateIndex)
+    startResponse = systemFetch(objectNew('url', 'startTemplate', 'body', jsonStringify(startRequest)))
+    startResponse = if(startResponse != null, jsonParse(startResponse))
+    if startResponse == null:
+        return
+    endif
+    id = objectGet(startResponse, 'id')
+
+    # Navigate to the conversation page
+    windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', id), false, ollamaChatBottomID))
+endfunction
+
+
+# The Ollama Chat conversation page
+async function ollamaChatVariablesPage(args):
+    templateIndex = objectGet(args, 'index')
+
+    # Get the template
+    templateResponse = systemFetch('getTemplate?index=' + templateIndex)
+    templateResponse = if(templateResponse != null, jsonParse(templateResponse))
+    if templateResponse == null:
+        ollamaChatErrorPage('Unknown template index')
+        return
+    endif
+
+    # Render the page title
+    title = 'Variables - ' + objectGet(templateResponse, 'title')
+    documentSetTitle(title)
+    markdownPrint(argsLink(ollamaChatArguments, 'Back', null, true), '', '# ' + markdownEscape(title))
+
+    # Render the variable inputs
+    variables = objectGet(templateResponse, 'variables')
+    submitFn = systemPartial(ollamaChatOnVariablesSubmit, templateIndex, variables)
+    onEnterFn = if(arrayLength(variables) == 1, submitFn)
+    for variable, ixVariable in variables:
+        name = objectGet(variable, 'name')
+        label = objectGet(variable, 'label')
+        elementModelRender(arrayNew( \
+            objectNew('html', 'p', 'elem', objectNew('html', 'b', 'elem', objectNew('text', label))), \
+            objectNew('html', 'p', 'elem', formsTextElements(name, '', 50, onEnterFn)) \
+        ))
+        if ixVariable == 0:
+            documentSetFocus(name)
+        endif
+    endfor
+
+    # Render the submit button
+    elementModelRender(arrayNew( \
+        objectNew('html', 'p', 'elem', formsLinkButtonElements('Start New Conversation', submitFn)) \
+    ))
+endfunction
+
+
+# Variables submit on-click event handler
+async function ollamaChatOnVariablesSubmit(templateIndex, variables):
+    # Get the variable values
+    variableValues = objectNew()
+    for variable in variables:
+        name = objectGet(variable, 'name')
+        objectSet(variableValues, name, documentInputValue(name))
+    endfor
+
+    # Start the conversation
+    startRequest = objectNew('index', templateIndex, 'variables', variableValues)
+    startResponse = systemFetch(objectNew('url', 'startTemplate', 'body', jsonStringify(startRequest)))
+    startResponse = if(startResponse != null, jsonParse(startResponse))
+    if startResponse == null:
+        return
+    endif
+    id = objectGet(startResponse, 'id')
+
+    # Navigate to the conversation page
+    windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', id), false, ollamaChatBottomID))
 endfunction
 
 
@@ -253,13 +365,13 @@ async function ollamaChatConversationPageBottom(args, conversation, generating):
 
     # Set the conversation update timeout
     if generating:
-        windowSetTimeout(systemPartial(ollamaChatOnConversationTimeout, args), ollamaChatTimeoutMs)
+        windowSetTimeout(systemPartial(ollamaChatOnConversationTimeout, args, arrayLength(exchanges)), ollamaChatTimeoutMs)
     endif
 endfunction
 
 
 # The Ollama Chat chat page conversation-update timeout handler
-async function ollamaChatOnConversationTimeout(args):
+async function ollamaChatOnConversationTimeout(args, originalExchangeCount):
     id = objectGet(args, 'id')
 
     # Fetch the conversation
@@ -275,6 +387,13 @@ async function ollamaChatOnConversationTimeout(args):
     # Done generating? Re-render the page to update the floating controls
     if !generating:
         ollamaChatSavePrompt()
+        ollamaChatConversationPage(args)
+        return
+    endif
+
+    # Has the exhange count changed?
+    exchangeCount = arrayLength(objectGet(conversation, 'exchanges'))
+    if exchangeCount != originalExchangeCount:
         ollamaChatConversationPage(args)
         return
     endif
