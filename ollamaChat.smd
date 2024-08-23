@@ -47,25 +47,6 @@ struct ConversationExchange
     string model
 
 
-group "Ollama Chat JSON"
-
-
-# The Ollama Chat config file format
-struct OllamaChatConfig
-
-    # The current model name
-    optional string model
-
-    # The saved conversations
-    Conversation[] conversations
-
-    # The conversation templates
-    optional ConversationTemplate[len > 0] templates
-
-    # If true, don't save the config file
-    optional bool noSave
-
-
 # An Ollama Chat conversation template
 struct ConversationTemplate
 
@@ -87,6 +68,25 @@ struct ConversationTemplateVariable
 
     # The variable's label (e.g. "The City and State (e.g. Seattle, WA)")
     string label
+
+
+group "Ollama Chat JSON"
+
+
+# The Ollama Chat config file format
+struct OllamaChatConfig
+
+    # The current model name
+    optional string model
+
+    # The saved conversations
+    Conversation[] conversations
+
+    # The conversation templates
+    optional ConversationTemplate[len > 0] templates
+
+    # If true, don't save the config file
+    optional bool noSave
 
 
 group "Ollama Chat API"
