@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.22 (2024-09-05)
+
+- [2639530](https://github.com/craigahobbs/ollama-chat/commit/2639530) - add prompt commands
+
 ## 0.9.21 (2024-08-23)
 
 - [cb8b829](https://github.com/craigahobbs/ollama-chat/commit/cb8b829) - add conversation templates
