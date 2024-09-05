@@ -3,7 +3,7 @@
 
 
 # The user-model conversation info
-struct ConversationBase
+struct ConversationInfo
 
     # The conversation identifier
     string id
@@ -15,26 +15,11 @@ struct ConversationBase
     string title
 
 
-# The user-model conversation generating state
-struct ConversationGeneratingBase
-
-    # If True, the latest exchange is actively generating
-    bool generating
-
-
-# Conversation information struct with generating state
-struct ConversationInfo (ConversationBase, ConversationGeneratingBase)
-
-
 # A user-model conversation
-struct Conversation (ConversationBase)
+struct Conversation (ConversationInfo)
 
     # The conversation's exchanges
     ConversationExchange[len > 0] exchanges
-
-
-# A user-model conversation with generating state
-struct ConversationGenerating (Conversation, ConversationGeneratingBase)
 
 
 # A conversation user-model exchange
@@ -59,6 +44,9 @@ struct ConversationTemplate
     # The template variables (e.g. "{{var}}")
     optional ConversationTemplateVariable[len > 0] variables
 
+    # The template command name
+    optional string name
+
 
 # An Ollama Chat conversation template variable
 struct ConversationTemplateVariable
@@ -68,6 +56,16 @@ struct ConversationTemplateVariable
 
     # The variable's label (e.g. "The City and State (e.g. Seattle, WA)")
     string label
+
+
+# An Ollama Chat conversation template info struct
+struct ConversationTemplateInfo
+
+    # The template identifier
+    string id
+
+    # The template title
+    string title
 
 
 group "Ollama Chat JSON"
@@ -107,8 +105,8 @@ action getConversations
         # The conversations
         ConversationInfo[] conversations
 
-        # The conversation template titles
-        optional string[len > 0] templates
+        # The conversation templates
+        ConversationTemplateInfo[] templates
 
 
 # Set the current model name
@@ -127,13 +125,13 @@ action getTemplate
         GET
 
     query
-        # The template index
-        int(>= 0) index
+        # The template ID
+        string id
 
     output (ConversationTemplate)
 
     errors
-        UnknownTemplateIndex
+        UnknownTemplateID
 
 
 # Start a conversation
@@ -156,8 +154,8 @@ action startTemplate
         POST
 
     input
-        # The template index
-        int(>= 0) index
+        # The template ID
+        string id
 
         # The template variable values
         optional string{len > 0} variables
@@ -167,7 +165,7 @@ action startTemplate
         string id
 
     errors
-        InvalidTemplateIndex
+        UnknownTemplateID
         MissingVariable
         UnknownVariable
 
@@ -196,7 +194,10 @@ action getConversation
 
     output
         # The conversation
-        ConversationGenerating conversation
+        Conversation conversation
+
+        # If True, the latest exchange is actively generating
+        bool generating
 
     errors
         UnknownConversationID

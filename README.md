@@ -22,6 +22,8 @@ that allows you to chat locally (and privately) with
 - View responses as Markdown or text
 - Save conversations as Markdown text
 - Multiple concurrent chats
+- Prompt commands for including file and URL content
+- Conversation templates for repeating prompts with variable substitutions
 
 
 ## Installation
@@ -58,14 +60,81 @@ A web browser is launched and opens the Ollama Chat web application.
 
 By default, a configuration file, "ollama-chat.json", is created in the user's home directory.
 
-
-## Start Conversation from CLI
-
 To start a conversation from the command line, use the `-m` argument:
 
 ~~~
 ollama-chat -m "Why is the sky blue?"
 ~~~
+
+
+## Prompt Commands
+
+Ollama Chat supports special **prompt commands** that allow you to include file and URL content in
+your prompt, among other things. The following prompt commands are available:
+
+- `/file` - include a file
+
+  ```
+  /file README.md
+
+  Please summarize the README file.
+  ```
+
+- `/dir` - include files from a directory
+
+  ```
+  /dir src/ollama_chat py
+
+  Please provide a summary for each Ollama Chat source file.
+  ```
+
+- `/url` - include a URL resource
+
+  ```
+  /url https://craigahobbs.github.io/ollama-chat/README.md
+
+  Please summarize the README file.
+  ```
+
+- `/do` - execute a conversation template by name or title
+
+  ```
+  /do city-report -v CityState "Seattle, WA"
+  ```
+
+To get prompt command help use the `-h` option:
+
+```
+/file -h
+```
+
+
+## Conversation Templates
+
+[Conversation Templates](https://craigahobbs.github.io/ollama-chat/api.html#var.vName='OllamaChatConfig'&type_ConversationTemplate)
+allow you to repeat the same prompts with different models. Templates can define variables that may
+be included in the template title and prompt text (`{{var}}`). For example:
+
+```json
+{
+    "conversations": [],
+    "templates": [
+        {
+            "title": "City Report for {{CityState}}",
+            "prompts": [
+                "Tell me about {{CityState}}",
+                "What is the average cost of living in {{CityState}}?"
+            ],
+            "variables": [
+                {
+                    "label": "City, State",
+                    "name": "CityState"
+                }
+            ]
+        }
+    ]
+}
+```
 
 
 ## File Format and API Documentation
