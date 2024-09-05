@@ -32,11 +32,18 @@ struct ConversationExchange
     string model
 
 
-# An Ollama Chat conversation template
-struct ConversationTemplate
+# An Ollama Chat conversation template info struct
+struct ConversationTemplateInfo
 
-    # The conversation title
+    # The template identifier
+    string id
+
+    # The template title
     string title
+
+
+# An Ollama Chat conversation template
+struct ConversationTemplate (ConversationTemplateInfo)
 
     # The user prompts to execute in order
     string[len > 0] prompts
@@ -56,16 +63,6 @@ struct ConversationTemplateVariable
 
     # The variable's label (e.g. "The City and State (e.g. Seattle, WA)")
     string label
-
-
-# An Ollama Chat conversation template info struct
-struct ConversationTemplateInfo
-
-    # The template identifier
-    string id
-
-    # The template title
-    string title
 
 
 group "Ollama Chat JSON"
@@ -125,7 +122,7 @@ action getTemplate
         GET
 
     query
-        # The template ID
+        # The template identifier
         string id
 
     output (ConversationTemplate)
@@ -144,7 +141,7 @@ action startConversation
         string(len > 0) user
 
     output
-        # The new conversation ID
+        # The new conversation identifier
         string id
 
 
@@ -154,14 +151,14 @@ action startTemplate
         POST
 
     input
-        # The template ID
+        # The template identifier
         string id
 
         # The template variable values
         optional string{len > 0} variables
 
     output
-        # The new conversation ID
+        # The new conversation identifier
         string id
 
     errors
@@ -220,6 +217,23 @@ action replyConversation
         ConversationBusy
 
 
+# Set a conversation's title
+action setConversationTitle
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+        # The title
+        string(len > 0) title
+
+    errors
+        UnknownConversationID
+        ConversationBusy
+
+
 # Delete a conversation
 action deleteConversation
     urls
@@ -227,6 +241,24 @@ action deleteConversation
 
     input
         # The conversation identifier
+        string id
+
+    errors
+        UnknownConversationID
+        ConversationBusy
+
+
+# Create a conversation template from a conversation
+action createTemplateFromConversation
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+    output
+        # The new template identifier
         string id
 
     errors
