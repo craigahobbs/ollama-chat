@@ -1,0 +1,11 @@
+{
+    "conversations": [],
+    "templates": [
+        {
+            "prompts": [
+                "The Ollama Chat source files are included below:\n\n/dir src/ollama_chat py -d 2 -e bare -e smd\n\nPlease provide a brief summary of each Ollama Chat source file."
+            ],
+            "title": "Chat with the Ollama Chat source code"
+        }
+    ]
+}

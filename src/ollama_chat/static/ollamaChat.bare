@@ -31,7 +31,6 @@ endfunction
 ollamaChatArguments = argsValidate(arrayNew( \
     objectNew('name', 'action', 'explicit', true), \
     objectNew('name', 'id'), \
-    objectNew('name', 'index', 'type', 'int'), \
     objectNew('name', 'message', 'explicit', true), \
     objectNew('name', 'multiline', 'type', 'bool'), \
     objectNew('name', 'text', 'type', 'bool'), \
@@ -126,10 +125,12 @@ async function ollamaChatIndexPage(args):
     templates = objectGet(conversationsResponse, 'templates')
     if templates:
         markdownPrint('## Templates')
-        for template, ixTemplate in templates:
+        for template in templates:
+            templateID = objectGet(template, 'id')
+            templateTitle = objectGet(template, 'title')
             elementModelRender( \
                 objectNew('html', 'p', 'elem', arrayNew( \
-                    formsLinkButtonElements(template, systemPartial(ollamaChatOnTemplateSelect, ixTemplate)) \
+                    formsLinkButtonElements(templateTitle, systemPartial(ollamaChatOnTemplateSelect, templateID)) \
                 )) \
             )
         endfor
@@ -148,9 +149,9 @@ endfunction
 
 
 # Select template on-click event handler
-async function ollamaChatOnTemplateSelect(templateIndex):
+async function ollamaChatOnTemplateSelect(templateID):
     # Get the template
-    templateResponse = systemFetch('getTemplate?index=' + templateIndex)
+    templateResponse = systemFetch('getTemplate?id=' + templateID)
     templateResponse = if(templateResponse != null, jsonParse(templateResponse))
     if templateResponse == null:
         return
@@ -158,12 +159,12 @@ async function ollamaChatOnTemplateSelect(templateIndex):
 
     # Variables?
     if objectGet(templateResponse, 'variables'):
-        windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', 'variables', 'index', templateIndex)))
+        windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', 'variables', 'id', templateID)))
         return
     endif
 
     # Start the conversation
-    startRequest = objectNew('index', templateIndex)
+    startRequest = objectNew('id', templateID)
     startResponse = systemFetch(objectNew('url', 'startTemplate', 'body', jsonStringify(startRequest)))
     startResponse = if(startResponse != null, jsonParse(startResponse))
     if startResponse == null:
@@ -178,13 +179,13 @@ endfunction
 
 # The Ollama Chat conversation page
 async function ollamaChatVariablesPage(args):
-    templateIndex = objectGet(args, 'index')
+    templateID = objectGet(args, 'id')
 
     # Get the template
-    templateResponse = systemFetch('getTemplate?index=' + templateIndex)
+    templateResponse = systemFetch('getTemplate?id=' + templateID)
     templateResponse = if(templateResponse != null, jsonParse(templateResponse))
     if templateResponse == null:
-        ollamaChatErrorPage('Unknown template index')
+        ollamaChatErrorPage('Unknown template ID')
         return
     endif
 
@@ -195,7 +196,7 @@ async function ollamaChatVariablesPage(args):
 
     # Render the variable inputs
     variables = objectGet(templateResponse, 'variables')
-    submitFn = systemPartial(ollamaChatOnVariablesSubmit, templateIndex, variables)
+    submitFn = systemPartial(ollamaChatOnVariablesSubmit, templateID, variables)
     onEnterFn = if(arrayLength(variables) == 1, submitFn)
     for variable, ixVariable in variables:
         name = objectGet(variable, 'name')
@@ -217,7 +218,7 @@ endfunction
 
 
 # Variables submit on-click event handler
-async function ollamaChatOnVariablesSubmit(templateIndex, variables):
+async function ollamaChatOnVariablesSubmit(templateID, variables):
     # Get the variable values
     variableValues = objectNew()
     for variable in variables:
@@ -226,7 +227,7 @@ async function ollamaChatOnVariablesSubmit(templateIndex, variables):
     endfor
 
     # Start the conversation
-    startRequest = objectNew('index', templateIndex, 'variables', variableValues)
+    startRequest = objectNew('id', templateID, 'variables', variableValues)
     startResponse = systemFetch(objectNew('url', 'startTemplate', 'body', jsonStringify(startRequest)))
     startResponse = if(startResponse != null, jsonParse(startResponse))
     if startResponse == null:
@@ -260,9 +261,9 @@ async function ollamaChatConversationPage(args):
             return
         endif
         conversation = objectGet(conversationResponse, 'conversation')
+        generating = objectGet(conversationResponse, 'generating')
         title = objectGet(conversation, 'title')
         model = objectGet(conversation, 'model')
-        generating = objectGet(conversation, 'generating')
     else:
         conversationsResponse = systemFetch('getConversations')
         conversationsResponse = if(conversationsResponse != null, jsonParse(conversationsResponse))
@@ -382,7 +383,7 @@ async function ollamaChatOnConversationTimeout(args, originalExchangeCount):
         return
     endif
     conversation = objectGet(conversationResponse, 'conversation')
-    generating = objectGet(conversation, 'generating')
+    generating = objectGet(conversationResponse, 'generating')
 
     # Done generating? Re-render the page to update the floating controls
     if !generating:
