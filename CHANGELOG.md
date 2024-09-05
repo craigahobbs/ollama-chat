@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.23 (2024-09-05)
+
+- [aba1376](https://github.com/craigahobbs/ollama-chat/commit/aba1376) - add ability to edit conversation title
+
+- [e125368](https://github.com/craigahobbs/ollama-chat/commit/e125368) - conversation page link to create template
+
 ## 0.9.22 (2024-09-05)
 
 - [2639530](https://github.com/craigahobbs/ollama-chat/commit/2639530) - add prompt commands
