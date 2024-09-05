@@ -217,6 +217,23 @@ action replyConversation
         ConversationBusy
 
 
+# Set a conversation's title
+action setConversationTitle
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+        # The title
+        string(len > 0) title
+
+    errors
+        UnknownConversationID
+        ConversationBusy
+
+
 # Delete a conversation
 action deleteConversation
     urls

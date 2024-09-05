@@ -30,6 +30,7 @@ class TestApp(unittest.TestCase):
                 'redirect_doc',
                 'regenerateConversationExchange',
                 'replyConversation',
+                'setConversationTitle',
                 'setModel',
                 'startConversation',
                 'startTemplate',

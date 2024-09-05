@@ -43,6 +43,7 @@ class OllamaChat(chisel.Application):
         self.add_request(get_template)
         self.add_request(regenerate_conversation_exchange)
         self.add_request(reply_conversation)
+        self.add_request(set_conversation_title)
         self.add_request(set_model)
         self.add_request(start_conversation)
         self.add_request(start_template)
@@ -143,10 +144,10 @@ def get_conversations(ctx, unused_req):
             ],
             'templates': [
                 {
-                    'id': str(ix_template),
+                    'id': template['id'],
                     'title': template['title']
                 }
-                for ix_template, template in enumerate(config.get('templates') or ())
+                for template in (config.get('templates') or ())
             ]
         }
 
@@ -159,15 +160,13 @@ def set_model(ctx, req):
 
 @chisel.action(name='getTemplate', types=OLLAMA_CHAT_TYPES)
 def get_template(ctx, req):
+    template_id = req['id']
     with ctx.app.config(save=True) as config:
         templates = config.get('templates') or []
-        try:
-            template_index = int(req['id'])
-        except ValueError:
+        template = next((template for template in templates if template['id'] == template_id), None)
+        if template is None:
             raise chisel.ActionError('UnknownTemplateID')
-        if template_index < 0 or template_index >= len(templates):
-            raise chisel.ActionError('UnknownTemplateID')
-        return copy.deepcopy(templates[template_index])
+        return copy.deepcopy(template)
 
 
 @chisel.action(name='startConversation', types=OLLAMA_CHAT_TYPES)
@@ -208,18 +207,15 @@ def start_conversation(ctx, req):
 
 @chisel.action(name='startTemplate', types=OLLAMA_CHAT_TYPES)
 def start_template(ctx, req):
+    template_id = req['id']
     variable_values = req.get('variables') or {}
 
     with ctx.app.config() as config:
         # Get the conversation template
-        templates = config['templates']
-        try:
-            template_index = int(req['id'])
-        except ValueError:
+        templates = config.get('templates') or []
+        template = next((template for template in templates if template['id'] == template_id), None)
+        if template is None:
             raise chisel.ActionError('UnknownTemplateID')
-        if template_index < 0 or template_index >= len(templates):
-            raise chisel.ActionError('UnknownTemplateID')
-        template = templates[template_index]
 
         # Get the template prompts
         try:
@@ -306,6 +302,22 @@ def reply_conversation(ctx, req):
 
         # Start the model chat
         ctx.app.chats[id_] = ChatManager(ctx.app, id_)
+
+
+@chisel.action(name='setConversationTitle', types=OLLAMA_CHAT_TYPES)
+def set_conversation_title(ctx, req):
+    with ctx.app.config(save=True) as config:
+        id_ = req['id']
+        conversation = config_conversation(config, id_)
+        if conversation is None:
+            raise chisel.ActionError('UnknownConversationID')
+
+        # Busy?
+        if id_ in ctx.app.chats:
+            raise chisel.ActionError('ConversationBusy')
+
+        # Set the conversation title
+        conversation['title'] = req['title']
 
 
 @chisel.action(name='deleteConversation', types=OLLAMA_CHAT_TYPES)

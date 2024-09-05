@@ -45,11 +45,25 @@ async function ollamaChatConversationPage(args):
 
     # Render the chat title
     documentSetTitle(title)
-    markdownPrint( \
-        '# ' + markdownEscape(title), \
-        '', \
-        '**Model:** ' + markdownEscape(model) \
-    )
+    if objectGet(args, 'action') == 'title':
+        markdownPrint('', '**Title:**')
+        titleClickFn = systemPartial(ollamaChatOnConversationTitleUpdate, args)
+        elementModelRender(arrayNew( \
+            objectNew('html', 'p', 'elem', formsTextElements(ollamaChatTitleInputID, title, 50, titleClickFn)), \
+            objectNew('html', 'p', 'elem', arrayNew( \
+                formsLinkButtonElements('Update', titleClickFn), \
+                objectNew('text', stringFromCharCode(160) + '|' + stringFromCharCode(160)), \
+                formsLinkElements('Cancel', argsURL(ollamaChatArguments)) \
+            )) \
+        ))
+        documentSetFocus(ollamaChatTitleInputID)
+    else:
+        markdownPrint( \
+            '# ' + markdownEscape(title), \
+            '', \
+            '**Model:** ' + markdownEscape(model) \
+        )
+    endif
 
     # No conversation yet?
     if conversation == null:
@@ -133,7 +147,22 @@ async function ollamaChatConversationPageBottom(args, conversation, generating):
 endfunction
 
 
-# The Ollama Chat chat page conversation-update timeout handler
+# The Ollama Chat conversation page title-update click handler
+async function ollamaChatOnConversationTitleUpdate(args):
+    # Update the conversation title
+    title = documentInputValue(ollamaChatTitleInputID)
+    systemFetch(objectNew( \
+        'url', 'setConversationTitle', \
+        'body', jsonStringify(objectNew('id', objectGet(args, 'id'), 'title', title)) \
+    ))
+
+    # Navigate to the conversation
+    ollamaChatSavePrompt()
+    windowSetLocation(argsURL(ollamaChatArguments))
+endfunction
+
+
+# The Ollama Chat conversation page conversation-update timeout handler
 async function ollamaChatOnConversationTimeout(args, originalExchangeCount):
     id = objectGet(args, 'id')
 
@@ -173,6 +202,10 @@ ollamaChatTimeoutMs = 500
 
 # The conversation prompt input ID
 ollamaChatPromptInputID = 'ollama-chat-prompt'
+
+
+# The conversation title input ID
+ollamaChatTitleInputID = 'ollama-chat-title'
 
 
 # The conversation prompt session storage key
@@ -268,7 +301,7 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
 
     # Compute spacing
     fontSizePx = documentFontSize()
-    topSpacePx = 1.5 * fontSizePx
+    topSpacePx = 2 * fontSizePx
     borderRadiusPx = 0.5 * fontSizePx
     menuPadPx = 0.65 * fontSizePx
     inputPadPx = 0.75 * fontSizePx
@@ -280,11 +313,13 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
     # Compute button navigation URLs
     indexURL = argsURL(ollamaChatArguments, null, true)
     menuURL = argsURL(ollamaChatArguments, objectNew('action', if(action != 'menu', 'menu')))
+    titleURL = argsURL(ollamaChatArguments, objectNew('action', 'title'))
     markdownURL = argsURL(ollamaChatArguments, objectNew('text', !textView))
     multilineURL = argsURL(ollamaChatArguments, objectNew('multiline', !multiline))
 
     # Compute button on-click functions
     menuClickFn = systemPartial(ollamaChatOnConversationClick, args, null, menuURL)
+    titleClickFn = systemPartial(ollamaChatOnConversationClick, args, null, titleURL)
     markdownClickFn = systemPartial(ollamaChatOnConversationClick, args, null, markdownURL)
     deleteClickFn = systemPartial(ollamaChatOnConversationClick, args, 'deleteConversation', indexURL, true)
     templateClickFn = systemPartial(ollamaChatOnConversationClick, args, 'createTemplateFromConversation', indexURL, true)
@@ -345,6 +380,8 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
                 objectNew('text', separator), \
                 formsLinkButtonElements(if(action != 'menu', '>>', '<<'), menuClickFn), \
                 if(action == 'menu', arrayNew( \
+                    objectNew('text', separator), \
+                    formsLinkButtonElements(if(!textView, 'Title', 'Markdown'), titleClickFn), \
                     objectNew('text', separator), \
                     formsLinkButtonElements(if(!textView, 'Text', 'Markdown'), markdownClickFn), \
                     objectNew('text', separator), \
