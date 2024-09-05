@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.24 (2024-09-05)
+
+- [21fd0b9](https://github.com/craigahobbs/ollama-chat/commit/21fd0b9) - fix missing static file
+
 ## 0.9.23 (2024-09-05)
 
 - [aba1376](https://github.com/craigahobbs/ollama-chat/commit/aba1376) - add ability to edit conversation title
