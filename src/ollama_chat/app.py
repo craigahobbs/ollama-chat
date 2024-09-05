@@ -35,6 +35,7 @@ class OllamaChat(chisel.Application):
         self.add_requests(chisel.create_doc_requests())
 
         # Add the APIs
+        self.add_request(create_template_from_conversation)
         self.add_request(delete_conversation)
         self.add_request(delete_conversation_exchange)
         self.add_request(get_conversation)
@@ -58,7 +59,13 @@ class OllamaChat(chisel.Application):
             'ollamaChat.bare',
             'text/plain; charset=utf-8',
             (('GET', None),),
-            'The Ollama Chat application BareScript'
+            'The Ollama Chat application'
+        )
+        self.add_static(
+            'ollamaChatConversation.bare',
+            'text/plain; charset=utf-8',
+            (('GET', None),),
+            'The Ollama Chat application conversation page'
         )
 
 
@@ -195,7 +202,7 @@ def start_conversation(ctx, req):
         # Start the model chat
         ctx.app.chats[id_] = ChatManager(ctx.app, id_)
 
-        # Return the new conversation ID
+        # Return the new conversation identifier
         return {'id': id_}
 
 
@@ -242,7 +249,7 @@ def start_template(ctx, req):
         # Start the model chat
         ctx.app.chats[id_] = ChatManager(ctx.app, id_, prompts[1:])
 
-        # Return the new conversation ID
+        # Return the new conversation identifier
         return {'id': id_}
 
 
@@ -315,6 +322,33 @@ def delete_conversation(ctx, req):
 
         # Delete the conversation
         config['conversations'] = [conversation for conversation in config['conversations'] if conversation['id'] != id_]
+
+
+@chisel.action(name='createTemplateFromConversation', types=OLLAMA_CHAT_TYPES)
+def create_template_from_conversation(ctx, req):
+    with ctx.app.config(save=True) as config:
+        id_ = req['id']
+        conversation = config_conversation(config, id_)
+        if conversation is None:
+            raise chisel.ActionError('UnknownConversationID')
+
+        # Busy?
+        if id_ in ctx.app.chats:
+            raise chisel.ActionError('ConversationBusy')
+
+        # Create the new template
+        id_ = str(uuid.uuid4())
+        template = {
+            'id': id_,
+            'title': conversation['title'],
+            'prompts': [exchange['user'] for exchange in conversation['exchanges']]
+        }
+
+        # Add the new template to the application config
+        config['templates'].insert(0, template)
+
+        # Return the new template identifier
+        return {'id': id_}
 
 
 @chisel.action(name='deleteConversationExchange', types=OLLAMA_CHAT_TYPES)

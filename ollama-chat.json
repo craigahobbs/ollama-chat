@@ -2,6 +2,7 @@
     "conversations": [],
     "templates": [
         {
+            "id": "2B20754A-EEA2-4FC4-AFC7-34F79CDF327D",
             "prompts": [
                 "The Ollama Chat source files are included below:\n\n/dir src/ollama_chat py -d 2 -e bare -e smd\n\nPlease provide a brief summary of each Ollama Chat source file."
             ],
