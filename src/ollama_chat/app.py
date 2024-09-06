@@ -92,7 +92,7 @@ class ConfigManager:
             with open(self.config_path, 'r', encoding='utf-8') as fh_config:
                 self.config = schema_markdown.validate_type(OLLAMA_CHAT_TYPES, 'OllamaChatConfig', json.loads(fh_config.read()))
         else:
-            self.config = {'model': ConfigManager.DEFAULT_MODEL, 'conversations': []}
+            self.config = {'conversations': []}
 
 
     @contextmanager
@@ -100,23 +100,22 @@ class ConfigManager:
         # Acquire the config lock
         self.config_lock.acquire()
 
+        # Yield the config on context entry
+        yield self.config
+
         try:
-            # If no model is set, set the default model
-            is_saving = save
-            if 'model' not in self.config:
-                self.config['model'] = ConfigManager.DEFAULT_MODEL
-                is_saving = True
-
-            # Yield the config on context entry
-            yield self.config
-
             # Save the config file on context exit, if requested
-            if is_saving and not self.config.get('noSave'):
+            if save and not self.config.get('noSave'):
                 with open(self.config_path, 'w', encoding='utf-8') as fh_config:
                     json.dump(self.config, fh_config, indent=4, sort_keys = True)
         finally:
             # Release the config lock
             self.config_lock.release()
+
+
+    @classmethod
+    def get_model(cls, config):
+        return config.get('model', cls.DEFAULT_MODEL)
 
 
 # The Ollama Chat API type model
@@ -132,7 +131,7 @@ def get_conversations(ctx, unused_req):
         models = ()
     with ctx.app.config() as config:
         return {
-            'model': config['model'],
+            'model': ConfigManager.get_model(config),
             'models': sorted(model['name'] for model in models),
             'conversations': [
                 {
@@ -182,10 +181,9 @@ def start_conversation(ctx, req):
 
         # Create the new conversation object
         id_ = str(uuid.uuid4())
-        model = config['model']
         conversation = {
             'id': id_,
-            'model': model,
+            'model': ConfigManager.get_model(config),
             'title': title,
             'exchanges': [
                 {
@@ -229,7 +227,7 @@ def start_template(ctx, req):
         id_ = str(uuid.uuid4())
         conversation = {
             'id': id_,
-            'model': config['model'],
+            'model': ConfigManager.get_model(config),
             'title': title,
             'exchanges': [
                 {
@@ -356,6 +354,10 @@ def create_template_from_conversation(ctx, req):
             'prompts': [exchange['user'] for exchange in conversation['exchanges']]
         }
 
+        # A conversation's exchanges can be empty, a template's prompts cannot
+        if not template['prompts']:
+            template['prompts'].append('')
+
         # Add the new template to the application config
         config['templates'].insert(0, template)
 
@@ -377,7 +379,7 @@ def delete_conversation_exchange(ctx, req):
 
         # Delete the most recent exchange (but not the last one)
         exchanges = conversation['exchanges']
-        if len(exchanges) > 1:
+        if len(exchanges):
             del exchanges[-1]
 
 

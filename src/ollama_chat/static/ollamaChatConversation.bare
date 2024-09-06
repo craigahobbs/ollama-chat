@@ -53,7 +53,7 @@ async function ollamaChatConversationPage(args):
             objectNew('html', 'p', 'elem', formsTextElements(ollamaChatTitleInputID, title, 50, titleClickFn)), \
             objectNew('html', 'p', 'elem', arrayNew( \
                 formsLinkButtonElements('Update', titleClickFn), \
-                objectNew('text', stringFromCharCode(160) + '|' + stringFromCharCode(160)), \
+                objectNew('text', stringFromCharCode(160, 160)), \
                 formsLinkButtonElements('Cancel', cancelClickFn) \
             )) \
         ))
@@ -106,30 +106,31 @@ async function ollamaChatConversationPageBottom(args, conversation, generating):
     multiline = objectGet(args, 'multiline')
     textView = objectGet(args, 'text')
 
-    # Render the model reply
+    # Any exchanges?
     exchanges = objectGet(conversation, 'exchanges')
-    lastExchange = arrayGet(exchanges, arrayLength(exchanges) - 1)
-    if textView:
-        elementModelRender(objectNew('html', 'pre', 'elem', objectNew('text', objectGet(lastExchange, 'model'))))
-    else:
-        markdownPrint(objectGet(lastExchange, 'model'))
-    endif
+    if arrayLength(exchanges):
+        # Render the model reply
+        lastExchange = arrayGet(exchanges, arrayLength(exchanges) - 1)
+        if textView:
+            elementModelRender(objectNew('html', 'pre', 'elem', objectNew('text', objectGet(lastExchange, 'model'))))
+        else:
+            markdownPrint(objectGet(lastExchange, 'model'))
+        endif
 
-    # Compute button on-click functions
-    deleteExchangeFn = systemPartial(ollamaChatOnConversationClick, args, 'deleteConversationExchange')
-    regenerateExchangeFn = systemPartial(ollamaChatOnConversationClick, args, 'regenerateConversationExchange')
+        # Compute button on-click functions
+        deleteExchangeFn = systemPartial(ollamaChatOnConversationClick, args, 'deleteConversationExchange')
+        regenerateExchangeFn = systemPartial(ollamaChatOnConversationClick, args, 'regenerateConversationExchange')
 
-    # Render the regenerate and delete links
-    if !generating:
-        elementModelRender( \
-            objectNew('html', 'p', 'elem', arrayNew( \
-                if(arrayLength(exchanges) > 1, arrayNew( \
+        # Render the regenerate and delete links
+        if !generating:
+            elementModelRender( \
+                objectNew('html', 'p', 'elem', arrayNew( \
                     formsLinkButtonElements('Delete', deleteExchangeFn), \
-                    objectNew('text', stringFromCharCode(160, 160)) \
-                )), \
-                formsLinkButtonElements('Regenerate', regenerateExchangeFn) \
-            )) \
-        )
+                    objectNew('text', stringFromCharCode(160, 160)), \
+                    formsLinkButtonElements('Regenerate', regenerateExchangeFn) \
+                )) \
+            )
+        endif
     endif
 
     # Render the bottom space
@@ -382,7 +383,7 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
                 formsLinkButtonElements(if(action != 'menu', '>>', '<<'), menuClickFn), \
                 if(action == 'menu', arrayNew( \
                     objectNew('text', separator), \
-                    formsLinkButtonElements(if(!textView, 'Title', 'Markdown'), titleClickFn), \
+                    formsLinkButtonElements('Title', titleClickFn), \
                     objectNew('text', separator), \
                     formsLinkButtonElements(if(!textView, 'Text', 'Markdown'), markdownClickFn), \
                     objectNew('text', separator), \
