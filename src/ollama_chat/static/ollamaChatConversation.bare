@@ -48,12 +48,13 @@ async function ollamaChatConversationPage(args):
     if objectGet(args, 'action') == 'title':
         markdownPrint('', '**Title:**')
         titleClickFn = systemPartial(ollamaChatOnConversationTitleUpdate, args)
+        cancelClickFn = systemPartial(ollamaChatOnConversationClick, args, null, argsURL(ollamaChatArguments))
         elementModelRender(arrayNew( \
             objectNew('html', 'p', 'elem', formsTextElements(ollamaChatTitleInputID, title, 50, titleClickFn)), \
             objectNew('html', 'p', 'elem', arrayNew( \
                 formsLinkButtonElements('Update', titleClickFn), \
                 objectNew('text', stringFromCharCode(160) + '|' + stringFromCharCode(160)), \
-                formsLinkElements('Cancel', argsURL(ollamaChatArguments)) \
+                formsLinkButtonElements('Cancel', cancelClickFn) \
             )) \
         ))
         documentSetFocus(ollamaChatTitleInputID)
