@@ -338,7 +338,7 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
         markdownText = arrayJoin(markdownParts, stringFromCharCode(10))
         markdownDownloadURL = urlObjectCreate(markdownText, 'text/markdown')
         markdownFilename = regexReplace(regexNew('[\'"]'), stringLower(title), '')
-        markdownFilename = regexReplace(regexNew('[^a-z]+'), markdownFilename, '-')
+        markdownFilename = regexReplace(regexNew('[^a-z0-9]+'), markdownFilename, '-')
         markdownFilename = regexReplace(regexNew('^-'), markdownFilename, '')
         markdownFilename = regexReplace(regexNew('-$'), markdownFilename, '') + '.md'
     endif
