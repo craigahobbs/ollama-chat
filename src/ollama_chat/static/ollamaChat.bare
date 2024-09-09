@@ -11,21 +11,15 @@ include 'ollamaChatConversation.bare'
 async function ollamaChatMain():
     args = argsParse(ollamaChatArguments)
     view = objectGet(args, 'view')
-
-    # Render the chat page
     if view == 'chat':
         ollamaChatConversationPage(args)
-        return
-    endif
-
-    # Render the template variables page
-    if view == 'variables':
+    elif view == 'template':
+        ollamaChatTemplatePage(args)
+    elif view == 'variables':
         ollamaChatVariablesPage(args)
-        return
+    else:
+        ollamaChatIndexPage(args)
     endif
-
-    # Render the index page
-    ollamaChatIndexPage(args)
 endfunction
 
 
@@ -167,6 +161,8 @@ async function ollamaChatIndexPage(args):
                         objectNew('text', stringFromCharCode(160, 160)), \
                         formsLinkButtonElements('Down', systemPartial(ollamaChatOnTemplateAction, args, templateID, 'down')), \
                         objectNew('text', stringFromCharCode(160, 160)), \
+                        formsLinkElements('Edit', argsURL(ollamaChatArguments, objectNew('view', 'template', 'id', templateID))), \
+                        objectNew('text', stringFromCharCode(160, 160)), \
                         formsLinkButtonElements('Delete', systemPartial(ollamaChatOnTemplateAction, args, templateID, 'delete')) \
                     )) \
                 )) \
@@ -232,7 +228,7 @@ async function ollamaChatOnTemplateSelect(templateID):
 endfunction
 
 
-# The Ollama Chat conversation page
+# The Ollama Chat template variables page
 async function ollamaChatVariablesPage(args):
     templateID = objectGet(args, 'id')
 
@@ -292,4 +288,26 @@ async function ollamaChatOnVariablesSubmit(templateID, variables):
 
     # Navigate to the conversation page
     windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', id), false, ollamaChatBottomID))
+endfunction
+
+
+# The Ollama Chat template page
+async function ollamaChatTemplatePage(args):
+    templateID = objectGet(args, 'id')
+
+    # Get the template
+    templateResponse = systemFetch('getTemplate?id=' + templateID)
+    templateResponse = if(templateResponse != null, jsonParse(templateResponse))
+    if templateResponse == null:
+        ollamaChatErrorPage('Unknown template ID')
+        return
+    endif
+
+    # Render the page title
+    title = objectGet(templateResponse, 'title')
+    documentSetTitle(title)
+    markdownPrint(argsLink(ollamaChatArguments, 'Back', null, true), '', '# ' + markdownEscape(title))
+
+    # TODO
+    markdownPrint('', 'Coming soon...')
 endfunction
