@@ -308,6 +308,29 @@ async function ollamaChatTemplatePage(args):
     documentSetTitle(title)
     markdownPrint(argsLink(ollamaChatArguments, 'Back', null, true), '', '# ' + markdownEscape(title))
 
-    # TODO
-    markdownPrint('', 'Coming soon...')
+    # Template name
+    name = objectGet(templateResponse, 'name')
+    if name != null:
+        markdownPrint('', '**Name:** ' + markdownEscape(name))
+    else:
+        markdownPrint('', 'The template is unnamed.')
+    endif
+
+    # Template variables
+    variables = objectGet(templateResponse, 'variables')
+    if variables != null:
+        for variable in variables:
+            varName = objectGet(variable, 'name')
+            varLabel = objectGet(variable, 'label')
+            markdownPrint('', '## Variable ' + markdownEscape(varName), '', '**Label:** ' + markdownEscape(varLabel))
+        endfor
+    else:
+        markdownPrint('', 'The template has no variables.')
+    endif
+
+    # Template prompts
+    prompts = objectGet(templateResponse, 'prompts')
+    for prompt, ixPrompt in prompts:
+        markdownPrint('', '## Prompt #' + (ixPrompt + 1), '', '```', prompt, '```')
+    endfor
 endfunction
