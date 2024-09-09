@@ -19,14 +19,14 @@ struct ConversationInfo
 struct Conversation (ConversationInfo)
 
     # The conversation's exchanges
-    ConversationExchange[len > 0] exchanges
+    ConversationExchange[] exchanges
 
 
 # A conversation user-model exchange
 struct ConversationExchange
 
     # The user prompt
-    string(len > 0) user
+    string user
 
     # The model response
     string model
@@ -78,7 +78,7 @@ struct OllamaChatConfig
     Conversation[] conversations
 
     # The conversation templates
-    optional ConversationTemplate[len > 0] templates
+    optional ConversationTemplate[] templates
 
     # If true, don't save the config file
     optional bool noSave
@@ -116,6 +116,51 @@ action setModel
         string model
 
 
+# Move a conversation
+action moveConversation
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+        # Move down? If not, the move is up.
+        bool down
+
+    errors
+        UnknownConversationID
+
+
+# Move a template
+action moveTemplate
+    urls
+        POST
+
+    input
+        # The template identifier
+        string id
+
+        # Move down? If not, the move is up.
+        bool down
+
+    errors
+        UnknownTemplateID
+
+
+# Delete a template
+action deleteTemplate
+    urls
+        POST
+
+    input
+        # The template identifier
+        string id
+
+    errors
+        UnknownTemplateID
+
+
 # Get a conversation template
 action getTemplate
     urls
@@ -138,7 +183,7 @@ action startConversation
 
     input
         # The user prompt
-        string(len > 0) user
+        string user
 
     output
         # The new conversation identifier
@@ -155,7 +200,7 @@ action startTemplate
         string id
 
         # The template variable values
-        optional string{len > 0} variables
+        optional string{} variables
 
     output
         # The new conversation identifier
@@ -210,7 +255,7 @@ action replyConversation
         string id
 
         # The user reply prompt
-        string(len > 0) user
+        string user
 
     errors
         UnknownConversationID
@@ -227,7 +272,7 @@ action setConversationTitle
         string id
 
         # The title
-        string(len > 0) title
+        string title
 
     errors
         UnknownConversationID
