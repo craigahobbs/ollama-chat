@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.26 (2024-09-09)
+
+- [d62eb0f](https://github.com/craigahobbs/ollama-chat/commit/d62eb0f) - fix deadlock issue
+
 ## 0.9.25 (2024-09-09)
 
 - [51ae823](https://github.com/craigahobbs/ollama-chat/commit/51ae823) - add ability to order conversations and templates
