@@ -32,16 +32,52 @@ async function testOllamaChatIndex():
             arrayNew('markdownPrint', arrayNew('# Ollama Chat')), \
             arrayNew('markdownPrint', arrayNew( \
                 '', \
-                "**Model:** llama3:latest&nbsp;&nbsp;[Select](#var.vAction='select')", \
+                "**Model:** llama3:latest&nbsp;&nbsp;[Select](#var.vAction='model')", \
                 '', \
                 "[Start New Conversation](#var.vView='chat')") \
             ), \
             arrayNew('markdownPrint', arrayNew('', '## Conversations')), \
-            arrayNew('dataTable', arrayNew( \
+            arrayNew("elementModelRender", arrayNew( \
                 arrayNew( \
-                    objectNew('Model', 'llama3:latest', 'Title', "[Hello](#var.vId='ID'&var.vView='chat')") \
-                ), \
-                objectNew('fields', arrayNew('Title', 'Model'), 'formats', objectNew('Title', objectNew('markdown', true))) \
+                    objectNew( \
+                        "html", "table", \
+                        "elem", arrayNew( \
+                            objectNew( \
+                                "html", "tbody", \
+                                "elem", arrayNew( \
+                                    objectNew( \
+                                        "html", "tr", \
+                                        "elem", arrayNew( \
+                                            objectNew( \
+                                                "html", "td", \
+                                                "elem", objectNew( \
+                                                    "html", "a", \
+                                                    "attr", objectNew("href", "#var.vId='ID'&var.vView='chat'"), \
+                                                    "elem", objectNew("text", "Hello") \
+                                                ) \
+                                            ), \
+                                            objectNew( \
+                                                "html", "td", \
+                                                "elem", objectNew("text", "llama3:latest") \
+                                            ), \
+                                            objectNew( \
+                                                "html", "td", \
+                                                "elem", arrayNew( \
+                                                    objectNew( \
+                                                        "html", "a", \
+                                                        "attr", objectNew("href", "#var.vAction='conversation'&var.vId='ID'"), \
+                                                        "elem", objectNew("text", "Select") \
+                                                    ), \
+                                                    null \
+                                                ) \
+                                            ) \
+                                        ) \
+                                    ) \
+                                ) \
+                            ) \
+                        ) \
+                    ) \
+                ) \
             )) \
         ) \
     )

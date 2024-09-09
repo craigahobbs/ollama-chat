@@ -60,6 +60,7 @@ endfunction
 # The Ollama Chat index page
 async function ollamaChatIndexPage(args):
     action = objectGet(args, 'action')
+    actionID = objectGet(args, 'id')
 
     # Get the conversations
     conversationsResponse = systemFetch('getConversations')
@@ -75,9 +76,9 @@ async function ollamaChatIndexPage(args):
 
     # Model selection?
     modelReport = '**Model:** ' + objectGet(conversationsResponse, 'model') + '&nbsp;&nbsp;'
-    if action == 'select':
+    if action == 'model':
         # Render the model selection links
-        markdownPrint(modelReport + argsLink(ollamaChatArguments, 'Cancel', objectNew('action', null)), '')
+        markdownPrint(modelReport + argsLink(ollamaChatArguments, 'Cancel', null, true), '')
         models = objectGet(conversationsResponse, 'models')
         if !models:
             markdownPrint('', '&nbsp;&nbsp;&nbsp;&nbsp;**Error:** No local models - download with `ollama pull <model>`')
@@ -96,7 +97,7 @@ async function ollamaChatIndexPage(args):
         # Render the start new chat link
         markdownPrint( \
             '', \
-            modelReport + argsLink(ollamaChatArguments, 'Select', objectNew('action', 'select')), \
+            modelReport + argsLink(ollamaChatArguments, 'Select', objectNew('action', 'model'), true), \
             '', \
             argsLink(ollamaChatArguments, 'Start New Conversation', objectNew('view', 'chat')) \
         )
@@ -108,45 +109,97 @@ async function ollamaChatIndexPage(args):
     if !conversations:
         markdownPrint('', '*No conversations*')
     else:
-        conversationData = arrayNew()
+        conversationTableRows = arrayNew()
+        conversationTable = arrayNew( \
+            objectNew('html', 'table', 'elem', arrayNew( \
+                objectNew('html', 'tbody', 'elem', conversationTableRows) \
+            )) \
+        )
         for conversation in conversations:
             id = objectGet(conversation, 'id')
             title = objectGet(conversation, 'title')
-            arrayPush(conversationData, objectNew( \
-                'Title', argsLink(ollamaChatArguments, title, objectNew('view', 'chat', 'id', id)), \
-                'Model', objectGet(conversation, 'model') \
-            ))
+            model = objectGet(conversation, 'model')
+            selected = action == 'conversation' && actionID == id
+            conversationURL = argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', id))
+            selectText = if(selected, 'Cancel', 'Select')
+            selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'conversation'), 'id', if(!selected, id)))
+            arrayPush(conversationTableRows, objectNew('html', 'tr', 'elem', arrayNew( \
+                objectNew('html', 'td', 'elem', formsLinkElements(title, conversationURL)), \
+                objectNew('html', 'td', 'elem', objectNew('text', model)), \
+                objectNew('html', 'td', 'elem', arrayNew( \
+                    formsLinkElements(selectText, selectURL), \
+                    if(selected, arrayNew( \
+                        objectNew('text', stringFromCharCode(160, 160) + '|' + stringFromCharCode(160, 160)), \
+                        formsLinkButtonElements('Up', systemPartial(ollamaChatOnConversationAction, args, id, 'up')), \
+                        objectNew('text', stringFromCharCode(160, 160)), \
+                        formsLinkButtonElements('Down', systemPartial(ollamaChatOnConversationAction, args, id, 'down')) \
+                    )) \
+                )) \
+            )))
         endfor
-        dataTable(conversationData, objectNew( \
-            'fields', arrayNew('Title', 'Model'), \
-            'formats', objectNew('Title', objectNew('markdown', true)) \
-        ))
+        elementModelRender(conversationTable)
     endif
 
     # Render the conversation templates
     templates = objectGet(conversationsResponse, 'templates')
     if templates:
         markdownPrint('## Templates')
+        templateTableRows = arrayNew()
+        templateTable = arrayNew( \
+            objectNew('html', 'table', 'elem', arrayNew( \
+                objectNew('html', 'tbody', 'elem', templateTableRows) \
+            )) \
+        )
         for template in templates:
             templateID = objectGet(template, 'id')
             templateTitle = objectGet(template, 'title')
-            elementModelRender( \
-                objectNew('html', 'p', 'elem', arrayNew( \
-                    formsLinkButtonElements(templateTitle, systemPartial(ollamaChatOnTemplateSelect, templateID)) \
+            templateStartFn = systemPartial(ollamaChatOnTemplateSelect, templateID)
+            selected = action == 'template' && actionID == templateID
+            selectText = if(selected, 'Cancel', 'Select')
+            selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'template'), 'id', if(!selected, templateID)))
+            arrayPush(templateTableRows, objectNew('html', 'tr', 'elem', arrayNew( \
+                objectNew('html', 'td', 'elem', formsLinkButtonElements(templateTitle, templateStartFn)), \
+                objectNew('html', 'td', 'elem', arrayNew( \
+                    formsLinkElements(selectText, selectURL), \
+                    if(selected, arrayNew( \
+                        objectNew('text', stringFromCharCode(160, 160) + '|' + stringFromCharCode(160, 160)), \
+                        formsLinkButtonElements('Up', systemPartial(ollamaChatOnTemplateAction, args, templateID, 'up')), \
+                        objectNew('text', stringFromCharCode(160, 160)), \
+                        formsLinkButtonElements('Down', systemPartial(ollamaChatOnTemplateAction, args, templateID, 'down')), \
+                        objectNew('text', stringFromCharCode(160, 160)), \
+                        formsLinkButtonElements('Delete', systemPartial(ollamaChatOnTemplateAction, args, templateID, 'delete')) \
+                    )) \
                 )) \
-            )
+            )))
         endfor
+        elementModelRender(templateTable)
     endif
 endfunction
 
 
 # Select model on-click event handler
 async function ollamaChatOnModelSelect(model):
-    # Set the model (ignore errors)
     systemFetch(objectNew('url', 'setModel', 'body', jsonStringify(objectNew('model', model))))
-
-    # Set location to the index page
     windowSetLocation(argsURL(ollamaChatArguments, null, true))
+endfunction
+
+
+# Conversation action on-click event handler
+async function ollamaChatOnConversationAction(args, id, action):
+    systemFetch(objectNew('url', 'moveConversation', 'body', jsonStringify(objectNew('id', id, 'down', action == 'down'))))
+    ollamaChatIndexPage(args)
+endfunction
+
+
+# Template action on-click event handler
+async function ollamaChatOnTemplateAction(args, id, action):
+    if action == 'delete':
+        systemFetch(objectNew('url', 'deleteTemplate', 'body', jsonStringify(objectNew('id', id))))
+        windowSetLocation(argsURL(ollamaChatArguments, null, true))
+    else:
+        systemFetch(objectNew('url', 'moveTemplate', 'body', jsonStringify(objectNew('id', id, 'down', action == 'down'))))
+        ollamaChatIndexPage(args)
+    endif
 endfunction
 
 

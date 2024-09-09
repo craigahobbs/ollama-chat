@@ -116,6 +116,51 @@ action setModel
         string model
 
 
+# Move a conversation
+action moveConversation
+    urls
+        POST
+
+    input
+        # The conversation identifier
+        string id
+
+        # Move down? If not, the move is up.
+        bool down
+
+    errors
+        UnknownConversationID
+
+
+# Move a template
+action moveTemplate
+    urls
+        POST
+
+    input
+        # The template identifier
+        string id
+
+        # Move down? If not, the move is up.
+        bool down
+
+    errors
+        UnknownTemplateID
+
+
+# Delete a template
+action deleteTemplate
+    urls
+        POST
+
+    input
+        # The template identifier
+        string id
+
+    errors
+        UnknownTemplateID
+
+
 # Get a conversation template
 action getTemplate
     urls

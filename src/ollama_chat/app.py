@@ -38,9 +38,12 @@ class OllamaChat(chisel.Application):
         self.add_request(create_template_from_conversation)
         self.add_request(delete_conversation)
         self.add_request(delete_conversation_exchange)
+        self.add_request(delete_template)
         self.add_request(get_conversation)
         self.add_request(get_conversations)
         self.add_request(get_template)
+        self.add_request(move_conversation)
+        self.add_request(move_template)
         self.add_request(regenerate_conversation_exchange)
         self.add_request(reply_conversation)
         self.add_request(set_conversation_title)
@@ -155,6 +158,61 @@ def get_conversations(ctx, unused_req):
 def set_model(ctx, req):
     with ctx.app.config(save=True) as config:
         config['model'] = req['model']
+
+
+@chisel.action(name='moveConversation', types=OLLAMA_CHAT_TYPES)
+def move_conversation(ctx, req):
+    with ctx.app.config(save=True) as config:
+        # Find the conversation index
+        id_ = req['id']
+        conversations = config['conversations']
+        ix_conv = next((ix for ix, conv in enumerate(conversations) if conv['id'] == id_), None)
+        if ix_conv is None:
+            raise chisel.ActionError('UnknownConversationID')
+        conversation = conversations[ix_conv]
+
+        # Move down?
+        if req['down']:
+            if ix_conv < len(conversations) - 1:
+                conversations[ix_conv] = conversations[ix_conv + 1]
+                conversations[ix_conv + 1] = conversation
+        else:
+            if ix_conv > 0:
+                conversations[ix_conv] = conversations[ix_conv - 1]
+                conversations[ix_conv - 1] = conversation
+
+
+@chisel.action(name='moveTemplate', types=OLLAMA_CHAT_TYPES)
+def move_template(ctx, req):
+    with ctx.app.config(save=True) as config:
+        # Find the template index
+        id_ = req['id']
+        templates = config['templates'] or []
+        ix_tmpl = next((ix for ix, tmpl in enumerate(templates) if tmpl['id'] == id_), None)
+        if ix_tmpl is None:
+            raise chisel.ActionError('UnknownTemplateID')
+        template = templates[ix_tmpl]
+
+        # Move down?
+        if req['down']:
+            if ix_tmpl < len(templates) - 1:
+                templates[ix_tmpl] = templates[ix_tmpl + 1]
+                templates[ix_tmpl + 1] = template
+        else:
+            if ix_tmpl > 0:
+                templates[ix_tmpl] = templates[ix_tmpl - 1]
+                templates[ix_tmpl - 1] = template
+
+
+@chisel.action(name='deleteTemplate', types=OLLAMA_CHAT_TYPES)
+def delete_template(ctx, req):
+    with ctx.app.config(save=True) as config:
+        id_ = req['id']
+        templates = config['templates'] or []
+        ix_tmpl = next((ix for ix, tmpl in enumerate(templates) if tmpl['id'] == id_), None)
+        if ix_tmpl is None:
+            raise chisel.ActionError('UnknownTemplateID')
+        del templates[ix_tmpl]
 
 
 @chisel.action(name='getTemplate', types=OLLAMA_CHAT_TYPES)
