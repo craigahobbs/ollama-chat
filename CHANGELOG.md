@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.27 (2024-09-09)
+
+- [d71738e](https://github.com/craigahobbs/ollama-chat/commit/d71738e) - fix template stop, fix fenced code block escaping
+
 ## 0.9.26 (2024-09-09)
 
 - [d62eb0f](https://github.com/craigahobbs/ollama-chat/commit/d62eb0f) - fix deadlock issue
