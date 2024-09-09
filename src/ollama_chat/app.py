@@ -103,10 +103,10 @@ class ConfigManager:
         # Acquire the config lock
         self.config_lock.acquire()
 
-        # Yield the config on context entry
-        yield self.config
-
         try:
+            # Yield the config on context entry
+            yield self.config
+
             # Save the config file on context exit, if requested
             if save and not self.config.get('noSave'):
                 with open(self.config_path, 'w', encoding='utf-8') as fh_config:
