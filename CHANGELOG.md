@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.25 (2024-09-09)
+
+- [51ae823](https://github.com/craigahobbs/ollama-chat/commit/51ae823) - add ability to order conversations and templates
+
+- [18dc015](https://github.com/craigahobbs/ollama-chat/commit/18dc015) - fix download file name issue
+
+- [190c972](https://github.com/craigahobbs/ollama-chat/commit/190c972) - allow last conversation exchange to be deleted
+
+- [79cf90a](https://github.com/craigahobbs/ollama-chat/commit/79cf90a) - save prompt across title update cancel
+
 ## 0.9.24 (2024-09-05)
 
 - [21fd0b9](https://github.com/craigahobbs/ollama-chat/commit/21fd0b9) - fix missing static file
