@@ -20,13 +20,13 @@ import ollama
 
 # The ollama chat manager class
 class ChatManager():
-    __slots__ = ('app', 'conversation_id', 'extra', 'stop')
+    __slots__ = ('app', 'conversation_id', 'prompts', 'stop')
 
 
-    def __init__(self, app, conversation_id, extra = None):
+    def __init__(self, app, conversation_id, prompts):
         self.app = app
         self.conversation_id = conversation_id
-        self.extra = extra or []
+        self.prompts = list(prompts)
         self.stop = False
 
         # Start the chat thread
@@ -38,15 +38,20 @@ class ChatManager():
     @staticmethod
     def chat_thread_fn(chat):
         try:
-            while True:
+            while not chat.stop and chat.prompts:
                 # Create the Ollama messages from the conversation
                 messages = []
                 flags = {}
                 with chat.app.config() as config:
                     conversation = config_conversation(config, chat.conversation_id)
                     model = conversation['model']
+
+                    # Add the next user prompt
+                    conversation['exchanges'].append({'user': chat.prompts[0], 'model': ''})
+                    del chat.prompts[0]
+
+                    # Process user prompt commands append to messages (unless there's a "do" command)
                     for exchange in conversation['exchanges']:
-                        # Process user prompt commands append to messages (unless there's a "do" command)
                         flags = {}
                         user_content = _process_commands(exchange['user'], flags)
                         if 'do' not in flags:
@@ -54,67 +59,44 @@ class ChatManager():
                             if exchange['model'] != '':
                                 messages.append({'role': 'assistant', 'content': exchange['model']})
 
-                # Help command?
-                if 'help' in flags:
-                    with chat.app.config() as config:
-                        # Update the conversation
-                        conversation = config_conversation(config, chat.conversation_id)
+                    # Help command?
+                    if 'help' in flags:
                         exchange = conversation['exchanges'][-1]
                         exchange['model'] = f'```\n{flags['help'].strip()}\n```'
+                        continue
 
-                # Show command?
-                elif 'show' in flags:
-                    with chat.app.config() as config:
-                        # Update the conversation
-                        conversation = config_conversation(config, chat.conversation_id)
+                    # Show command?
+                    elif 'show' in flags:
                         exchange = conversation['exchanges'][-1]
                         exchange['model'] = user_content
+                        continue
 
-                # Do command?
-                elif 'do' in flags:
-                    with chat.app.config() as config:
+                    # Do command?
+                    elif 'do' in flags:
                         # Insert the template prompts to the chat
                         template_name, variable_values = flags['do']
                         template = config_template_name(config, template_name)
                         if template is None:
                             raise ValueError(f'unknown template "{template_name}"')
-                        _, prompts = config_template_prompts(template, variable_values)
-                        for prompt in reversed(prompts):
-                            chat.extra.insert(0, prompt)
+                        _, template_prompts = config_template_prompts(template, variable_values)
+                        for template_prompt in reversed(template_prompts):
+                            chat.prompts.insert(0, template_prompt)
 
                         # Update the conversation
-                        conversation = config_conversation(config, chat.conversation_id)
                         exchange = conversation['exchanges'][-1]
                         exchange['model'] = f'Executing template "{template_name}"'
+                        continue
 
-                else:
-                    # Start the chat
-                    stream = ollama.chat(model=model, messages=messages, stream=True)
+                # Stream the chat response
+                for chunk in ollama.chat(model=model, messages=messages, stream=True):
+                    if chat.stop:
+                        break
 
-                    # Stream the chat response
-                    for chunk in stream:
-                        # Stop streaming if stopped
-                        if chat.stop:
-                            break
-
-                        # Update the conversation
-                        with chat.app.config() as config:
-                            conversation = config_conversation(config, chat.conversation_id)
-                            exchange = conversation['exchanges'][-1]
-                            exchange['model'] += chunk['message']['content']
-
-                # Any extra prompts?
-                if not chat.extra:
-                    break
-
-                # Add the next user prompt
-                with chat.app.config() as config:
-                    conversation = config_conversation(config, chat.conversation_id)
-                    conversation['exchanges'].append({
-                        'user': chat.extra[0],
-                        'model': ''
-                    })
-                    del chat.extra[0]
+                    # Update the conversation
+                    with chat.app.config() as config:
+                        conversation = config_conversation(config, chat.conversation_id)
+                        exchange = conversation['exchanges'][-1]
+                        exchange['model'] += chunk['message']['content']
 
         except Exception as exc: # pylint: disable=broad-exception-caught
             # Communicate the error
@@ -296,10 +278,10 @@ _COMMAND_PARSER_URL.add_argument('-n', dest='show', action='store_true', help='r
 # Helper to produce file text content
 def _command_file_content(file_name, content):
     content_newline = '\n' if not content.endswith('\n') else ''
-    escaped_content = _R_COMMAND_FENCE_ESCAPE.sub('\\```', content)
+    escaped_content = _R_COMMAND_FENCE_ESCAPE.sub(r'\1\```', content)
     return f'**{_escape_markdown_text(file_name)}**\n\n```\n{escaped_content}{content_newline}```'
 
-_R_COMMAND_FENCE_ESCAPE = re.compile(r'^```', re.MULTILINE)
+_R_COMMAND_FENCE_ESCAPE = re.compile(r'^( {0,3})```', re.MULTILINE)
 
 
 # Helper to escape a string for inclusion in Markdown text

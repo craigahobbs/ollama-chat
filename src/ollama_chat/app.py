@@ -243,19 +243,14 @@ def start_conversation(ctx, req):
             'id': id_,
             'model': ConfigManager.get_model(config),
             'title': title,
-            'exchanges': [
-                {
-                    'user': req['user'],
-                    'model': ''
-                }
-            ]
+            'exchanges': []
         }
 
         # Add the new conversation to the application config
         config['conversations'].insert(0, conversation)
 
         # Start the model chat
-        ctx.app.chats[id_] = ChatManager(ctx.app, id_)
+        ctx.app.chats[id_] = ChatManager(ctx.app, id_, [user_prompt])
 
         # Return the new conversation identifier
         return {'id': id_}
@@ -287,19 +282,14 @@ def start_template(ctx, req):
             'id': id_,
             'model': ConfigManager.get_model(config),
             'title': title,
-            'exchanges': [
-                {
-                    'user': prompts[0],
-                    'model': ''
-                }
-            ]
+            'exchanges': []
         }
 
         # Add the new conversation to the application config
         config['conversations'].insert(0, conversation)
 
         # Start the model chat
-        ctx.app.chats[id_] = ChatManager(ctx.app, id_, prompts[1:])
+        ctx.app.chats[id_] = ChatManager(ctx.app, id_, prompts)
 
         # Return the new conversation identifier
         return {'id': id_}
@@ -350,14 +340,8 @@ def reply_conversation(ctx, req):
         if id_ in ctx.app.chats:
             raise chisel.ActionError('ConversationBusy')
 
-        # Add the reply exchange
-        conversation['exchanges'].append({
-            'user': req['user'],
-            'model': ''
-        })
-
         # Start the model chat
-        ctx.app.chats[id_] = ChatManager(ctx.app, id_)
+        ctx.app.chats[id_] = ChatManager(ctx.app, id_, [req['user']])
 
 
 @chisel.action(name='setConversationTitle', types=OLLAMA_CHAT_TYPES)
@@ -435,7 +419,7 @@ def delete_conversation_exchange(ctx, req):
         if id_ in ctx.app.chats:
             raise chisel.ActionError('ConversationBusy')
 
-        # Delete the most recent exchange (but not the last one)
+        # Delete the most recent exchange
         exchanges = conversation['exchanges']
         if len(exchanges):
             del exchanges[-1]
@@ -453,9 +437,12 @@ def regenerate_conversation_exchange(ctx, req):
         if id_ in ctx.app.chats:
             raise chisel.ActionError('ConversationBusy')
 
-        # Reset the most recent exchange's model response
+        # Any exchanges?
         exchanges = conversation['exchanges']
-        exchanges[-1]['model'] = ''
+        if len(exchanges):
+            # Delete the most recent exchange
+            prompt = exchanges[-1]['user']
+            del exchanges[-1]
 
-        # Start the model chat
-        ctx.app.chats[id_] = ChatManager(ctx.app, id_)
+            # Start the model chat
+            ctx.app.chats[id_] = ChatManager(ctx.app, id_, [prompt])
