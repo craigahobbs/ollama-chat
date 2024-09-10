@@ -26,6 +26,7 @@ endfunction
 # The Ollama Chat application URL arguments
 ollamaChatArguments = argsValidate(arrayNew( \
     objectNew('name', 'action', 'explicit', true), \
+    objectNew('name', 'actionID', 'explicit', true), \
     objectNew('name', 'id'), \
     objectNew('name', 'message', 'explicit', true), \
     objectNew('name', 'multiline', 'type', 'bool'), \
@@ -54,7 +55,7 @@ endfunction
 # The Ollama Chat index page
 async function ollamaChatIndexPage(args):
     action = objectGet(args, 'action')
-    actionID = objectGet(args, 'id')
+    actionID = objectGet(args, 'actionID')
 
     # Get the conversations
     conversationsResponse = systemFetch('getConversations')
@@ -72,7 +73,7 @@ async function ollamaChatIndexPage(args):
     modelReport = '**Model:** ' + objectGet(conversationsResponse, 'model') + '&nbsp;&nbsp;'
     if action == 'model':
         # Render the model selection links
-        markdownPrint(modelReport + argsLink(ollamaChatArguments, 'Cancel', null, true), '')
+        markdownPrint(modelReport + argsLink(ollamaChatArguments, 'Cancel'), '')
         models = objectGet(conversationsResponse, 'models')
         if !models:
             markdownPrint('', '&nbsp;&nbsp;&nbsp;&nbsp;**Error:** No local models - download with `ollama pull <model>`')
@@ -91,7 +92,7 @@ async function ollamaChatIndexPage(args):
         # Render the start new chat link
         markdownPrint( \
             '', \
-            modelReport + argsLink(ollamaChatArguments, 'Select', objectNew('action', 'model'), true), \
+            modelReport + argsLink(ollamaChatArguments, 'Select', objectNew('action', 'model')), \
             '', \
             argsLink(ollamaChatArguments, 'Start New Conversation', objectNew('view', 'chat')) \
         )
@@ -116,7 +117,7 @@ async function ollamaChatIndexPage(args):
             selected = action == 'conversation' && actionID == id
             conversationURL = argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', id))
             selectText = if(selected, 'Cancel', 'Select')
-            selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'conversation'), 'id', if(!selected, id)))
+            selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'conversation'), 'actionID', if(!selected, id)))
             arrayPush(conversationTableRows, objectNew('html', 'tr', 'elem', arrayNew( \
                 objectNew('html', 'td', 'elem', formsLinkElements(title, conversationURL)), \
                 objectNew('html', 'td', 'elem', objectNew('text', model)), \
@@ -150,7 +151,7 @@ async function ollamaChatIndexPage(args):
             templateStartFn = systemPartial(ollamaChatOnTemplateSelect, templateID)
             selected = action == 'template' && actionID == templateID
             selectText = if(selected, 'Cancel', 'Select')
-            selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'template'), 'id', if(!selected, templateID)))
+            selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'template'), 'actionID', if(!selected, templateID)))
             arrayPush(templateTableRows, objectNew('html', 'tr', 'elem', arrayNew( \
                 objectNew('html', 'td', 'elem', formsLinkButtonElements(templateTitle, templateStartFn)), \
                 objectNew('html', 'td', 'elem', arrayNew( \
@@ -176,7 +177,7 @@ endfunction
 # Select model on-click event handler
 async function ollamaChatOnModelSelect(model):
     systemFetch(objectNew('url', 'setModel', 'body', jsonStringify(objectNew('model', model))))
-    windowSetLocation(argsURL(ollamaChatArguments, null, true))
+    windowSetLocation(argsURL(ollamaChatArguments))
 endfunction
 
 
@@ -191,7 +192,7 @@ endfunction
 async function ollamaChatOnTemplateAction(args, id, action):
     if action == 'delete':
         systemFetch(objectNew('url', 'deleteTemplate', 'body', jsonStringify(objectNew('id', id))))
-        windowSetLocation(argsURL(ollamaChatArguments, null, true))
+        windowSetLocation(argsURL(ollamaChatArguments))
     else:
         systemFetch(objectNew('url', 'moveTemplate', 'body', jsonStringify(objectNew('id', id, 'down', action == 'down'))))
         ollamaChatIndexPage(args)

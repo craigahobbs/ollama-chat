@@ -65,7 +65,7 @@ async function testOllamaChatIndex():
                                                 "elem", arrayNew( \
                                                     objectNew( \
                                                         "html", "a", \
-                                                        "attr", objectNew("href", "#var.vAction='conversation'&var.vId='ID'"), \
+                                                        "attr", objectNew("href", "#var.vAction='conversation'&var.vActionID='ID'"), \
                                                         "elem", objectNew("text", "Select") \
                                                     ), \
                                                     null \
