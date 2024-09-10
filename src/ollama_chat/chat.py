@@ -62,7 +62,7 @@ class ChatManager():
                     # Help command?
                     if 'help' in flags:
                         exchange = conversation['exchanges'][-1]
-                        exchange['model'] = f'```\n{flags['help'].strip()}\n```'
+                        exchange['model'] = f'```\n{flags["help"].strip()}\n```'
                         continue
 
                     # Show command?
