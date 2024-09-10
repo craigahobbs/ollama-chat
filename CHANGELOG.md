@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.28 (2024-09-10)
+
+- [bcd0b88](https://github.com/craigahobbs/ollama-chat/commit/bcd0b88) - fix pre-python-3.12 f-string issue
+
 ## 0.9.27 (2024-09-09)
 
 - [d71738e](https://github.com/craigahobbs/ollama-chat/commit/d71738e) - fix template stop, fix fenced code block escaping
