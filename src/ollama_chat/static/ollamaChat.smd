@@ -176,6 +176,17 @@ action getTemplate
         UnknownTemplateID
 
 
+# Update a template
+action updateTemplate
+    urls
+        POST
+
+    input (ConversationTemplate)
+
+    errors
+        UnknownTemplateID
+
+
 # Start a conversation
 action startConversation
     urls

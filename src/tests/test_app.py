@@ -37,7 +37,8 @@ class TestApp(unittest.TestCase):
                 'setModel',
                 'startConversation',
                 'startTemplate',
-                'stopConversation'
+                'stopConversation',
+                'updateTemplate'
             ])
 
         mock_isfile.assert_called_once_with('ollama-chat.json')

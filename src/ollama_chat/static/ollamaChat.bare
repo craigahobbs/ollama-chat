@@ -316,10 +316,10 @@ async function ollamaChatTemplatePage(args):
     markdownPrint('# ' + markdownEscape(title))
 
     # Render the update/discard links
-    markdownPrint( \
-        argsLink(ollamaChatArguments, 'Update Template'), '', \
-        argsLink(ollamaChatArguments, 'Discard Changes') \
-    )
+    elementModelRender(arrayNew( \
+        objectNew('html', 'p', 'elem', formsLinkButtonElements('Update Template', systemPartial(ollamaChatOnTemplateUpdate, template))), \
+        objectNew('html', 'p', 'elem', formsLinkButtonElements('Discard Changes', ollamaChatOnTemplateDiscard)) \
+    ))
 
     # Render the template title
     markdownPrint('', '## Title')
@@ -375,6 +375,29 @@ ollamaChatTemplateEditSessionID = 'ollama-chat-template-edit'
 
 # The Ollama Chat template editor title input ID
 ollamaChatTemplateEditTitleID = 'ollama-chat-title'
+
+
+# The Ollama Chat template editor update click handler
+async function ollamaChatOnTemplateUpdate(template):
+    # Update the template
+    systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
+
+    # Clear session storage
+    sessionStorageRemove(ollamaChatTemplateEditSessionID)
+
+    # Navigate back to index
+    windowSetLocation(argsURL(ollamaChatArguments, null, true))
+endfunction
+
+
+# The Ollama Chat template editor discard click handler
+function ollamaChatOnTemplateDiscard():
+    # Clear session storage
+    sessionStorageRemove(ollamaChatTemplateEditSessionID)
+
+    # Navigate back to index
+    windowSetLocation(argsURL(ollamaChatArguments, null, true))
+endfunction
 
 
 # The Ollama Chat template editor title-update click handler
