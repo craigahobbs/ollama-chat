@@ -401,6 +401,8 @@ def create_template_from_conversation(ctx, req):
             template['prompts'].append('')
 
         # Add the new template to the application config
+        if 'templates' not in config:
+            config['templates'] = []
         config['templates'].insert(0, template)
 
         # Return the new template identifier
