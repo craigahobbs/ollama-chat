@@ -52,11 +52,8 @@ async function ollamaChatConversationPage(args):
             )) \
         ))
         documentSetFocus(ollamaChatTitleInputID)
-    else:
-        markdownPrint('# ' + markdownEscape(title))
-        if model != null:
-            markdownPrint('', '**Model:** ' + markdownEscape(model))
-        endif
+    elif conversation != null:
+        markdownPrint('# ' + markdownEscape(title), '', '**Model:** ' + markdownEscape(model))
     endif
 
     # No conversation yet or empty conversation?

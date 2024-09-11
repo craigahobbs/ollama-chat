@@ -295,22 +295,52 @@ endfunction
 # The Ollama Chat template page
 async function ollamaChatTemplatePage(args):
     templateID = objectGet(args, 'id')
+    action = objectGet(args, 'action')
 
     # Get the template
-    templateResponse = systemFetch('getTemplate?id=' + templateID)
-    templateResponse = if(templateResponse != null, jsonParse(templateResponse))
-    if templateResponse == null:
-        ollamaChatErrorPage('Unknown template ID')
-        return
+    templateSession = sessionStorageGet(ollamaChatTemplateEditSessionID)
+    template = if(templateSession, jsonParse(templateSession))
+    if template == null || objectGet(template, 'id') != templateID:
+        templateResponse = systemFetch('getTemplate?id=' + templateID)
+        template = if(templateResponse != null, jsonParse(templateResponse))
+        if template == null:
+            ollamaChatErrorPage('Unknown template ID')
+            return
+        endif
+        sessionStorageSet(ollamaChatTemplateEditSessionID, jsonStringify(template))
     endif
 
     # Render the page title
-    title = objectGet(templateResponse, 'title')
+    title = objectGet(template, 'title')
     documentSetTitle(title)
-    markdownPrint(argsLink(ollamaChatArguments, 'Back', null, true), '', '# ' + markdownEscape(title))
+    markdownPrint('# ' + markdownEscape(title))
+
+    # Render the update/discard links
+    markdownPrint( \
+        argsLink(ollamaChatArguments, 'Update Template'), '', \
+        argsLink(ollamaChatArguments, 'Discard Changes') \
+    )
+
+    # Render the template title
+    markdownPrint('', '## Title')
+    if action == 'title':
+        titleClickFn = systemPartial(ollamaChatOnTemplateTitleUpdate, template)
+        elementModelRender(arrayNew( \
+            objectNew('html', 'p', 'elem', formsTextElements(ollamaChatTemplateEditTitleID, title, 50, titleClickFn)), \
+            objectNew('html', 'p', 'elem', arrayNew( \
+                formsLinkButtonElements('Update', titleClickFn), \
+                objectNew('text', stringFromCharCode(160, 160)), \
+                formsLinkElements('Cancel', argsURL(ollamaChatArguments)) \
+            )) \
+        ))
+        documentSetFocus(ollamaChatTemplateEditTitleID)
+    else:
+        markdownPrint(markdownEscape(title), '', argsLink(ollamaChatArguments, 'Edit', objectNew('action', 'title')))
+    endif
 
     # Template name
-    name = objectGet(templateResponse, 'name')
+    markdownPrint('', '## Name')
+    name = objectGet(template, 'name')
     if name != null:
         markdownPrint('', '**Name:** ' + markdownEscape(name))
     else:
@@ -318,20 +348,44 @@ async function ollamaChatTemplatePage(args):
     endif
 
     # Template variables
-    variables = objectGet(templateResponse, 'variables')
+    markdownPrint('', '## Variables')
+    variables = objectGet(template, 'variables')
     if variables != null:
         for variable in variables:
             varName = objectGet(variable, 'name')
             varLabel = objectGet(variable, 'label')
-            markdownPrint('', '## Variable ' + markdownEscape(varName), '', '**Label:** ' + markdownEscape(varLabel))
+            markdownPrint('', '### ' + markdownEscape(varName), '', '**Label:** ' + markdownEscape(varLabel))
         endfor
     else:
         markdownPrint('', 'The template has no variables.')
     endif
 
     # Template prompts
-    prompts = objectGet(templateResponse, 'prompts')
+    markdownPrint('', '## Prompts')
+    prompts = objectGet(template, 'prompts')
     for prompt, ixPrompt in prompts:
-        markdownPrint('', '## Prompt #' + (ixPrompt + 1), '', '```', prompt, '```')
+        markdownPrint('', '### Prompt ' + (ixPrompt + 1), '', '```', prompt, '```')
     endfor
+endfunction
+
+
+# The Ollama Chat template editor template JSON session ID
+ollamaChatTemplateEditSessionID = 'ollama-chat-template-edit'
+
+
+# The Ollama Chat template editor title input ID
+ollamaChatTemplateEditTitleID = 'ollama-chat-title'
+
+
+# The Ollama Chat template editor title-update click handler
+function ollamaChatOnTemplateTitleUpdate(template):
+    # Update the template title
+    templateTitle = stringTrim(documentInputValue(ollamaChatTemplateEditTitleID) || '')
+    objectSet(template, 'title', templateTitle)
+
+    # Update session storage
+    sessionStorageSet(ollamaChatTemplateEditSessionID, jsonStringify(template))
+
+    # Navigate back to template editor
+    windowSetLocation(argsURL(ollamaChatArguments, args))
 endfunction
