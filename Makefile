@@ -1,6 +1,7 @@
 # Licensed under the MIT License
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
+
 # Download python-build
 define WGET
 ifeq '$$(wildcard $(notdir $(1)))' ''
@@ -17,16 +18,16 @@ $(eval $(call WGET, https://craigahobbs.github.io/python-build/pylintrc))
 GHPAGES_SRC := build/doc/
 
 
-# Development dependencies
-TESTS_REQUIRE := bare-script
-
-
 # Exclude incompatible Python versions
 PYTHON_IMAGES_EXCLUDE := python:3.8
 
 
 # Include python-build
 include Makefile.base
+
+
+# Development dependencies
+TESTS_REQUIRE := bare-script
 
 
 # Set the coverage limit
