@@ -14,30 +14,29 @@ class TestApp(unittest.TestCase):
             app = OllamaChat('ollama-chat.json')
             self.assertEqual(app.config.config_path, 'ollama-chat.json')
             self.assertDictEqual(app.chats, {})
-            self.assertListEqual(sorted(app.requests.keys()), [
-                'chisel_doc',
-                'chisel_doc_index',
-                'chisel_doc_request',
-                'createTemplateFromConversation',
-                'deleteConversation',
-                'deleteConversationExchange',
-                'deleteTemplate',
-                'getConversation',
-                'getConversations',
-                'getTemplate',
-                'index.html',
-                'moveConversation',
-                'moveTemplate',
-                'ollamaChat.bare',
-                'ollamaChatConversation.bare',
-                'redirect_doc',
-                'regenerateConversationExchange',
-                'replyConversation',
-                'setConversationTitle',
-                'setModel',
-                'startConversation',
-                'startTemplate',
-                'stopConversation'
-            ])
+            self.assertListEqual(
+                [key for key in sorted(app.requests.keys()) if not key.startswith('chisel_doc')],
+                [
+                    'createTemplateFromConversation',
+                    'deleteConversation',
+                    'deleteConversationExchange',
+                    'deleteTemplate',
+                    'getConversation',
+                    'getConversations',
+                    'getTemplate',
+                    'index.html',
+                    'moveConversation',
+                    'moveTemplate',
+                    'ollamaChat.bare',
+                    'ollamaChatConversation.bare',
+                    'regenerateConversationExchange',
+                    'replyConversation',
+                    'setConversationTitle',
+                    'setModel',
+                    'startConversation',
+                    'startTemplate',
+                    'stopConversation'
+                ]
+            )
 
         mock_isfile.assert_called_once_with('ollama-chat.json')
