@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.30 (2024-09-26)
+
+- [32bb773](https://github.com/craigahobbs/ollama-chat/commit/32bb773) - update markdown-up stub
+
+- [0af82fb](https://github.com/craigahobbs/ollama-chat/commit/0af82fb) - cleanup setup.cfg
+
 ## 0.9.29 (2024-09-10)
 
 - [308ecdd](https://github.com/craigahobbs/ollama-chat/commit/308ecdd) - fix createTemplateFromConversation when no templates
