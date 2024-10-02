@@ -18,10 +18,6 @@ $(eval $(call WGET, https://craigahobbs.github.io/python-build/pylintrc))
 GHPAGES_SRC := build/doc/
 
 
-# Exclude incompatible Python versions
-PYTHON_IMAGES_EXCLUDE := python:3.8
-
-
 # Include python-build
 include Makefile.base
 
