@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.31 (2024-10-02)
+
+- [7617bb5](https://github.com/craigahobbs/ollama-chat/commit/7617bb5) - add Python 3.13, remove Python 3.8 \(end-of-life\)
+
 ## 0.9.30 (2024-09-26)
 
 - [32bb773](https://github.com/craigahobbs/ollama-chat/commit/32bb773) - update markdown-up stub
