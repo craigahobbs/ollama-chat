@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.32 (2024-10-02)
+
+- [1b129b8](https://github.com/craigahobbs/ollama-chat/commit/1b129b8) - add Python 3.13 \(really this time\)
+
 ## 0.9.31 (2024-10-02)
 
 - [7617bb5](https://github.com/craigahobbs/ollama-chat/commit/7617bb5) - add Python 3.13, remove Python 3.8 \(end-of-life\)
