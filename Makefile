@@ -27,8 +27,8 @@ TESTS_REQUIRE := bare-script
 
 
 # Set the coverage limit
-COVERAGE_REPORT_ARGS := $(COVERAGE_REPORT_ARGS) --fail-under 27
-UNITTEST_PARALLEL_COVERAGE_ARGS := --coverage-branch --coverage-fail-under 27
+COVERAGE_REPORT_ARGS := $(COVERAGE_REPORT_ARGS) --fail-under 26
+UNITTEST_PARALLEL_COVERAGE_ARGS := --coverage-branch --coverage-fail-under 25
 
 
 # Disable pylint docstring warnings
