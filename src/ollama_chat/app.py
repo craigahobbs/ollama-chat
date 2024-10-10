@@ -83,7 +83,7 @@ class ConfigManager:
     __slots__ = ('config_path', 'config_lock', 'config')
 
 
-    DEFAULT_MODEL = 'llama3.1:latest'
+    DEFAULT_MODEL = 'llama3.2:latest'
 
 
     def __init__(self, config_path):
