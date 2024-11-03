@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.33 (2024-11-03)
+
+- [426c4e7](https://github.com/craigahobbs/ollama-chat/commit/426c4e7) - add template editor
+
 ## 0.9.32 (2024-10-02)
 
 - [1b129b8](https://github.com/craigahobbs/ollama-chat/commit/1b129b8) - add Python 3.13 \(really this time\)
