@@ -27,16 +27,10 @@ async function ollamaChatConversationPage(args):
         title = objectGet(conversation, 'title')
         model = objectGet(conversation, 'model')
     else:
-        conversationsResponse = systemFetch('getConversations')
-        conversationsResponse = if(conversationsResponse != null, jsonParse(conversationsResponse))
-        if conversationsResponse == null:
-            ollamaChatErrorPage('Failed to get conversations')
-            return
-        endif
         conversation = null
-        title = ollamaChatTitle
-        model = objectGet(conversationsResponse, 'model')
         generating = False
+        title = ollamaChatTitle
+        model = null
     endif
 
     # Render the floating controls
@@ -45,7 +39,7 @@ async function ollamaChatConversationPage(args):
 
     # Render the chat title
     documentSetTitle(title)
-    if objectGet(args, 'action') == 'title':
+    if conversation != null && objectGet(args, 'action') == 'title':
         markdownPrint('', '**Title:**')
         titleClickFn = systemPartial(ollamaChatOnConversationTitleUpdate, args)
         cancelClickFn = systemPartial(ollamaChatOnConversationClick, args, null, argsURL(ollamaChatArguments))
@@ -58,21 +52,17 @@ async function ollamaChatConversationPage(args):
             )) \
         ))
         documentSetFocus(ollamaChatTitleInputID)
-    else:
-        markdownPrint( \
-            '# ' + markdownEscape(title), \
-            '', \
-            '**Model:** ' + markdownEscape(model) \
-        )
+    elif conversation != null:
+        markdownPrint('# ' + markdownEscape(title), '', '**Model:** ' + markdownEscape(model))
     endif
 
-    # No conversation yet?
-    if conversation == null:
+    # No conversation yet or empty conversation?
+    exchanges = objectGet(conversation, 'exchanges')
+    if conversation == null || !exchanges:
         return
     endif
 
     # Render the exchanges
-    exchanges = objectGet(conversation, 'exchanges')
     ixExchangeLast = arrayLength(exchanges) - 1
     for exchange, ixExchange in exchanges:
         elementModelRender(arrayNew( \
@@ -135,7 +125,7 @@ async function ollamaChatConversationPageBottom(args, conversation, generating):
 
     # Render the bottom space
     fontSizePx = documentFontSize()
-    bottomSpacePx = if(multiline, if(generating, 16, 12), if(generating, 8, 4)) * fontSizePx
+    bottomSpacePx = if(generating, mathFloor(0.67 * windowHeight() / fontSizePx), if(multiline, 12, 4)) * fontSizePx
     bottomElementId = stringSlice(argsURL(ollamaChatArguments, null, false, ollamaChatBottomID), 1)
     elementModelRender(arrayNew( \
         objectNew('html', 'div', 'attr', objectNew('style', 'height: ' + numberToFixed(bottomSpacePx, ollamaChatPrecision) + 'px')), \
@@ -152,11 +142,13 @@ endfunction
 # The Ollama Chat conversation page title-update click handler
 async function ollamaChatOnConversationTitleUpdate(args):
     # Update the conversation title
-    title = documentInputValue(ollamaChatTitleInputID)
-    systemFetch(objectNew( \
-        'url', 'setConversationTitle', \
-        'body', jsonStringify(objectNew('id', objectGet(args, 'id'), 'title', title)) \
-    ))
+    title = stringTrim(documentInputValue(ollamaChatTitleInputID))
+    if title:
+        systemFetch(objectNew( \
+            'url', 'setConversationTitle', \
+            'body', jsonStringify(objectNew('id', objectGet(args, 'id'), 'title', title)) \
+        ))
+    endif
 
     # Navigate to the conversation
     ollamaChatSavePrompt()
@@ -277,7 +269,7 @@ async function ollamaChatOnConversationPrompt(args, message):
         id = objectGet(startResponse, 'id')
 
         # Navigate to the conversation ID
-        windowSetLocation(argsURL(ollamaChatArguments, objectNew('id', id), false, ollamaChatBottomID))
+        windowSetLocation(argsURL(ollamaChatArguments, objectNew('id', id)))
         return
     endif
 
@@ -298,7 +290,6 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
     action = objectGet(args, 'action')
     multiline = objectGet(args, 'multiline')
     textView = objectGet(args, 'text')
-    title = objectGet(conversation, 'title')
     elements = arrayNew()
 
     # Compute spacing
@@ -331,13 +322,14 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
     markdownDownloadURL = null
     markdownFilename = null
     if conversation != null && !generating && action == 'menu':
-        markdownParts = arrayNew('# ' + markdownEscape(title), '', '**Model:** ' + markdownEscape(objectGet(conversation, 'model')))
+        markdownTitle = objectGet(conversation, 'title')
+        markdownParts = arrayNew('# ' + markdownEscape(markdownTitle), '', '**Model:** ' + markdownEscape(objectGet(conversation, 'model')))
         for exchange in objectGet(conversation, 'exchanges'):
             arrayPush(markdownParts, '', '## User:', '', objectGet(exchange, 'user'), '', '## Model:', '', objectGet(exchange, 'model'))
         endfor
         markdownText = arrayJoin(markdownParts, stringFromCharCode(10))
         markdownDownloadURL = urlObjectCreate(markdownText, 'text/markdown')
-        markdownFilename = regexReplace(regexNew('[\'"]'), stringLower(title), '')
+        markdownFilename = regexReplace(regexNew('[\'"]'), stringLower(markdownTitle), '')
         markdownFilename = regexReplace(regexNew('[^a-z0-9]+'), markdownFilename, '-')
         markdownFilename = regexReplace(regexNew('^-'), markdownFilename, '')
         markdownFilename = regexReplace(regexNew('-$'), markdownFilename, '') + '.md'

@@ -24,6 +24,7 @@ async function testOllamaChatIndex():
 
     ollamaChatMain()
 
+    spacer = stringFromCharCode(160, 160)
     unittestDeepEqual( \
         unittestMockEnd(), \
         arrayNew( \
@@ -31,8 +32,7 @@ async function testOllamaChatIndex():
             arrayNew('documentSetTitle', arrayNew('Ollama Chat')), \
             arrayNew('markdownPrint', arrayNew('# Ollama Chat')), \
             arrayNew('markdownPrint', arrayNew( \
-                '', \
-                "**Model:** llama3:latest&nbsp;&nbsp;[Select](#var.vAction='model')", \
+                '**Model:** llama3:latest' + spacer + "[Select](#var.vAction='model')", \
                 '', \
                 "[Start New Conversation](#var.vView='chat')") \
             ), \
@@ -65,7 +65,7 @@ async function testOllamaChatIndex():
                                                 "elem", arrayNew( \
                                                     objectNew( \
                                                         "html", "a", \
-                                                        "attr", objectNew("href", "#var.vAction='conversation'&var.vId='ID'"), \
+                                                        "attr", objectNew("href", "#var.vAction='conversation'&var.vActionID='ID'"), \
                                                         "elem", objectNew("text", "Select") \
                                                     ), \
                                                     null \
@@ -78,7 +78,9 @@ async function testOllamaChatIndex():
                         ) \
                     ) \
                 ) \
-            )) \
+            )), \
+            arrayNew('markdownPrint', arrayNew('', '## Templates')), \
+            arrayNew('markdownPrint', arrayNew('', stringFromCharCode(160, 160, 160, 160) + '*No templates*')) \
         ) \
     )
 endfunction

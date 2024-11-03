@@ -29,13 +29,15 @@ class TestApp(unittest.TestCase):
                     'moveTemplate',
                     'ollamaChat.bare',
                     'ollamaChatConversation.bare',
+                    'ollamaChatTemplate.bare',
                     'regenerateConversationExchange',
                     'replyConversation',
                     'setConversationTitle',
                     'setModel',
                     'startConversation',
                     'startTemplate',
-                    'stopConversation'
+                    'stopConversation',
+                    'updateTemplate'
                 ]
             )
 

@@ -51,6 +51,7 @@ class OllamaChat(chisel.Application):
         self.add_request(start_conversation)
         self.add_request(start_template)
         self.add_request(stop_conversation)
+        self.add_request(update_template)
 
         # Add the ollama-chat statics
         self.add_static(
@@ -70,6 +71,12 @@ class OllamaChat(chisel.Application):
             'text/plain; charset=utf-8',
             (('GET', None),),
             'The Ollama Chat application conversation page'
+        )
+        self.add_static(
+            'ollamaChatTemplate.bare',
+            'text/plain; charset=utf-8',
+            (('GET', None),),
+            'The Ollama Chat application template page'
         )
 
 
@@ -224,6 +231,17 @@ def get_template(ctx, req):
         if template is None:
             raise chisel.ActionError('UnknownTemplateID')
         return copy.deepcopy(template)
+
+
+@chisel.action(name='updateTemplate', types=OLLAMA_CHAT_TYPES)
+def update_template(ctx, req):
+    template_id = req['id']
+    with ctx.app.config(save=True) as config:
+        templates = config.get('templates') or []
+        ix_template = next((ix_tmpl for ix_tmpl, tmpl in enumerate(templates) if tmpl['id'] == template_id), None)
+        if ix_template is None:
+            raise chisel.ActionError('UnknownTemplateID')
+        templates[ix_template] = req
 
 
 @chisel.action(name='startConversation', types=OLLAMA_CHAT_TYPES)
