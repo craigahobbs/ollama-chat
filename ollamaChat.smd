@@ -46,7 +46,7 @@ struct ConversationTemplateInfo
 struct ConversationTemplate (ConversationTemplateInfo)
 
     # The user prompts to execute in order
-    string[len > 0] prompts
+    string[] prompts
 
     # The template variables (e.g. "{{var}}")
     optional ConversationTemplateVariable[len > 0] variables
@@ -171,6 +171,17 @@ action getTemplate
         string id
 
     output (ConversationTemplate)
+
+    errors
+        UnknownTemplateID
+
+
+# Update a template
+action updateTemplate
+    urls
+        POST
+
+    input (ConversationTemplate)
 
     errors
         UnknownTemplateID
