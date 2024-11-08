@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.34 (2024-11-08)
+
+- [3a370ae](https://github.com/craigahobbs/ollama-chat/commit/3a370ae) - template improvements
+
 ## 0.9.33 (2024-11-03)
 
 - [426c4e7](https://github.com/craigahobbs/ollama-chat/commit/426c4e7) - add template editor
