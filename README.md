@@ -5,10 +5,8 @@
 [![GitHub](https://img.shields.io/github/license/craigahobbs/ollama-chat)](https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ollama-chat)](https://pypi.org/project/ollama-chat/)
 
-**Ollama Chat** is a web chat client for
-[Ollama](https://ollama.com)
-that allows you to chat locally (and privately) with
-[Large Language Models (LLMs)](https://ollama.com/library).
+**Ollama Chat** is a conversational AI chat client that uses [Ollama](https://ollama.com) to interact with local large
+language models (LLMs).
 
 
 ## Features
@@ -67,6 +65,15 @@ ollama-chat -m "Why is the sky blue?"
 ~~~
 
 
+## Conversation Templates
+
+Conversation Templates allow you to repeat the same prompts with different models. Templates can define variables for
+use in the template title and prompt text (e.g., `{{var}}`).
+
+There are two ways to create a template. Click "Add Template" from the index page, and a new template is created and
+opened in the template editor. The other way is to click "Template" from a conversation view's menu.
+
+
 ## Prompt Commands
 
 Ollama Chat supports special **prompt commands** that allow you to include file and URL content in
@@ -106,34 +113,6 @@ To get prompt command help use the `-h` option:
 
 ```
 /file -h
-```
-
-
-## Conversation Templates
-
-[Conversation Templates](https://craigahobbs.github.io/ollama-chat/api.html#var.vName='OllamaChatConfig'&type_ConversationTemplate)
-allow you to repeat the same prompts with different models. Templates can define variables that may
-be included in the template title and prompt text (`{{var}}`). For example:
-
-```json
-{
-    "conversations": [],
-    "templates": [
-        {
-            "title": "City Report for {{CityState}}",
-            "prompts": [
-                "Tell me about {{CityState}}",
-                "What is the average cost of living in {{CityState}}?"
-            ],
-            "variables": [
-                {
-                    "label": "City, State",
-                    "name": "CityState"
-                }
-            ]
-        }
-    ]
-}
 ```
 
 

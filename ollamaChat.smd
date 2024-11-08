@@ -45,7 +45,7 @@ struct ConversationTemplateInfo
 # An Ollama Chat conversation template
 struct ConversationTemplate (ConversationTemplateInfo)
 
-    # The user prompts to execute in order
+    # The template user prompts
     string[] prompts
 
     # The template variables (e.g. "{{var}}")
@@ -146,6 +146,29 @@ action moveTemplate
 
     errors
         UnknownTemplateID
+
+
+# Create a conversation template
+action createTemplate
+    urls
+        POST
+
+    input
+        # The template title
+        string title
+
+        # The template command name
+        optional string name
+
+        # The template variables (e.g. "{{var}}")
+        optional ConversationTemplateVariable[len > 0] variables
+
+        # The template user prompts
+        string[] prompts
+
+    output
+        # The new template identifier
+        string id
 
 
 # Delete a template
@@ -297,24 +320,6 @@ action deleteConversation
 
     input
         # The conversation identifier
-        string id
-
-    errors
-        UnknownConversationID
-        ConversationBusy
-
-
-# Create a conversation template from a conversation
-action createTemplateFromConversation
-    urls
-        POST
-
-    input
-        # The conversation identifier
-        string id
-
-    output
-        # The new template identifier
         string id
 
     errors
