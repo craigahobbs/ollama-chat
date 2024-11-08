@@ -247,6 +247,27 @@ async function ollamaChatOnConversationClick(args, api, url, noSave):
 endfunction
 
 
+# Conversation template on-click event handler
+async function ollamaChatOnConversationTemplate(conversation):
+    # Get the template prompts
+    prompts = arrayNew()
+    for exchange in objectGet(conversation, 'exchanges'):
+        arrayPush(prompts, objectGet(exchange, 'user'))
+    endfor
+
+    # Create a template from the conversation
+    templateRequest = objectNew('title', objectGet(conversation, 'title'), 'prompts', prompts)
+    templateResponse = systemFetch(objectNew('url', 'createTemplate', 'body', jsonStringify(templateRequest)))
+    templateResponse = if(templateResponse != null, jsonParse(templateResponse))
+    templateID = if(templateResponse != null, objectGet(templateResponse, 'id'))
+
+    # Navigate to the template editor
+    if templateID != null:
+        windowSetLocation(argsURL(ollamaChatArguments, objectNew('id', templateID, 'view', 'template')))
+    endif
+endfunction
+
+
 # Prompt on-enter/on-click event handler
 async function ollamaChatOnConversationPrompt(args, message):
     id = objectGet(args, 'id')
@@ -315,7 +336,7 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
     titleClickFn = systemPartial(ollamaChatOnConversationClick, args, null, titleURL)
     markdownClickFn = systemPartial(ollamaChatOnConversationClick, args, null, markdownURL)
     deleteClickFn = systemPartial(ollamaChatOnConversationClick, args, 'deleteConversation', indexURL, true)
-    templateClickFn = systemPartial(ollamaChatOnConversationClick, args, 'createTemplateFromConversation', indexURL, true)
+    templateClickFn = systemPartial(ollamaChatOnConversationTemplate, conversation)
     multilineFn = systemPartial(ollamaChatOnConversationClick, args, null, multilineURL)
 
     # Generate the download URL, if necessary

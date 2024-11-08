@@ -38,12 +38,11 @@ async function ollamaChatTemplateVariablesPage(args):
 
     # Render the submit button
     elementModelRender(arrayNew( \
-        objectNew('html', 'p', 'elem', formsLinkButtonElements('Start New Conversation', submitFn)) \
+        objectNew('html', 'p', 'elem', formsLinkButtonElements('Start Conversation', submitFn)) \
     ))
 endfunction
 
 
-# Variables submit on-click event handler
 async function ollamaChatTemplateVariablesOnSubmit(templateID, variables):
     # Get the variable values
     variableValues = objectNew()
@@ -96,7 +95,7 @@ async function ollamaChatTemplatePage(args):
             objectNew('html', 'p', 'elem', formsTextElements(ollamaChatTemplateInputID, title, 50, titleClickFn)), \
             objectNew('html', 'p', 'elem', arrayNew( \
                 formsLinkElements('Cancel', argsURL(ollamaChatArguments)), \
-                objectNew('text', spacer), \
+                objectNew('text', spacer + '|' + spacer), \
                 formsLinkButtonElements('Update', titleClickFn) \
             )) \
         ))
@@ -115,7 +114,7 @@ async function ollamaChatTemplatePage(args):
             objectNew('html', 'p', 'elem', formsTextElements(ollamaChatTemplateInputID, name, 50, nameClickFn)), \
             objectNew('html', 'p', 'elem', arrayNew( \
                 formsLinkElements('Cancel', argsURL(ollamaChatArguments)), \
-                objectNew('text', spacer), \
+                objectNew('text', spacer + '|' + spacer), \
                 formsLinkButtonElements('Update', nameClickFn), \
                 objectNew('text', spacer), \
                 formsLinkButtonElements('Remove', nameRemoveFn) \
@@ -132,7 +131,12 @@ async function ollamaChatTemplatePage(args):
     endif
 
     # Template variables
-    markdownPrint('', '## Variables')
+    markdownPrint( \
+        '', \
+        '## Variables', \
+        '', \
+        'Variables are used within the template title and prompts like so: `{{variableName}}`' \
+    )
     variables = objectGet(template, 'variables')
     if variables != null:
         for variable, ixVariable in variables:
@@ -148,7 +152,7 @@ async function ollamaChatTemplatePage(args):
                     objectNew('html', 'p', 'elem', formsTextElements(ollamaChatTemplateInputID2, varLabel, 50, nameClickFn)), \
                     objectNew('html', 'p', 'elem', arrayNew( \
                         formsLinkElements('Cancel', argsURL(ollamaChatArguments)), \
-                        objectNew('text', spacer), \
+                        objectNew('text', spacer + '|' + spacer), \
                         formsLinkButtonElements('Update', systemPartial(ollamaChatTemplateOnVariableUpdate, template, ixVariable)), \
                         objectNew('text', spacer), \
                         formsLinkButtonElements('Remove', systemPartial(ollamaChatTemplateOnVariableRemove, template, ixVariable)), \
@@ -205,7 +209,7 @@ async function ollamaChatTemplatePage(args):
                     )), \
                     objectNew('html', 'p', 'elem', arrayNew( \
                         formsLinkElements('Cancel', argsURL(ollamaChatArguments)), \
-                        objectNew('text', spacer), \
+                        objectNew('text', spacer + '|' + spacer), \
                         formsLinkButtonElements('Update', systemPartial(ollamaChatTemplateOnPromptUpdate, template, ixPrompt)), \
                         objectNew('text', spacer), \
                         formsLinkButtonElements('Remove', systemPartial(ollamaChatTemplateOnPromptRemove, template, ixPrompt)), \
@@ -239,7 +243,6 @@ ollamaChatTemplateInputID = 'ollama-chat-template-input'
 ollamaChatTemplateInputID2 = 'ollama-chat-template-input2'
 
 
-# The Ollama Chat template editor title-update click handler
 async function ollamaChatTemplateOnTitle(template):
     # Update the template title
     title = stringTrim(documentInputValue(ollamaChatTemplateInputID))
@@ -253,7 +256,6 @@ async function ollamaChatTemplateOnTitle(template):
 endfunction
 
 
-# The Ollama Chat template editor name-update click handler
 async function ollamaChatTemplateOnName(template):
     # Update the template name
     name = stringTrim(documentInputValue(ollamaChatTemplateInputID))
@@ -267,7 +269,6 @@ async function ollamaChatTemplateOnName(template):
 endfunction
 
 
-# The Ollama Chat template editor name-remove click handler
 async function ollamaChatTemplateOnNameRemove(template):
     # Remove the template name
     objectDelete(template, 'name')
@@ -335,25 +336,14 @@ async function ollamaChatTemplateOnVariableMove(template, ixVariable, isDown):
     variables = objectGet(template, 'variables')
 
     # Move the variable
-    ixVariableNew = ixVariable
-    if isDown:
-        if ixVariable < arrayLength(variables) - 1:
-            ixVariableNew = ixVariable + 1
-            temp = arrayGet(variables, ixVariable)
-            arraySet(variables, ixVariable, arrayGet(variables, ixVariableNew))
-            arraySet(variables, ixVariableNew, temp)
-        endif
-    else:
-        if ixVariable > 0:
-            ixVariableNew = ixVariable - 1
-            temp = arrayGet(variables, ixVariable)
-            arraySet(variables, ixVariable, arrayGet(variables, ixVariableNew))
-            arraySet(variables, ixVariableNew, temp)
-        endif
+    ixVariableNew = ixVariable + if(isDown, 1, -1)
+    if ixVariableNew < 0 || ixVariableNew >= arrayLength(variables):
+        return
     endif
-    if ixVariableNew != ixVariable:
-        systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
-    endif
+    temp = arrayGet(variables, ixVariable)
+    arraySet(variables, ixVariable, arrayGet(variables, ixVariableNew))
+    arraySet(variables, ixVariableNew, temp)
+    systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
 
     # Navigate back to template editor
     windowSetLocation(argsURL(ollamaChatArguments, objectNew('action', 'variable', 'actionID', stringNew(ixVariableNew))))
@@ -404,25 +394,14 @@ async function ollamaChatTemplateOnPromptMove(template, ixPrompt, isDown):
     prompts = objectGet(template, 'prompts')
 
     # Move the prompt
-    ixPromptNew = ixPrompt
-    if isDown:
-        if ixPrompt < arrayLength(prompts) - 1:
-            ixPromptNew = ixPrompt + 1
-            temp = arrayGet(prompts, ixPrompt)
-            arraySet(prompts, ixPrompt, arrayGet(prompts, ixPromptNew))
-            arraySet(prompts, ixPromptNew, temp)
-        endif
-    else:
-        if ixPrompt > 0:
-            ixPromptNew = ixPrompt - 1
-            temp = arrayGet(prompts, ixPrompt)
-            arraySet(prompts, ixPrompt, arrayGet(prompts, ixPromptNew))
-            arraySet(prompts, ixPromptNew, temp)
-        endif
+    ixPromptNew = ixPrompt + if(isDown, 1, -1)
+    if ixPromptNew < 0 || ixPromptNew >= arrayLength(prompts):
+        return
     endif
-    if ixPromptNew != ixPrompt:
-        systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
-    endif
+    temp = arrayGet(prompts, ixPrompt)
+    arraySet(prompts, ixPrompt, arrayGet(prompts, ixPromptNew))
+    arraySet(prompts, ixPromptNew, temp)
+    systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
 
     # Navigate back to template editor
     windowSetLocation(argsURL(ollamaChatArguments, objectNew('action', 'prompt', 'actionID', stringNew(ixPromptNew))))

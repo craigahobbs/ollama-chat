@@ -17,7 +17,7 @@ class TestApp(unittest.TestCase):
             self.assertListEqual(
                 [key for key in sorted(app.requests.keys()) if not key.startswith('chisel_doc')],
                 [
-                    'createTemplateFromConversation',
+                    'createTemplate',
                     'deleteConversation',
                     'deleteConversationExchange',
                     'deleteTemplate',

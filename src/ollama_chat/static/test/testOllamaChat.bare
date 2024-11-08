@@ -34,8 +34,19 @@ async function testOllamaChatIndex():
             arrayNew('markdownPrint', arrayNew( \
                 '**Model:** llama3:latest' + spacer + "[Select](#var.vAction='model')", \
                 '', \
-                "[Start New Conversation](#var.vView='chat')") \
+                "[Start Conversation](#var.vView='chat')") \
             ), \
+            arrayNew("elementModelRender", arrayNew( \
+                objectNew( \
+                    'html', 'p', \
+                    'elem', objectNew( \
+                        'html', 'a', \
+                        'attr', objectNew('style', 'cursor: pointer; user-select: none;'), \
+                        'elem', objectNew('text', 'Add Template'), \
+                        'callback', objectNew('click', null) \
+                    ) \
+                ) \
+            )), \
             arrayNew('markdownPrint', arrayNew('', '## Conversations')), \
             arrayNew("elementModelRender", arrayNew( \
                 arrayNew( \

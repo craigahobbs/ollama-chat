@@ -96,8 +96,12 @@ async function ollamaChatIndexPage(args):
         markdownPrint( \
             modelReport + argsLink(ollamaChatArguments, 'Select', objectNew('action', 'model')), \
             '', \
-            argsLink(ollamaChatArguments, 'Start New Conversation', objectNew('view', 'chat')) \
+            argsLink(ollamaChatArguments, 'Start Conversation', objectNew('view', 'chat')) \
         )
+        elementModelRender(objectNew( \
+            'html', 'p', \
+            'elem',  formsLinkButtonElements('Add Template', ollamaChatIndexOnTemplate) \
+        ))
     endif
 
     # Render the conversations
@@ -184,6 +188,24 @@ endfunction
 async function ollamaChatIndexOnModelSelect(model):
     systemFetch(objectNew('url', 'setModel', 'body', jsonStringify(objectNew('model', model))))
     windowSetLocation(argsURL(ollamaChatArguments))
+endfunction
+
+
+# Add template on-click event handler
+async function ollamaChatIndexOnTemplate():
+    # Create the new template
+    templateRequest = objectNew( \
+        'title', 'New template', \
+        'prompts', arrayNew('New prompt') \
+    )
+    templateResponse = systemFetch(objectNew('url', 'createTemplate', 'body', jsonStringify(templateRequest)))
+    templateResponse = if(templateResponse != null, jsonParse(templateResponse))
+    templateID = if(templateResponse != null, objectGet(templateResponse, 'id'))
+
+    # Edit the new template
+    if templateID != null:
+        windowSetLocation(argsURL(ollamaChatArguments, objectNew('id', templateID, 'view', 'template')))
+    endif
 endfunction
 
 

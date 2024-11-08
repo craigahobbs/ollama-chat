@@ -35,7 +35,7 @@ class OllamaChat(chisel.Application):
         self.add_requests(chisel.create_doc_requests())
 
         # Add the APIs
-        self.add_request(create_template_from_conversation)
+        self.add_request(create_template)
         self.add_request(delete_conversation)
         self.add_request(delete_conversation_exchange)
         self.add_request(delete_template)
@@ -394,29 +394,20 @@ def delete_conversation(ctx, req):
         config['conversations'] = [conversation for conversation in config['conversations'] if conversation['id'] != id_]
 
 
-@chisel.action(name='createTemplateFromConversation', types=OLLAMA_CHAT_TYPES)
-def create_template_from_conversation(ctx, req):
+@chisel.action(name='createTemplate', types=OLLAMA_CHAT_TYPES)
+def create_template(ctx, req):
     with ctx.app.config(save=True) as config:
-        id_ = req['id']
-        conversation = config_conversation(config, id_)
-        if conversation is None:
-            raise chisel.ActionError('UnknownConversationID')
-
-        # Busy?
-        if id_ in ctx.app.chats:
-            raise chisel.ActionError('ConversationBusy')
-
         # Create the new template
         id_ = str(uuid.uuid4())
         template = {
             'id': id_,
-            'title': conversation['title'],
-            'prompts': [exchange['user'] for exchange in conversation['exchanges']]
+            'title': req['title'],
+            'prompts': req['prompts']
         }
-
-        # A conversation's exchanges can be empty, a template's prompts cannot
-        if not template['prompts']:
-            template['prompts'].append('')
+        if 'name' in req:
+            template['name'] = req['name']
+        if 'variables' in req:
+            template['variables'] = req['variables']
 
         # Add the new template to the application config
         if 'templates' not in config:
