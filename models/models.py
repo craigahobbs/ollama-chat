@@ -67,21 +67,28 @@ def _parse_modified(modified):
     if modified == 'yesterday':
         return (today - datetime.timedelta(days=1))
 
-    # X days/weeks/months ago?
+    # X minutes/hours/days/weeks/months ago?
     m_ago = _regex_modified_ago.match(modified)
     if m_ago:
         count = int(m_ago.group('count'))
         unit = m_ago.group('unit')
-        if unit == 'days':
+        if unit == 'day':
             return today - datetime.timedelta(days=count)
-        elif unit == 'weeks':
+        elif unit == 'week':
             return today - datetime.timedelta(weeks=count)
-        else: # unit == 'months'
+        elif unit == 'month':
             return today - datetime.timedelta(days=count * 30)
+        else:
+            return today
+
+    # about a hour/minute ago?
+    elif _regex_about.test(modified):
+        return today
 
     raise ValueError(f'Unrecognized modified string: {modified}')
 
-_regex_modified_ago = re.compile(r'^(?P<count>\d+)\s+(?P<unit>days|weeks|months)\s+ago$')
+_regex_modified_ago = re.compile(r'^(?P<count>\d+)\s+(?P<unit>minute|hour|day|week|month)s?\s+ago$')
+_regex_about = re.compile(r'^about\s+an?\s+(hour|minute)\s+ago$')
 
 
 def _parse_count(count):
