@@ -82,7 +82,7 @@ def _parse_modified(modified):
             return today
 
     # about a hour/minute ago?
-    elif _regex_about.test(modified):
+    elif _regex_about.match(modified):
         return today
 
     raise ValueError(f'Unrecognized modified string: {modified}')

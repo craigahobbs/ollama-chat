@@ -979,7 +979,7 @@
         "name": "nemotron",
         "description": "Llama-3.1-Nemotron-70B-Instruct is a large language model customized by NVIDIA to improve the helpfulness of LLM generated responses to user queries.",
         "modified": "2024-10-22",
-        "downloads": 33200,
+        "downloads": 33300,
         "parameters": [
             70000000000
         ],
@@ -1135,7 +1135,7 @@
         "name": "opencoder",
         "description": "OpenCoder is an open and reproducible code LLM family which includes 1.5B and 8B models, supporting chat in English and Chinese languages.",
         "modified": "2024-11-18",
-        "downloads": 5975,
+        "downloads": 5976,
         "parameters": [
             1500000000,
             8000000000
@@ -1573,7 +1573,7 @@
         "name": "starcoder2",
         "description": "StarCoder2 is the next generation of transparently trained open code LLMs that comes in three sizes: 3B, 7B and 15B parameters.",
         "modified": "2024-09-20",
-        "downloads": 433900,
+        "downloads": 434000,
         "parameters": [
             3000000000,
             7000000000,
