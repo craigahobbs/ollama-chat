@@ -142,7 +142,7 @@ def get_conversations(ctx, unused_req):
     with ctx.app.config() as config:
         return {
             'model': ConfigManager.get_model(config),
-            'models': sorted(model['name'] for model in models),
+            'models': sorted(model.model for model in models),
             'conversations': [
                 {
                     'id': conversation['id'],
