@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.35 (2024-11-25)
+
+- [050b869](https://github.com/craigahobbs/ollama-chat/commit/050b869) - fix for ollama 0.4
+
 ## 0.9.34 (2024-11-08)
 
 - [3a370ae](https://github.com/craigahobbs/ollama-chat/commit/3a370ae) - template improvements
