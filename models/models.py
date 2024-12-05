@@ -131,8 +131,14 @@ def main():
             'description': raw_model['description'],
             'modified': _parse_modified(raw_model['modified']).isoformat(),
             'downloads': _parse_count(raw_model['downloads']),
-            'parameters': [_parse_count(size) for size in raw_model['sizes']],
-            'tags': [f'{model_name}:{size}' for size in raw_model['sizes']]
+            'variants': [
+                {
+                    'id': f'{model_name}:{size}',
+                    'size': size,
+                    'parameters': _parse_count(size)
+                }
+                for size in raw_model['sizes']
+            ]
         })
 
     # Output the model JSON
