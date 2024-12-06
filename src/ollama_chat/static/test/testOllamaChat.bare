@@ -32,10 +32,10 @@ async function testOllamaChatIndex():
             arrayNew('documentSetTitle', arrayNew('Ollama Chat')), \
             arrayNew('markdownPrint', arrayNew('# Ollama Chat')), \
             arrayNew('markdownPrint', arrayNew( \
-                '**Model:** llama3:latest' + spacer + "[Select](#var.vAction='model')", \
+                '**Model:** llama3:latest' + spacer + "[Select](#var.vView='models')", \
                 '', \
-                "[Start Conversation](#var.vView='chat')") \
-            ), \
+                "[Start Conversation](#var.vView='chat')" \
+            )), \
             arrayNew("elementModelRender", arrayNew( \
                 objectNew( \
                     'html', 'p', \

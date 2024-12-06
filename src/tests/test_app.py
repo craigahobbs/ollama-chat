@@ -20,15 +20,20 @@ class TestApp(unittest.TestCase):
                     'createTemplate',
                     'deleteConversation',
                     'deleteConversationExchange',
+                    'deleteModel',
                     'deleteTemplate',
+                    'downloadModel',
                     'getConversation',
                     'getConversations',
+                    'getModels',
+                    'getSystemInfo',
                     'getTemplate',
                     'index.html',
                     'moveConversation',
                     'moveTemplate',
                     'ollamaChat.bare',
                     'ollamaChatConversation.bare',
+                    'ollamaChatModels.bare',
                     'ollamaChatTemplate.bare',
                     'regenerateConversationExchange',
                     'replyConversation',
@@ -37,6 +42,7 @@ class TestApp(unittest.TestCase):
                     'startConversation',
                     'startTemplate',
                     'stopConversation',
+                    'stopModelDownload',
                     'updateTemplate'
                 ]
             )

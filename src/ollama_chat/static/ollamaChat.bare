@@ -5,6 +5,7 @@ include <args.mds>
 include <forms.mds>
 
 include 'ollamaChatConversation.bare'
+include 'ollamaChatModels.bare'
 include 'ollamaChatTemplate.bare'
 
 
@@ -14,6 +15,10 @@ async function ollamaChatMain():
     view = objectGet(args, 'view')
     if view == 'chat':
         ollamaChatConversationPage(args)
+    elif view == 'download':
+        ollamaChatModelsDownloadPage(args)
+    elif view == 'models':
+        ollamaChatModelsPage(args)
     elif view == 'template':
         ollamaChatTemplatePage(args)
     elif view == 'variables':
@@ -28,9 +33,12 @@ endfunction
 ollamaChatArguments = argsValidate(arrayNew( \
     objectNew('name', 'action', 'explicit', true), \
     objectNew('name', 'actionID', 'explicit', true), \
+    objectNew('name', 'filterCompatible', 'type', 'bool', 'default', true), \
+    objectNew('name', 'filterMonths', 'type', 'int', 'default', 1), \
     objectNew('name', 'id'), \
     objectNew('name', 'message', 'explicit', true), \
     objectNew('name', 'multiline', 'type', 'bool'), \
+    objectNew('name', 'sort', 'type', 'string', 'default', 'Modified'), \
     objectNew('name', 'text', 'type', 'bool'), \
     objectNew('name', 'view') \
 ))
@@ -70,39 +78,19 @@ async function ollamaChatIndexPage(args):
     documentSetTitle(ollamaChatTitle)
     markdownPrint('# ' + markdownEscape(ollamaChatTitle))
 
-    # Model report and selection
+    # Render the menu
     spacer = stringFromCharCode(160, 160)
     indent = spacer + spacer
-    modelReport = '**Model:** ' + objectGet(conversationsResponse, 'model') + spacer
-    if action == 'model':
-        # Render the model selection links
-        markdownPrint(modelReport + argsLink(ollamaChatArguments, 'Cancel'))
-        models = objectGet(conversationsResponse, 'models')
-        if !models:
-            markdownPrint('', indent + '**Error:** No local models - download with `ollama pull <model>`')
-        else:
-            markdownPrint('', indent + '**Select a model:**')
-            for model in models:
-                elementModelRender( \
-                    objectNew('html', 'p', 'elem', arrayNew( \
-                        objectNew('text', indent), \
-                        formsLinkButtonElements(model, systemPartial(ollamaChatIndexOnModelSelect, model)) \
-                    )) \
-                )
-            endfor
-        endif
-    else:
-        # Render the start new chat link
-        markdownPrint( \
-            modelReport + argsLink(ollamaChatArguments, 'Select', objectNew('action', 'model')), \
-            '', \
-            argsLink(ollamaChatArguments, 'Start Conversation', objectNew('view', 'chat')) \
-        )
-        elementModelRender(objectNew( \
-            'html', 'p', \
-            'elem',  formsLinkButtonElements('Add Template', ollamaChatIndexOnTemplate) \
-        ))
-    endif
+    markdownPrint( \
+        '**Model:** ' + objectGet(conversationsResponse, 'model') + spacer + \
+            argsLink(ollamaChatArguments, 'Select', objectNew('view', 'models')), \
+        '', \
+        argsLink(ollamaChatArguments, 'Start Conversation', objectNew('view', 'chat')) \
+    )
+    elementModelRender(objectNew( \
+        'html', 'p', \
+        'elem',  formsLinkButtonElements('Add Template', ollamaChatIndexOnTemplate) \
+    ))
 
     # Render the conversations
     conversations = objectGet(conversationsResponse, 'conversations')
@@ -181,13 +169,6 @@ async function ollamaChatIndexPage(args):
         endfor
         elementModelRender(templateTable)
     endif
-endfunction
-
-
-# Select model on-click event handler
-async function ollamaChatIndexOnModelSelect(model):
-    systemFetch(objectNew('url', 'setModel', 'body', jsonStringify(objectNew('model', model))))
-    windowSetLocation(argsURL(ollamaChatArguments))
 endfunction
 
 

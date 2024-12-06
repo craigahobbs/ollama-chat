@@ -23,13 +23,14 @@ from .chat import ChatManager, config_conversation, config_template_prompts
 
 # The ollama-chat back-end API WSGI application class
 class OllamaChat(chisel.Application):
-    __slots__ = ('config', 'chats')
+    __slots__ = ('config', 'chats', 'downloads')
 
 
     def __init__(self, config_path):
         super().__init__()
         self.config = ConfigManager(config_path)
         self.chats = {}
+        self.downloads = {}
 
         # Add the chisel documentation application
         self.add_requests(chisel.create_doc_requests())
@@ -38,9 +39,13 @@ class OllamaChat(chisel.Application):
         self.add_request(create_template)
         self.add_request(delete_conversation)
         self.add_request(delete_conversation_exchange)
+        self.add_request(delete_model)
         self.add_request(delete_template)
+        self.add_request(download_model)
         self.add_request(get_conversation)
         self.add_request(get_conversations)
+        self.add_request(get_models)
+        self.add_request(get_system_info)
         self.add_request(get_template)
         self.add_request(move_conversation)
         self.add_request(move_template)
@@ -51,6 +56,7 @@ class OllamaChat(chisel.Application):
         self.add_request(start_conversation)
         self.add_request(start_template)
         self.add_request(stop_conversation)
+        self.add_request(stop_model_download)
         self.add_request(update_template)
 
         # Add the ollama-chat statics
@@ -71,6 +77,12 @@ class OllamaChat(chisel.Application):
             'text/plain; charset=utf-8',
             (('GET', None),),
             'The Ollama Chat application conversation page'
+        )
+        self.add_static(
+            'ollamaChatModels.bare',
+            'text/plain; charset=utf-8',
+            (('GET', None),),
+            'The Ollama Chat application models page'
         )
         self.add_static(
             'ollamaChatTemplate.bare',
@@ -128,6 +140,46 @@ class ConfigManager:
         return config.get('model', cls.DEFAULT_MODEL)
 
 
+# The model download manager class
+class DownloadManager():
+    __slots__ = ('app', 'model', 'status', 'completed', 'total', 'stop')
+
+
+    def __init__(self, app, model):
+        self.app = app
+        self.model = model
+        self.status = ''
+        self.completed = 0
+        self.total = 0
+        self.stop = False
+
+        # Start the download thread
+        download_thread = threading.Thread(target=self.download_thread_fn, args=(self,))
+        download_thread.daemon = True
+        download_thread.start()
+
+
+    @staticmethod
+    def download_thread_fn(manager):
+        try:
+            for progress in ollama.pull(manager.model, stream=True):
+                # Stopped?
+                if manager.stop:
+                    break
+
+                # Update the download status
+                manager.status = progress.status
+                manager.completed = progress.completed or 0
+                manager.total = progress.total
+
+        except Exception: # pylint: disable=broad-exception-caught
+            pass
+
+        # Delete the application's download entry
+        if manager.model in manager.app.downloads:
+            del manager.app.downloads[manager.model]
+
+
 # The Ollama Chat API type model
 with importlib.resources.files('ollama_chat.static').joinpath('ollamaChat.smd').open('r') as cm_smd:
     OLLAMA_CHAT_TYPES = schema_markdown.parse_schema_markdown(cm_smd.read())
@@ -135,14 +187,9 @@ with importlib.resources.files('ollama_chat.static').joinpath('ollamaChat.smd').
 
 @chisel.action(name='getConversations', types=OLLAMA_CHAT_TYPES)
 def get_conversations(ctx, unused_req):
-    try:
-        models = ollama.list()['models'] or ()
-    except: # pylint: disable=bare-except
-        models = ()
     with ctx.app.config() as config:
         return {
             'model': ConfigManager.get_model(config),
-            'models': sorted(model.model for model in models),
             'conversations': [
                 {
                     'id': conversation['id'],
@@ -457,3 +504,84 @@ def regenerate_conversation_exchange(ctx, req):
 
             # Start the model chat
             ctx.app.chats[id_] = ChatManager(ctx.app, id_, [prompt])
+
+
+@chisel.action(name='getModels', types=OLLAMA_CHAT_TYPES)
+def get_models(ctx, unused_req):
+    # Get the current model
+    with ctx.app.config() as config:
+        current_model = ConfigManager.get_model(config)
+
+    # Get the Ollama models
+    try:
+        models = ollama.list()['models'] or ()
+    except: # pylint: disable=bare-except
+        models = ()
+
+    # Create the models response
+    response_models = [
+        {
+            'id': model.model,
+            'name': model.model[:model.model.index(':')],
+            'parameters': _parse_parameter_size(model.details.parameter_size),
+            'size': model.size,
+            'modified': model.modified_at
+        }
+        for model in models
+    ]
+
+    # Create the downloading models response
+    downloading_models = []
+    for model_id, download_manager in ctx.app.downloads.items():
+        download = {
+            'id': model_id,
+            'status': download_manager.status,
+            'completed': download_manager.completed
+        }
+        if download_manager.total:
+            download['size'] = download_manager.total
+        downloading_models.append(download)
+
+    return {
+        'model': current_model,
+        'models': sorted(response_models, key=lambda model: model['id']),
+        'downloading': sorted(downloading_models, key=lambda model: model['id'])
+    }
+
+
+# Helper function to parse parameter sizes
+def _parse_parameter_size(parameter_size):
+    value = float(parameter_size[:-1])
+    unit = parameter_size[-1]
+    if unit == 'B':
+        return int(value * 1000000000)
+    elif unit == 'M':
+        return int(value * 1000000)
+    elif unit == 'K':
+        return int(value * 1000)
+    raise ValueError(f'Unrecognized parameter size: {parameter_size}')
+
+
+@chisel.action(name='getSystemInfo', types=OLLAMA_CHAT_TYPES)
+def get_system_info(unused_ctx, unused_req):
+    return {
+        'memory': os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
+    }
+
+
+@chisel.action(name='downloadModel', types=OLLAMA_CHAT_TYPES)
+def download_model(ctx, req):
+    with ctx.app.config():
+        ctx.app.downloads[req['model']] = DownloadManager(ctx.app, req['model'])
+
+
+@chisel.action(name='stopModelDownload', types=OLLAMA_CHAT_TYPES)
+def stop_model_download(ctx, req):
+    with ctx.app.config():
+        if req['model'] in ctx.app.downloads:
+            ctx.app.downloads[req['model']].stop = True
+
+
+@chisel.action(name='deleteModel', types=OLLAMA_CHAT_TYPES)
+def delete_model(unused_ctx, req):
+    ollama.delete(req['model'])

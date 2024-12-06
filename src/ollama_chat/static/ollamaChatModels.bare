@@ -1,0 +1,333 @@
+# Licensed under the MIT License
+# https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
+
+
+# The available models JSON URL
+ollamaChatModelsAvailableURL = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+
+
+# The download refresh timeout
+ollamaChatModelsDownloadTimeoutMs = 2000
+
+
+# The Ollama Chat models page
+async function ollamaChatModelsPage(args):
+    action = objectGet(args, 'action')
+    actionID = objectGet(args, 'actionID')
+
+    # Get the models
+    modelsResponse = systemFetch('getModels')
+    modelsResponse = if(modelsResponse != null, jsonParse(modelsResponse))
+    if modelsResponse == null:
+        ollamaChatErrorPage('Failed to get models')
+        return
+    endif
+    currentModel = objectGet(modelsResponse, 'model')
+    models = objectGet(modelsResponse, 'models')
+    downloading = objectGet(modelsResponse, 'downloading')
+
+    # Render the page title
+    title = 'Ollama Chat - Models'
+    documentSetTitle(title)
+    markdownPrint( \
+        argsLink(ollamaChatArguments, 'Back', null, true), \
+        '', \
+        '# ' + markdownEscape(title), \
+        '', \
+        '**Model:** ' + currentModel, \
+        '', \
+        argsLink(ollamaChatArguments, 'Download Models', objectNew('view', 'download')) \
+    )
+
+    # Render the downloading models
+    if downloading:
+        # Render the model list
+        markdownPrint('', '## Downloading')
+        downloadTableRows = arrayNew(objectNew('html', 'tr', 'elem', arrayNew( \
+            objectNew('html', 'th', 'elem', objectNew('text', 'Model')), \
+            objectNew('html', 'th', 'elem', objectNew('text', 'Progress')), \
+            objectNew('html', 'th', 'elem', objectNew('text', 'Status')), \
+            objectNew('html', 'th', 'elem', objectNew('text', '')) \
+        )))
+        downloadTable = arrayNew( \
+            objectNew('html', 'table', 'elem', arrayNew( \
+                objectNew('html', 'tbody', 'elem', downloadTableRows) \
+            )) \
+        )
+        for download in downloading:
+            modelID = objectGet(download, 'id')
+            status = objectGet(download, 'status')
+            completed = objectGet(download, 'completed')
+            size = objectGet(download, 'size')
+            progress = if(size == null, '0%', mathRound(100 * completed / size) + '% of ' + ollamaChatModelsFormatSize(size))
+            arrayPush(downloadTableRows, objectNew('html', 'tr', 'elem', arrayNew( \
+                objectNew('html', 'td', 'elem', objectNew('text', modelID)), \
+                objectNew('html', 'td', 'elem', objectNew('text', progress)), \
+                objectNew('html', 'td', 'elem', objectNew('text', status)), \
+                formsLinkButtonElements('Stop', systemPartial(ollamaChatModelsOnDownloadStop, modelID)) \
+            )))
+        endfor
+        elementModelRender(downloadTable)
+
+        # Set the refresh timer
+        windowSetTimeout(ollamaChatModelsPage, ollamaChatModelsDownloadTimeoutMs)
+    endif
+
+    # Render the model list
+    markdownPrint('', '## Models')
+    modelTableRows = arrayNew(objectNew('html', 'tr', 'elem', arrayNew( \
+        objectNew('html', 'th', 'elem', objectNew('text', 'Model')), \
+        objectNew('html', 'th', 'attr', objectNew('style', 'text-align: right;'), 'elem', objectNew('text', 'Parameters')), \
+        objectNew('html', 'th', 'attr', objectNew('style', 'text-align: right;'), 'elem', objectNew('text', 'Size')), \
+        objectNew('html', 'th', 'elem', objectNew('text', 'Modified')), \
+        objectNew('html', 'th', 'elem', objectNew('text', '')) \
+    )))
+    modelTable = arrayNew( \
+        objectNew('html', 'table', 'elem', arrayNew( \
+            objectNew('html', 'tbody', 'elem', modelTableRows) \
+        )) \
+    )
+    spacer = stringFromCharCode(160, 160)
+    for model in models:
+        modelID = objectGet(model, 'id')
+        modelName = objectGet(model, 'name')
+        parameters = objectGet(model, 'parameters')
+        size = objectGet(model, 'size')
+        modified = datetimeISOParse(objectGet(model, 'modified'))
+        selected = action == 'model' && actionID == modelID
+
+        # Add the model row
+        selectText = if(selected, 'Cancel', 'Select')
+        selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'model'), 'actionID', if(!selected, modelID)))
+        arrayPush(modelTableRows, objectNew('html', 'tr', 'elem', arrayNew( \
+            objectNew('html', 'td', 'elem', formsLinkButtonElements(modelID, systemPartial(ollamaChatModelsOnModelSelect, modelID))), \
+            objectNew( \
+                'html', 'td', \
+                'attr', objectNew('style', 'text-align: right;'), \
+                'elem', objectNew('text', ollamaChatModelsFormatCount(parameters)) \
+            ), \
+            objectNew( \
+                'html', 'td', \
+                'attr', objectNew('style', 'text-align: right;'), \
+                'elem', objectNew('text', ollamaChatModelsFormatSize(size)) \
+            ), \
+            objectNew('html', 'td', 'elem', objectNew('text', datetimeISOFormat(modified, true))), \
+            arrayNew( \
+                formsLinkElements(selectText, selectURL), \
+                if(selected, arrayNew( \
+                    objectNew('text', spacer + '|' + spacer), \
+                    formsLinkButtonElements('Delete', systemPartial(ollamaChatModelsOnDelete, modelID)), \
+                    objectNew('text', spacer), \
+                    formsLinkButtonElements('Update', systemPartial(ollamaChatModelsOnDownload, modelID)), \
+                    objectNew('text', spacer), \
+                    formsLinkElements('Info', ollamaChatModelsModelURL(modelName)) \
+                )) \
+            ) \
+        )))
+    endfor
+    elementModelRender(modelTable)
+endfunction
+
+
+# Helper to create the Ollama model page URL
+function ollamaChatModelsModelURL(modelName):
+    return 'https://ollama.com/library/' + urlEncodeComponent(modelName)
+endfunction
+
+
+# Helper to format parameter counts
+function ollamaChatModelsFormatCount(parameters):
+    if parameters < 1000000:
+        return numberToFixed(parameters / 1000, 1) + 'K'
+    elif parameters < 1000000000:
+        return numberToFixed(parameters / 1000000, 1) + 'M'
+    endif
+    return numberToFixed(parameters / 1000000000, 1) + 'B'
+endfunction
+
+
+# Helper to format model sizes
+function ollamaChatModelsFormatSize(parameters):
+    if parameters < 1048576:
+        return numberToFixed(parameters / 1024, 1) + 'KB'
+    elif parameters < 1073741824:
+        return numberToFixed(parameters / 1048576, 1) + 'MB'
+    endif
+    return numberToFixed(parameters / 1073741824, 1) + 'GB'
+endfunction
+
+
+# Select model on-click event handler
+async function ollamaChatModelsOnModelSelect(model):
+    systemFetch(objectNew('url', 'setModel', 'body', jsonStringify(objectNew('model', model))))
+    windowSetLocation(argsURL(ollamaChatArguments, null, true))
+endfunction
+
+
+# Stop model download on-click event handler
+async function ollamaChatModelsOnDownloadStop(model):
+    systemFetch(objectNew('url', 'stopModelDownload', 'body', jsonStringify(objectNew('model', model))))
+    ollamaChatModelsPage()
+endfunction
+
+
+# Delete model delete on-click event handler
+async function ollamaChatModelsOnDelete(model):
+    systemFetch(objectNew('url', 'deleteModel', 'body', jsonStringify(objectNew('model', model))))
+    ollamaChatModelsPage()
+endfunction
+
+
+# The Ollama Chat model download page
+async function ollamaChatModelsDownloadPage(args):
+    action = objectGet(args, 'action')
+    actionID = objectGet(args, 'actionID')
+    filterMonths = objectGet(args, 'filterMonths')
+    filterCompatible = objectGet(args, 'filterCompatible')
+    sort = objectGet(args, 'sort')
+
+    # Get the system info
+    systemInfo = systemFetch('getSystemInfo')
+    systemInfo = if(systemInfo != null, jsonParse(systemInfo))
+    totalMemory = objectGet(systemInfo, 'memory')
+
+    # Get the downloaded and available models
+    availableModels = systemFetch(ollamaChatModelsAvailableURL)
+    availableModels = if(availableModels != null, jsonParse(availableModels))
+    if !availableModels:
+        ollamaChatErrorPage('Failed to get available models')
+        return
+    endif
+
+    # Render the page title
+    title = 'Ollama Chat - Download'
+    documentSetTitle(title)
+    markdownPrint( \
+        argsLink(ollamaChatArguments, 'Back', objectNew('view', 'models'), true), \
+        '', \
+        '# ' + markdownEscape(title) \
+    )
+
+    # Render the filters
+    filterSpacer = stringFromCharCode(160) + '|' + stringFromCharCode(160)
+    markdownPrint( \
+        '**Recent:** ' + \
+            ollamaChatModelsFilterLink('1 month', 1, 'filterMonths', filterMonths) + filterSpacer + \
+            ollamaChatModelsFilterLink('3 months', 3, 'filterMonths', filterMonths) + filterSpacer + \
+            ollamaChatModelsFilterLink('6 month', 6, 'filterMonths', filterMonths) + filterSpacer + \
+            ollamaChatModelsFilterLink('All', 0, 'filterMonths', filterMonths), \
+        '', \
+        '**Show:** ' + \
+            ollamaChatModelsFilterLink('Compatible', true, 'filterCompatible', filterCompatible) + filterSpacer + \
+            ollamaChatModelsFilterLink('All', false, 'filterCompatible', filterCompatible), \
+        '', \
+        '**Sort:** ' + \
+            ollamaChatModelsFilterLink('Modified', 'Modified', 'sort', sort) + filterSpacer + \
+            ollamaChatModelsFilterLink('Downloads', 'Downloads', 'sort', sort) + filterSpacer + \
+            ollamaChatModelsFilterLink('Name', 'Name', 'sort', sort) \
+    )
+
+    # Sort the model array
+    if sort == 'Downloads':
+        models = arraySort(availableModels, systemPartial(ollamaChatModelsSort, 'Downloads'))
+    elif sort == 'Name':
+        models = arraySort(availableModels, systemPartial(ollamaChatModelsSort, 'Name'))
+    else:
+        models = arraySort(availableModels, systemPartial(ollamaChatModelsSort, 'Modified'))
+    endif
+
+    # Compute the minimum modified date
+    today = datetimeToday()
+    minModified = if(filterMonths == 0, null, datetimeNew(datetimeYear(today), datetimeMonth(today) - filterMonths, datetimeDay(today)))
+
+    # Render the models
+    for model in models:
+        name = objectGet(model, 'name')
+        description = objectGet(model, 'description')
+        downloads = objectGet(model, 'downloads')
+        modifiedText = objectGet(model, 'modified')
+        modified = datetimeISOParse(modifiedText)
+        variants = objectGet(model, 'variants')
+        selected = action == 'model' && actionID == name
+
+        # Create the parameter sizes text and compute compatibility
+        parameterSizes = arrayNew()
+        anyCompatible = false
+        for variant in variants:
+            variantParameters = objectGet(variant, 'parameters')
+            isCompatible = variantParameters <= totalMemory
+            anyCompatible = anyCompatible || isCompatible
+            objectSet(variant, 'compatible', isCompatible)
+            if !filterCompatible || isCompatible:
+                arrayPush(parameterSizes, objectGet(variant, 'size'))
+            endif
+        endfor
+        parametersText = arrayJoin(parameterSizes, ', ')
+
+        # Filter models
+        if (minModified && modified < minModified) || (filterCompatible && !anyCompatible):
+            continue
+        endif
+
+        # Render the model information
+        spacer = stringFromCharCode(160, 160)
+        markdownPrint( \
+            '## [' + markdownEscape(name) + '](' + ollamaChatModelsModelURL(name) + ')', \
+            '', \
+            markdownEscape(description), \
+            '', \
+            '**Parameters:** ' + parametersText + ' \\', \
+            '**Downloads:** ' + ollamaChatModelsFormatCount(downloads) + ' \\', \
+            '**Modified:** ' + modifiedText + ' \\', \
+            argsLink( \
+                ollamaChatArguments, \
+                if(selected, 'Cancel', 'Select'), objectNew('action', if(!selected, 'model'), 'actionID', if(!selected, name)) \
+            ) \
+        )
+        if selected:
+            downloadLinks = arrayNew()
+            for variant, ixVariant in variants:
+                modelID = objectGet(variant, 'id')
+                if !filterCompatible || objectGet(variant, 'compatible'):
+                    arrayPush(downloadLinks, objectNew('html', 'p', 'elem', arrayNew( \
+                        objectNew('text', spacer + spacer), \
+                        formsLinkButtonElements(modelID, systemPartial(ollamaChatModelsOnDownload, modelID)) \
+                    )))
+                endif
+            endfor
+            elementModelRender(downloadLinks)
+        endif
+    endfor
+endfunction
+
+
+function ollamaChatModelsFilterLink(text, value, argName, argValue):
+    if value == argValue:
+        return markdownEscape(text)
+    endif
+    return argsLink(ollamaChatArguments, text, objectNew(argName, value))
+endfunction
+
+
+function ollamaChatModelsSort(sort, model1, model2):
+    downloads1 = objectGet(model1, 'downloads')
+    downloads2 = objectGet(model2, 'downloads')
+    compareDownloads = if(downloads1 == downloads2, 0, if(downloads1 < downloads2, 1, -1))
+    modified1 = objectGet(model1, 'modified')
+    modified2 = objectGet(model2, 'modified')
+    compareModified = if(modified1 == modified2, 0, if(modified1 < modified2, 1, -1))
+    name1 = objectGet(model1, 'name')
+    name2 = objectGet(model2, 'name')
+    compareName = if(name1 == name2, 0, if(name1 < name2, -1, 1))
+    return if(sort == 'Modified', \
+        if(compareModified, compareModified, if(compareDownloads, compareDownloads, compareName)), \
+        if(sort == 'Downloads', \
+            if(compareDownloads, compareDownloads, if(compareModified, compareModified, compareName)), \
+            compareName))
+endfunction
+
+
+async function ollamaChatModelsOnDownload(modelID):
+    systemFetch(objectNew('url', 'downloadModel', 'body', jsonStringify(objectNew('model', modelID))))
+    windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', 'models')))
+endfunction

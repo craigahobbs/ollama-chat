@@ -2,13 +2,16 @@
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
 
+group
+
+
 # The user-model conversation info
 struct ConversationInfo
 
     # The conversation identifier
     string id
 
-    # The model name
+    # The model ID
     string model
 
     # The conversation title
@@ -65,13 +68,48 @@ struct ConversationTemplateVariable
     string label
 
 
+# Model information
+struct ModelInfo
+
+    # The model ID
+    string id
+
+    # The model name
+    string name
+
+    # The parameter count
+    int parameters
+
+    # The size, in bytes
+    int size
+
+    # The last modified date
+    datetime modified
+
+
+# Model download information
+struct ModelDownloadInfo
+
+    # The model ID
+    string id
+
+    # The download status
+    string status
+
+    # The number of bytes downloaded so far
+    int completed
+
+    # The size, in bytes. This member is not present while the download is starting.
+    optional int size
+
+
 group "Ollama Chat JSON"
 
 
 # The Ollama Chat config file format
 struct OllamaChatConfig
 
-    # The current model name
+    # The current model ID
     optional string model
 
     # The saved conversations
@@ -84,6 +122,48 @@ struct OllamaChatConfig
     optional bool noSave
 
 
+group "Ollama Chat Models JSON"
+
+
+# The Ollama Chat downloadable models file format
+typedef OllamaChatModel[len > 0] OllamaChatModels
+
+
+group
+
+
+# An Ollama Chat downloadable model
+struct OllamaChatModel
+
+    # The model name
+    string name
+
+    # The model's description
+    string description
+
+    # The model's last modified date
+    datetime modified
+
+    # The model's download count
+    int downloads
+
+    # The model variants
+    OllamaChatModelVariant[len > 0] variants
+
+
+# An Ollama Chat downloadable model variant
+struct OllamaChatModelVariant
+
+    # The variant's ID
+    string id
+
+    # The variant's tag
+    string size
+
+    # The variant's parameter count
+    int parameters
+
+
 group "Ollama Chat API"
 
 
@@ -93,11 +173,8 @@ action getConversations
         GET
 
     output
-        # The current model name
+        # The current model ID
         string model
-
-        # The available models
-        string[] models
 
         # The conversations
         ConversationInfo[] conversations
@@ -106,13 +183,13 @@ action getConversations
         ConversationTemplateInfo[] templates
 
 
-# Set the current model name
+# Set the current model ID
 action setModel
     urls
         POST
 
     input
-        # The model name
+        # The model ID
         string model
 
 
@@ -353,3 +430,59 @@ action regenerateConversationExchange
     errors
         UnknownConversationID
         ConversationBusy
+
+
+# Get the available models
+action getModels
+    urls
+        GET
+
+    output
+        # The current model ID
+        string model
+
+        # The available models
+        ModelInfo[] models
+
+        # The available models
+        ModelDownloadInfo[] downloading
+
+
+# Get the system info
+action getSystemInfo
+    urls
+        GET
+
+    output
+        # The total system memory
+        int memory
+
+
+# Download a model
+action downloadModel
+    urls
+        POST
+
+    input
+        # The model ID
+        string model
+
+
+# Stop a model download
+action stopModelDownload
+    urls
+        POST
+
+    input
+        # The model ID
+        string model
+
+
+# Delete a downloaded model
+action deleteModel
+    urls
+        POST
+
+    input
+        # The model ID
+        string model
