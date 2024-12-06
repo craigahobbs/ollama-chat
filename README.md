@@ -22,6 +22,7 @@ language models (LLMs).
 - Multiple concurrent chats
 - Prompt commands for including file and URL content
 - Conversation templates for repeating prompts with variable substitutions
+- Download and manage models
 
 
 ## Installation
