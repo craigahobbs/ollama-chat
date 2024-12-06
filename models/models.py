@@ -126,20 +126,21 @@ def main():
     # Parse scraped model info values
     models = []
     for model_name, raw_model in raw_models.items():
-        models.append({
-            'name': model_name,
-            'description': raw_model['description'],
-            'modified': _parse_modified(raw_model['modified']).isoformat(),
-            'downloads': _parse_count(raw_model['downloads']),
-            'variants': [
-                {
-                    'id': f'{model_name}:{size}',
-                    'size': size,
-                    'parameters': _parse_count(size)
-                }
-                for size in raw_model['sizes']
-            ]
-        })
+        if raw_model['sizes']:
+            models.append({
+                'name': model_name,
+                'description': raw_model['description'],
+                'modified': _parse_modified(raw_model['modified']).isoformat(),
+                'downloads': _parse_count(raw_model['downloads']),
+                'variants': [
+                    {
+                        'id': f'{model_name}:{size}',
+                        'size': size,
+                        'parameters': _parse_count(size)
+                    }
+                    for size in raw_model['sizes']
+                ]
+            })
 
     # Output the model JSON
     print(json.dumps(sorted(models, key=lambda model: model['name']), indent=4))
