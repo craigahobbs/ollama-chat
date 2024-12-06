@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.36 (2024-12-06)
+
+- [7993e87](https://github.com/craigahobbs/ollama-chat/commit/7993e87) - add model management and download pages
+
 ## 0.9.35 (2024-11-25)
 
 - [050b869](https://github.com/craigahobbs/ollama-chat/commit/050b869) - fix for ollama 0.4
