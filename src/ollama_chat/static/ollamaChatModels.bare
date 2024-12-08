@@ -75,57 +75,61 @@ async function ollamaChatModelsPage(args):
 
     # Render the model list
     markdownPrint('', '## Models')
-    modelTableRows = arrayNew(objectNew('html', 'tr', 'elem', arrayNew( \
-        objectNew('html', 'th', 'elem', objectNew('text', 'Model')), \
-        objectNew('html', 'th', 'attr', objectNew('style', 'text-align: right;'), 'elem', objectNew('text', 'Parameters')), \
-        objectNew('html', 'th', 'attr', objectNew('style', 'text-align: right;'), 'elem', objectNew('text', 'Size')), \
-        objectNew('html', 'th', 'elem', objectNew('text', 'Modified')), \
-        objectNew('html', 'th', 'elem', objectNew('text', '')) \
-    )))
-    modelTable = arrayNew( \
-        objectNew('html', 'table', 'elem', arrayNew( \
-            objectNew('html', 'tbody', 'elem', modelTableRows) \
-        )) \
-    )
-    spacer = stringFromCharCode(160, 160)
-    for model in models:
-        modelID = objectGet(model, 'id')
-        modelName = objectGet(model, 'name')
-        parameters = objectGet(model, 'parameters')
-        size = objectGet(model, 'size')
-        modified = datetimeISOParse(objectGet(model, 'modified'))
-        selected = action == 'model' && actionID == modelID
-
-        # Add the model row
-        selectText = if(selected, 'Cancel', 'Select')
-        selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'model'), 'actionID', if(!selected, modelID)))
-        arrayPush(modelTableRows, objectNew('html', 'tr', 'elem', arrayNew( \
-            objectNew('html', 'td', 'elem', formsLinkButtonElements(modelID, systemPartial(ollamaChatModelsOnModelSelect, modelID))), \
-            objectNew( \
-                'html', 'td', \
-                'attr', objectNew('style', 'text-align: right;'), \
-                'elem', objectNew('text', ollamaChatModelsFormatCount(parameters)) \
-            ), \
-            objectNew( \
-                'html', 'td', \
-                'attr', objectNew('style', 'text-align: right;'), \
-                'elem', objectNew('text', ollamaChatModelsFormatSize(size)) \
-            ), \
-            objectNew('html', 'td', 'elem', objectNew('text', datetimeISOFormat(modified, true))), \
-            arrayNew( \
-                formsLinkElements(selectText, selectURL), \
-                if(selected, arrayNew( \
-                    objectNew('text', spacer + '|' + spacer), \
-                    formsLinkButtonElements('Delete', systemPartial(ollamaChatModelsOnDelete, modelID)), \
-                    objectNew('text', spacer), \
-                    formsLinkButtonElements('Update', systemPartial(ollamaChatModelsOnDownload, modelID)), \
-                    objectNew('text', spacer), \
-                    formsLinkElements('Info', ollamaChatModelsModelURL(modelName)) \
-                )) \
-            ) \
+    if !models:
+        markdownPrint('', 'There are no downloaded models.')
+    else:
+        modelTableRows = arrayNew(objectNew('html', 'tr', 'elem', arrayNew( \
+            objectNew('html', 'th', 'elem', objectNew('text', 'Model')), \
+            objectNew('html', 'th', 'attr', objectNew('style', 'text-align: right;'), 'elem', objectNew('text', 'Parameters')), \
+            objectNew('html', 'th', 'attr', objectNew('style', 'text-align: right;'), 'elem', objectNew('text', 'Size')), \
+            objectNew('html', 'th', 'elem', objectNew('text', 'Modified')), \
+            objectNew('html', 'th', 'elem', objectNew('text', '')) \
         )))
-    endfor
-    elementModelRender(modelTable)
+        modelTable = arrayNew( \
+            objectNew('html', 'table', 'elem', arrayNew( \
+                objectNew('html', 'tbody', 'elem', modelTableRows) \
+            )) \
+        )
+        spacer = stringFromCharCode(160, 160)
+        for model in models:
+            modelID = objectGet(model, 'id')
+            modelName = objectGet(model, 'name')
+            parameters = objectGet(model, 'parameters')
+            size = objectGet(model, 'size')
+            modified = datetimeISOParse(objectGet(model, 'modified'))
+            selected = action == 'model' && actionID == modelID
+
+            # Add the model row
+            selectText = if(selected, 'Cancel', 'Select')
+            selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'model'), 'actionID', if(!selected, modelID)))
+            arrayPush(modelTableRows, objectNew('html', 'tr', 'elem', arrayNew( \
+                objectNew('html', 'td', 'elem', formsLinkButtonElements(modelID, systemPartial(ollamaChatModelsOnModelSelect, modelID))), \
+                objectNew( \
+                    'html', 'td', \
+                    'attr', objectNew('style', 'text-align: right;'), \
+                    'elem', objectNew('text', ollamaChatModelsFormatCount(parameters)) \
+                ), \
+                objectNew( \
+                    'html', 'td', \
+                    'attr', objectNew('style', 'text-align: right;'), \
+                    'elem', objectNew('text', ollamaChatModelsFormatSize(size)) \
+                ), \
+                objectNew('html', 'td', 'elem', objectNew('text', datetimeISOFormat(modified, true))), \
+                arrayNew( \
+                    formsLinkElements(selectText, selectURL), \
+                    if(selected, arrayNew( \
+                        objectNew('text', spacer + '|' + spacer), \
+                        formsLinkButtonElements('Delete', systemPartial(ollamaChatModelsOnDelete, modelID)), \
+                        objectNew('text', spacer), \
+                        formsLinkButtonElements('Update', systemPartial(ollamaChatModelsOnDownload, modelID)), \
+                        objectNew('text', spacer), \
+                        formsLinkElements('Info', ollamaChatModelsModelURL(modelName)) \
+                    )) \
+                ) \
+            )))
+        endfor
+        elementModelRender(modelTable)
+    endif
 endfunction
 
 
@@ -222,8 +226,8 @@ async function ollamaChatModelsDownloadPage(args):
             ollamaChatModelsFilterLink('All', false, 'filterCompatible', filterCompatible), \
         '', \
         '**Sort:** ' + \
-            ollamaChatModelsFilterLink('Modified', 'Modified', 'sort', sort) + filterSpacer + \
             ollamaChatModelsFilterLink('Downloads', 'Downloads', 'sort', sort) + filterSpacer + \
+            ollamaChatModelsFilterLink('Modified', 'Modified', 'sort', sort) + filterSpacer + \
             ollamaChatModelsFilterLink('Name', 'Name', 'sort', sort) \
     )
 

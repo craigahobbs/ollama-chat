@@ -34,7 +34,7 @@ ollamaChatArguments = argsValidate(arrayNew( \
     objectNew('name', 'action', 'explicit', true), \
     objectNew('name', 'actionID', 'explicit', true), \
     objectNew('name', 'filterCompatible', 'type', 'bool', 'default', true), \
-    objectNew('name', 'filterMonths', 'type', 'int', 'default', 1), \
+    objectNew('name', 'filterMonths', 'type', 'int', 'default', 3), \
     objectNew('name', 'id'), \
     objectNew('name', 'message', 'explicit', true), \
     objectNew('name', 'multiline', 'type', 'bool'), \

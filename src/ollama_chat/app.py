@@ -7,6 +7,7 @@ The ollama-chat back-end application
 
 from contextlib import contextmanager
 import copy
+import ctypes
 import json
 import os
 import importlib.resources
@@ -562,13 +563,6 @@ def _parse_parameter_size(parameter_size):
     raise ValueError(f'Unrecognized parameter size: {parameter_size}')
 
 
-@chisel.action(name='getSystemInfo', types=OLLAMA_CHAT_TYPES)
-def get_system_info(unused_ctx, unused_req):
-    return {
-        'memory': os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
-    }
-
-
 @chisel.action(name='downloadModel', types=OLLAMA_CHAT_TYPES)
 def download_model(ctx, req):
     with ctx.app.config():
@@ -585,3 +579,35 @@ def stop_model_download(ctx, req):
 @chisel.action(name='deleteModel', types=OLLAMA_CHAT_TYPES)
 def delete_model(unused_ctx, req):
     ollama.delete(req['model'])
+
+
+@chisel.action(name='getSystemInfo', types=OLLAMA_CHAT_TYPES)
+def get_system_info(unused_ctx, unused_req):
+    # Compute the total memory
+    if os.name == 'nt':
+        memory_status = MEMORYSTATUSEX()
+        # pylint: disable-next=invalid-name, attribute-defined-outside-init
+        memory_status.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+        ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(memory_status))
+        total_memory = memory_status.ullTotalPhys
+    else:
+        # pylint: disable-next=no-member, useless-suppression
+        total_memory = os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
+
+    return {
+        'memory': total_memory
+    }
+
+
+class MEMORYSTATUSEX(ctypes.Structure):
+    _fields_ = [
+        ("dwLength", ctypes.c_uint),
+        ("dwMemoryLoad", ctypes.c_uint),
+        ("ullTotalPhys", ctypes.c_ulonglong),
+        ("ullAvailPhys", ctypes.c_ulonglong),
+        ("ullTotalPageFile", ctypes.c_ulonglong),
+        ("ullAvailPageFile", ctypes.c_ulonglong),
+        ("ullTotalVirtual", ctypes.c_ulonglong),
+        ("ullAvailVirtual", ctypes.c_ulonglong),
+        ("sullAvailExtendedVirtual", ctypes.c_ulonglong),
+    ]
