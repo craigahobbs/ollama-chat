@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.37 (2024-12-08)
+
+- [08e5c95](https://github.com/craigahobbs/ollama-chat/commit/08e5c95) - fix get_system_info on windows
+
 ## 0.9.36 (2024-12-06)
 
 - [7993e87](https://github.com/craigahobbs/ollama-chat/commit/7993e87) - add model management and download pages
