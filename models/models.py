@@ -79,7 +79,7 @@ def _parse_modified(modified):
         elif unit == 'week':
             return today - datetime.timedelta(weeks=count)
         elif unit == 'month':
-            return (today - datetime.timedelta(days=count * 30)).replace(day=1)
+            return today - datetime.timedelta(days=count * 30)
         else:
             return today
 
