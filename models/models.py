@@ -4,6 +4,8 @@ import json
 import re
 import urllib.request
 
+import schema_markdown
+
 
 # Scrape the local model metadata from the Ollama models web page
 class OllamaModelParser(HTMLParser):
@@ -77,7 +79,7 @@ def _parse_modified(modified):
         elif unit == 'week':
             return today - datetime.timedelta(weeks=count)
         elif unit == 'month':
-            return today - datetime.timedelta(days=count * 30)
+            return (today - datetime.timedelta(days=count * 30)).replace(day=1)
         else:
             return today
 
@@ -141,6 +143,11 @@ def main():
                     for size in raw_model['sizes']
                 ]
             })
+
+    # Validate the model JSON
+    with open('src/ollama_chat/static/ollamaChat.smd', 'r', encoding='utf-8') as fh:
+        ollama_chat_types = schema_markdown.parse_schema_markdown(fh.read())
+    schema_markdown.validate_type(ollama_chat_types, 'OllamaChatModels', models)
 
     # Output the model JSON
     print(json.dumps(sorted(models, key=lambda model: model['name']), indent=4))

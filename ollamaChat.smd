@@ -142,7 +142,7 @@ struct OllamaChatModel
     string description
 
     # The model's last modified date
-    datetime modified
+    date modified
 
     # The model's download count
     int downloads
