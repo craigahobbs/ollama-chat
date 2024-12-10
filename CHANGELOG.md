@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.41 (2024-12-10)
+
+- [8665360](https://github.com/craigahobbs/ollama-chat/commit/8665360) - fix -m and -t arguments when used with -b argument
+
 ## 0.9.40 (2024-12-10)
 
 - [7b404ef](https://github.com/craigahobbs/ollama-chat/commit/7b404ef) - improve -m \(start conversation\) and -t \(start template\) command-line arguments
