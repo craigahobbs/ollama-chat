@@ -43,43 +43,41 @@ def main(argv=None):
                         help='the template variables')
     parser.add_argument('-p', metavar='N', dest='port', type=int, default=8080,
                         help='the application port (default is 8080)')
-    parser.add_argument('-b', dest='no_backend', action='store_true',
+    parser.add_argument('-b', dest='backend', action='store_false', default=True,
                         help="don't start the back-end (use existing)")
-    parser.add_argument('-n', dest='no_browser', action='store_true',
+    parser.add_argument('-n', dest='browser', action='store_false', default=True,
                         help="don't open a web browser")
     parser.add_argument('-q', dest='quiet', action='store_true',
                         help="don't display access logging")
     args = parser.parse_args(args=argv)
 
-    # Determine the config path
-    config_path = args.config or os.getenv(CONFIG_ENVIRONMENT)
-    if config_path is None:
-        if os.path.isfile(CONFIG_FILENAME):
-            config_path = CONFIG_FILENAME
-        else:
-            config_path = os.path.join(os.path.expanduser('~'), CONFIG_FILENAME)
-    elif config_path.endswith(os.sep) or os.path.isdir(config_path):
-        config_path = os.path.join(config_path, CONFIG_FILENAME)
+    # Starting a backend server? If so, create the backend application.
+    if args.backend:
 
-    # Create the WSGI application
-    wsgiapp = OllamaChat(config_path) if not args.no_backend else None
+        # Determine the config path
+        config_path = args.config or os.getenv(CONFIG_ENVIRONMENT)
+        if config_path is None:
+            if os.path.isfile(CONFIG_FILENAME):
+                config_path = CONFIG_FILENAME
+            else:
+                config_path = os.path.join(os.path.expanduser('~'), CONFIG_FILENAME)
+        elif config_path.endswith(os.sep) or os.path.isdir(config_path):
+            config_path = os.path.join(config_path, CONFIG_FILENAME)
 
-    # Wrap the WSGI application and the start_response function so we can log status and environ
-    def wsgiapp_wrap(environ, start_response):
-        def log_start_response(status, response_headers):
-            if not args.quiet:
-                print(f'ollama-chat: {status[0:3]} {environ["REQUEST_METHOD"]} {environ["PATH_INFO"]} {environ["QUERY_STRING"]}')
-            return start_response(status, response_headers)
-        return wsgiapp(environ, log_start_response)
+        # Create the backend application
+        application = OllamaChat(config_path)
 
     # Construct the URL
     host = '127.0.0.1'
     url = f'http://{host}:{args.port}/'
+
+    # Conversation command?
     if args.message:
+
         # Start the conversation
         request_bytes = json.dumps({'user': args.message}).encode('utf-8')
-        if wsgiapp is not None:
-            _, _, response_bytes = wsgiapp.request('POST', '/startConversation', wsgi_input=request_bytes)
+        if args.backend:
+            _, _, response_bytes = application.request('POST', '/startConversation', wsgi_input=request_bytes)
         else:
             request = urllib.request.Request(f'{url}startConversation', data=request_bytes)
             with urllib.request.urlopen(request) as response:
@@ -90,11 +88,13 @@ def main(argv=None):
         message_args = encode_query_string({'var': {'vView': "'chat'", 'vId': f"'{response['id']}'"}})
         url += f'#{message_args}'
 
+    # Template command?
     elif args.template:
+
         # Start the template
         request_bytes = json.dumps({'id': args.template, 'variables': dict(args.template_vars)}).encode('utf-8')
-        if wsgiapp is not None:
-            _, _, response_bytes = wsgiapp.request('POST', '/startTemplate', wsgi_input=request_bytes)
+        if args.backend:
+            _, _, response_bytes = application.request('POST', '/startTemplate', wsgi_input=request_bytes)
         else:
             try:
                 request = urllib.request.Request(f'{url}startTemplate', data=request_bytes)
@@ -110,16 +110,28 @@ def main(argv=None):
         template_args = encode_query_string({'var': {'vView': "'chat'", 'vId': f"'{response['id']}'"}})
         url += f'#{template_args}'
 
-    # Launch the web browser on a thread so the WSGI application can startup first
-    if not args.no_browser:
+    # Launch the web browser on a thread (it may block)
+    if args.browser:
         webbrowser_thread = threading.Thread(target=webbrowser.open, args=(url,))
         webbrowser_thread.daemon = True
         webbrowser_thread.start()
 
     # Host the application
-    if not args.no_backend:
+    if args.backend:
+
+        # Wrap the backend so we can log status and environ
+        def application_wrap(environ, start_response):
+            def log_start_response(status, response_headers):
+                if not args.quiet:
+                    print(f'ollama-chat: {status[0:3]} {environ["REQUEST_METHOD"]} {environ["PATH_INFO"]} {environ["QUERY_STRING"]}')
+                return start_response(status, response_headers)
+            return application(environ, log_start_response)
+
+        # Start the backend application
         if not args.quiet:
             print(f'ollama-chat: Serving at {url} ...')
-        waitress.serve(wsgiapp_wrap, port=args.port)
-    elif not args.no_browser:
+        waitress.serve(application_wrap, port=args.port)
+
+    # Not starting a backend service, so we must wait on the web browser start
+    elif args.browser:
         webbrowser_thread.join()
