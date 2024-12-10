@@ -7,13 +7,6 @@ async function ollamaChatConversationPage(args):
     id = objectGet(args, 'id')
     textView = objectGet(args, 'text')
 
-    # Message argument?
-    message = objectGet(args, 'message')
-    if message != null:
-        ollamaChatOnConversationPrompt(args, message)
-        return
-    endif
-
     # Fetch the conversation
     if id != null:
         conversationResponse = systemFetch('getConversation?id=' + id)

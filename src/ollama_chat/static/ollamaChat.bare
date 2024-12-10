@@ -12,6 +12,22 @@ include 'ollamaChatTemplate.bare'
 # The Ollama Chat application main entry point
 async function ollamaChatMain():
     args = argsParse(ollamaChatArguments)
+
+    # Start a conversation?
+    conversationMessage = stringTrim(objectGet(args, 'message', ''))
+    if conversationMessage:
+        ollamaChatStartConversation(conversationMessage)
+        return
+    endif
+
+    # Start a template?
+    templateName = stringTrim(objectGet(args, 'template', ''))
+    if templateName:
+        ollamaChatStartTemplate(args, templateName)
+        return
+    endif
+
+    # Render the page
     view = objectGet(args, 'view')
     if view == 'chat':
         ollamaChatConversationPage(args)
@@ -39,6 +55,8 @@ ollamaChatArguments = argsValidate(arrayNew( \
     objectNew('name', 'message', 'explicit', true), \
     objectNew('name', 'multiline', 'type', 'bool'), \
     objectNew('name', 'sort', 'type', 'string', 'default', 'Modified'), \
+    objectNew('name', 'template', 'explicit', true), \
+    objectNew('name', 'templateVars', 'explicit', true), \
     objectNew('name', 'text', 'type', 'bool'), \
     objectNew('name', 'view') \
 ))
@@ -58,6 +76,62 @@ function ollamaChatErrorPage(message):
         '', \
         '**ERROR:** ' + markdownEscape(message) \
     )
+endfunction
+
+
+# The Ollama Chat start conversation command
+async function ollamaChatStartConversation(message):
+    # Start the conversation
+    startArgs = objectNew('user', message)
+    startResponse = systemFetch(objectNew('url', 'startConversation', 'body', jsonStringify(startArgs)))
+    startResponse = if(startResponse != null, jsonParse(startResponse))
+    conversationID = if(startResponse != null, objectGet(startResponse, 'id'))
+
+    # Navigate to the started conversation
+    windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', conversationID)))
+endfunction
+
+
+# The Ollama Chat start template command
+async function ollamaChatStartTemplate(args, templateName):
+    # Find the template ID
+    templateID = null
+    conversationsResponse = systemFetch('getConversations')
+    conversationsResponse = if(conversationsResponse != null, jsonParse(conversationsResponse))
+    if conversationsResponse != null:
+        for template in objectGet(conversationsResponse, 'templates'):
+            if objectGet(template, 'name') == templateName:
+                templateID = objectGet(template, 'id')
+                break
+            endif
+        endfor
+    endif
+
+    # Unknown template name?
+    if templateID == null:
+        ollamaChatErrorPage('Unknown template name: ' + templateName)
+        return
+    endif
+
+    # Parse the JSON variables
+    templateVars = jsonParse(objectGet(args, 'templateVars', '{}'))
+    if templateVars == null:
+        ollamaChatErrorPage('Invalid template variables: ' + objectGet(args, 'templateVars'))
+        return
+    endif
+
+    # Start the template
+    startArgs = objectNew('id', templateID, 'variables', templateVars)
+    startResponse = systemFetch(objectNew('url', 'startTemplate', 'body', jsonStringify(startArgs)))
+    startResponse = if(startResponse != null, jsonParse(startResponse))
+    conversationID = if(startResponse != null, objectGet(startResponse, 'id'))
+    if conversationID == null:
+        ollamaChatErrorPage('Missing one or more template variables')
+        return
+    endif
+
+    # Navigate to the started conversation
+    windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', conversationID)))
 endfunction
 
 

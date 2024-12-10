@@ -200,13 +200,20 @@ def get_conversations(ctx, unused_req):
                 for conversation in config['conversations']
             ],
             'templates': [
-                {
-                    'id': template['id'],
-                    'title': template['title']
-                }
+                _create_template_info(template)
                 for template in (config.get('templates') or ())
             ]
         }
+
+
+def _create_template_info(template):
+    template_info = {
+        'id': template['id'],
+        'title': template['title']
+    }
+    if 'name' in template:
+        template_info['name'] = template['name']
+    return template_info
 
 
 @chisel.action(name='setModel', types=OLLAMA_CHAT_TYPES)

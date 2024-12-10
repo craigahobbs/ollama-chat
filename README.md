@@ -14,7 +14,6 @@ language models (LLMs).
 - Platform independent - tested on macOS, Windows, and Linux
 - Chat with any local Ollama model
 - Save conversations for later viewing and interaction
-- Single and multiline prompts
 - Regenerate the most recent conversation response
 - Delete the most recent conversation exchange
 - View responses as Markdown or text
@@ -22,6 +21,7 @@ language models (LLMs).
 - Multiple concurrent chats
 - Prompt commands for including file and URL content
 - Conversation templates for repeating prompts with variable substitutions
+- Start a converstation or template from the command line
 - Download and manage models
 
 
@@ -63,6 +63,12 @@ To start a conversation from the command line, use the `-m` argument:
 
 ~~~
 ollama-chat -m "Why is the sky blue?"
+~~~
+
+To start a named template from the command line, use the `-t` and `-v` arguments:
+
+~~~
+ollama-chat -t AskAristotle -v Subject "Why is the sky blue?"
 ~~~
 
 

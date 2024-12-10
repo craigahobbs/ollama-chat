@@ -44,6 +44,9 @@ struct ConversationTemplateInfo
     # The template title
     string title
 
+    # The template command name
+    optional string name
+
 
 # An Ollama Chat conversation template
 struct ConversationTemplate (ConversationTemplateInfo)
@@ -53,9 +56,6 @@ struct ConversationTemplate (ConversationTemplateInfo)
 
     # The template variables (e.g. "{{var}}")
     optional ConversationTemplateVariable[len > 0] variables
-
-    # The template command name
-    optional string name
 
 
 # An Ollama Chat conversation template variable

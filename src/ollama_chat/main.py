@@ -6,6 +6,7 @@ ollama-chat command-line script main module
 """
 
 import argparse
+import json
 import os
 import threading
 import webbrowser
@@ -35,8 +36,14 @@ def main(argv=None):
                         help='the configuration file (default is "$HOME/ollama-chat.json")')
     parser.add_argument('-m', metavar='MESSAGE', dest='message',
                         help='start a conversation')
+    parser.add_argument('-t', metavar='NAME', dest='template',
+                        help='start a template')
+    parser.add_argument('-v', nargs=2, action='append', metavar=('VAR', 'VALUE'), dest='template_vars', default = [],
+                        help='the template variables')
     parser.add_argument('-p', metavar='N', dest='port', type=int, default=8080,
                         help='the application port (default is 8080)')
+    parser.add_argument('-b', dest='no_backend', action='store_true',
+                        help="don't start the back-end (use existing)")
     parser.add_argument('-n', dest='no_browser', action='store_true',
                         help="don't open a web browser")
     parser.add_argument('-q', dest='quiet', action='store_true',
@@ -49,8 +56,14 @@ def main(argv=None):
     if args.message is not None:
         message = args.message.strip()
         if message:
-            message_vars = encode_query_string({'var': {'vView': "'chat'", 'vMessage': repr(message)}})
-            url += f'#{message_vars}'
+            message_args = encode_query_string({'var': {'vMessage': repr(message)}})
+            url += f'#{message_args}'
+    elif args.template is not None:
+        template = args.template.strip()
+        if template:
+            template_vars = json.dumps(dict(args.template_vars))
+            template_args = encode_query_string({'var': {'vTemplate': repr(template), 'vTemplateVars': repr(template_vars)}})
+            url += f'#{template_args}'
 
     # Launch the web browser on a thread so the WSGI application can startup first
     if not args.no_browser:
@@ -80,6 +93,9 @@ def main(argv=None):
         return wsgiapp(environ, log_start_response)
 
     # Host the application
-    if not args.quiet:
-        print(f'ollama-chat: Serving at {url} ...')
-    waitress.serve(wsgiapp_wrap, port=args.port)
+    if not args.no_backend:
+        if not args.quiet:
+            print(f'ollama-chat: Serving at {url} ...')
+        waitress.serve(wsgiapp_wrap, port=args.port)
+    elif args.no_browser:
+        webbrowser_thread.join()
