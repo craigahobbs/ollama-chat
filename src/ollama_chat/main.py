@@ -50,27 +50,6 @@ def main(argv=None):
                         help="don't display access logging")
     args = parser.parse_args(args=argv)
 
-    # Construct the URL
-    host = '127.0.0.1'
-    url = f'http://{host}:{args.port}/'
-    if args.message is not None:
-        message = args.message.strip()
-        if message:
-            message_args = encode_query_string({'var': {'vMessage': repr(message)}})
-            url += f'#{message_args}'
-    elif args.template is not None:
-        template = args.template.strip()
-        if template:
-            template_vars = json.dumps(dict(args.template_vars))
-            template_args = encode_query_string({'var': {'vTemplate': repr(template), 'vTemplateVars': repr(template_vars)}})
-            url += f'#{template_args}'
-
-    # Launch the web browser on a thread so the WSGI application can startup first
-    if not args.no_browser:
-        webbrowser_thread = threading.Thread(target=webbrowser.open, args=(url,))
-        webbrowser_thread.daemon = True
-        webbrowser_thread.start()
-
     # Determine the config path
     config_path = args.config or os.getenv(CONFIG_ENVIRONMENT)
     if config_path is None:
@@ -91,6 +70,46 @@ def main(argv=None):
                 print(f'ollama-chat: {status[0:3]} {environ["REQUEST_METHOD"]} {environ["PATH_INFO"]} {environ["QUERY_STRING"]}')
             return start_response(status, response_headers)
         return wsgiapp(environ, log_start_response)
+
+    # Construct the URL
+    host = '127.0.0.1'
+    url = f'http://{host}:{args.port}/'
+    if args.message:
+        # Start the conversation
+        request_bytes = json.dumps({'user': args.message}).encode('utf-8')
+        _, _, response_bytes = wsgiapp.request('POST', '/startConversation', wsgi_input=request_bytes)
+        response = json.loads(response_bytes.decode('utf-8'))
+
+        # Update the URL
+        message_args = encode_query_string({'var': {'vView': "'chat'", 'vId': f"'{response['id']}'"}})
+        url += f'#{message_args}'
+
+    elif args.template:
+        # Find the template ID
+        with wsgiapp.config() as config:
+            template_id = next(
+                (template['id'] for template in config.get('templates', []) if template.get('name', None) == args.template),
+                None
+            )
+        if template_id is None:
+            parser.error(f'unknown template "{args.template}"')
+
+        # Start the template
+        request_bytes = json.dumps({'id': template_id, 'variables': dict(args.template_vars)}).encode('utf-8')
+        _, _, response_bytes = wsgiapp.request('POST', '/startTemplate', wsgi_input=request_bytes)
+        response = json.loads(response_bytes.decode('utf-8'))
+        if 'error' in response:
+            parser.error(response["message"])
+
+        # Update the URL
+        template_args = encode_query_string({'var': {'vView': "'chat'", 'vId': f"'{response['id']}'"}})
+        url += f'#{template_args}'
+
+    # Launch the web browser on a thread so the WSGI application can startup first
+    if not args.no_browser:
+        webbrowser_thread = threading.Thread(target=webbrowser.open, args=(url,))
+        webbrowser_thread.daemon = True
+        webbrowser_thread.start()
 
     # Host the application
     if not args.no_backend:
