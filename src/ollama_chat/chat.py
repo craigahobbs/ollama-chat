@@ -257,7 +257,7 @@ _COMMAND_PARSER_DIR.add_argument('-h', dest='help', action=CommandHelpAction, he
 _COMMAND_PARSER_DIR.add_argument('-n', dest='show', action='store_true', help='respond with user prompt')
 _COMMAND_PARSER_DIR.add_argument('-x', dest='exclude', metavar='PATH', action='append', help='exclude file or directory')
 _COMMAND_PARSER_DO = _COMMAND_SUBPARSERS.add_parser('do', add_help=False, exit_on_error=False, help='execute a conversation template')
-_COMMAND_PARSER_DO.add_argument('name', help='the template name or title')
+_COMMAND_PARSER_DO.add_argument('name', help='the template name')
 _COMMAND_PARSER_DO.add_argument('-h', dest='help', action=CommandHelpAction, help='show help')
 _COMMAND_PARSER_DO.add_argument('-v', dest='var', metavar=('VAR', 'VAL'), nargs=2, action='append', help='set a template variable')
 _COMMAND_PARSER_FILE = _COMMAND_SUBPARSERS.add_parser('file', add_help=False, exit_on_error=False, help='include a file')

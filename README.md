@@ -110,7 +110,7 @@ your prompt, among other things. The following prompt commands are available:
   Please summarize the README file.
   ```
 
-- `/do` - execute a conversation template by name or title
+- `/do` - execute a conversation template by name
 
   ```
   /do city-report -v CityState "Seattle, WA"
