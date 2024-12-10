@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.40 (2024-12-10)
+
+- [7b404ef](https://github.com/craigahobbs/ollama-chat/commit/7b404ef) - improve -m \(start conversation\) and -t \(start template\) command-line arguments
+
 ## 0.9.39 (2024-12-10)
 
 - [4671243](https://github.com/craigahobbs/ollama-chat/commit/4671243) - fix no-backend web browser launch
