@@ -97,5 +97,5 @@ def main(argv=None):
         if not args.quiet:
             print(f'ollama-chat: Serving at {url} ...')
         waitress.serve(wsgiapp_wrap, port=args.port)
-    elif args.no_browser:
+    elif not args.no_browser:
         webbrowser_thread.join()
