@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.39 (2024-12-10)
+
+- [4671243](https://github.com/craigahobbs/ollama-chat/commit/4671243) - fix no-backend web browser launch
+
 ## 0.9.38 (2024-12-09)
 
 - [0ac0d7c](https://github.com/craigahobbs/ollama-chat/commit/0ac0d7c) - add -t argument to start a named template
