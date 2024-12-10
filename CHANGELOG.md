@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.38 (2024-12-09)
+
+- [0ac0d7c](https://github.com/craigahobbs/ollama-chat/commit/0ac0d7c) - add -t argument to start a named template
+
 ## 0.9.37 (2024-12-08)
 
 - [08e5c95](https://github.com/craigahobbs/ollama-chat/commit/08e5c95) - fix get_system_info on windows
