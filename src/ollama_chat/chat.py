@@ -75,7 +75,8 @@ class ChatManager():
                     elif 'do' in flags:
                         # Insert the template prompts to the chat
                         template_name, variable_values = flags['do']
-                        template = config_template_name(config, template_name)
+                        templates = config['templates'] or []
+                        template = next((tmpl for tmpl in templates if tmpl.get('name') == template_name), None)
                         if template is None:
                             raise ValueError(f'unknown template "{template_name}"')
                         _, template_prompts = config_template_prompts(template, variable_values)
@@ -115,12 +116,6 @@ class ChatManager():
 # Helper to find a conversation by ID
 def config_conversation(config, id_):
     return next((conv for conv in config['conversations'] if conv['id'] == id_), None)
-
-
-# Helper to find a template by name or title
-def config_template_name(config, name):
-    templates = config['templates'] or []
-    return next((tmpl for tmpl in templates if tmpl.get('name') == name or tmpl['title'] == name), None)
 
 
 # Helper to get the template prompts

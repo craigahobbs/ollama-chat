@@ -339,7 +339,9 @@ def start_template(ctx, req):
         templates = config.get('templates') or []
         template = next((template for template in templates if template['id'] == template_id), None)
         if template is None:
-            raise chisel.ActionError('UnknownTemplateID')
+            template = next((template for template in templates if template.get('name') == template_id), None)
+        if template is None:
+            raise chisel.ActionError('UnknownTemplateID', f'Unknown template "{template_id}"')
 
         # Get the template prompts
         try:

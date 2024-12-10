@@ -307,7 +307,7 @@ action startTemplate
         POST
 
     input
-        # The template identifier
+        # The template identifier or name
         string id
 
         # The template variable values

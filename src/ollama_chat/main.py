@@ -9,6 +9,7 @@ import argparse
 import json
 import os
 import threading
+import urllib.request
 import webbrowser
 
 from schema_markdown import encode_query_string
@@ -61,7 +62,7 @@ def main(argv=None):
         config_path = os.path.join(config_path, CONFIG_FILENAME)
 
     # Create the WSGI application
-    wsgiapp = OllamaChat(config_path)
+    wsgiapp = OllamaChat(config_path) if not args.no_backend else None
 
     # Wrap the WSGI application and the start_response function so we can log status and environ
     def wsgiapp_wrap(environ, start_response):
@@ -77,7 +78,12 @@ def main(argv=None):
     if args.message:
         # Start the conversation
         request_bytes = json.dumps({'user': args.message}).encode('utf-8')
-        _, _, response_bytes = wsgiapp.request('POST', '/startConversation', wsgi_input=request_bytes)
+        if wsgiapp is not None:
+            _, _, response_bytes = wsgiapp.request('POST', '/startConversation', wsgi_input=request_bytes)
+        else:
+            request = urllib.request.Request(f'{url}startConversation', data=request_bytes)
+            with urllib.request.urlopen(request) as response:
+                response_bytes = response.read()
         response = json.loads(response_bytes.decode('utf-8'))
 
         # Update the URL
@@ -85,21 +91,20 @@ def main(argv=None):
         url += f'#{message_args}'
 
     elif args.template:
-        # Find the template ID
-        with wsgiapp.config() as config:
-            template_id = next(
-                (template['id'] for template in config.get('templates', []) if template.get('name', None) == args.template),
-                None
-            )
-        if template_id is None:
-            parser.error(f'unknown template "{args.template}"')
-
         # Start the template
-        request_bytes = json.dumps({'id': template_id, 'variables': dict(args.template_vars)}).encode('utf-8')
-        _, _, response_bytes = wsgiapp.request('POST', '/startTemplate', wsgi_input=request_bytes)
+        request_bytes = json.dumps({'id': args.template, 'variables': dict(args.template_vars)}).encode('utf-8')
+        if wsgiapp is not None:
+            _, _, response_bytes = wsgiapp.request('POST', '/startTemplate', wsgi_input=request_bytes)
+        else:
+            try:
+                request = urllib.request.Request(f'{url}startTemplate', data=request_bytes)
+                with urllib.request.urlopen(request) as response:
+                    response_bytes = response.read()
+            except urllib.request.HTTPError as exc:
+                response_bytes = exc.fp.read()
         response = json.loads(response_bytes.decode('utf-8'))
         if 'error' in response:
-            parser.error(response["message"])
+            parser.error(response.get('message') or response["error"])
 
         # Update the URL
         template_args = encode_query_string({'var': {'vView': "'chat'", 'vId': f"'{response['id']}'"}})
