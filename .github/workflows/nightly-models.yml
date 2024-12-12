@@ -1,0 +1,29 @@
+name: Nightly models.json update
+
+on:
+  schedule:
+    - cron: '0 0 * * *'   # Runs at 00:00 UTC every day
+  workflow_dispatch:      # Allows manual trigger from GitHub UI
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: gh-pages
+
+    - name: Install dependencies
+      run: |
+        pip3 install schema-markdown
+
+    - name: Run script
+      run: python3 models/models.py > models/models.json
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git commit -am "Update models.json" || exit 0
+        git push
