@@ -1,6 +1,7 @@
 import datetime
 from html.parser import HTMLParser
 import json
+import os
 import re
 import urllib.request
 
@@ -149,7 +150,10 @@ def main():
             })
 
     # Validate the model JSON
-    with open('src/ollama_chat/static/ollamaChat.smd', 'r', encoding='utf-8') as fh:
+    ollama_chat_smd = 'ollamaChat.smd'
+    if not os.path.isfile(ollama_chat_smd):
+        ollama_chat_smd = 'src/ollama_chat/static/ollamaChat.smd'
+    with open(ollama_chat_smd, 'r', encoding='utf-8') as fh:
         ollama_chat_types = schema_markdown.parse_schema_markdown(fh.read())
     schema_markdown.validate_type(ollama_chat_types, 'OllamaChatModels', models)
 
