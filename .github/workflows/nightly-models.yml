@@ -14,6 +14,9 @@ jobs:
       with:
         ref: gh-pages
 
+    - name: Check Python version
+      run: python3 --version
+
     - name: Install dependencies
       run: |
         pip3 install schema-markdown
