@@ -65,6 +65,10 @@ class OllamaModelParser(HTMLParser):
 def _parse_modified(modified):
     today = datetime.date.today()
 
+    # Just now?
+    if modified == 'just now':
+        return today
+
     # Yesterday?
     if modified == 'yesterday':
         return (today - datetime.timedelta(days=1))
