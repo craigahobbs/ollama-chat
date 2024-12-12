@@ -2,7 +2,7 @@ name: Nightly models.json update
 
 on:
   schedule:
-    - cron: '0 0 * * *'   # Runs at 00:00 UTC every day
+    - cron: '0 8 * * *'   # Midnight PST
   workflow_dispatch:      # Allows manual trigger from GitHub UI
 
 jobs:
