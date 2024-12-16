@@ -35,8 +35,12 @@ UNITTEST_PARALLEL_COVERAGE_ARGS := --coverage-branch --coverage-fail-under 25
 PYLINT_ARGS := $(PYLINT_ARGS) static/models --disable=missing-class-docstring --disable=missing-function-docstring --disable=missing-module-docstring
 
 
+# Don't delete models.json in gh-pages branch
+GHPAGES_RSYNC_ARGS := --exclude='models/models.json'
+
+
 help:
-	@echo "            [models|run|test-app]"
+	@echo "            [run|test-app]"
 
 
 clean:
@@ -63,8 +67,3 @@ test-app: $(DEFAULT_VENV_BUILD)
 .PHONY: run
 run: $(DEFAULT_VENV_BUILD)
 	$(DEFAULT_VENV_BIN)/ollama-chat$(if $(ARGS), $(ARGS))
-
-
-.PHONE: models
-models: $(DEFAULT_VENV_BUILD)
-	$(DEFAULT_VENV_PYTHON) static/models/models.py > static/models/models.json
