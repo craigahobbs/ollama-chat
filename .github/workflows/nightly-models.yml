@@ -6,7 +6,26 @@ on:
   workflow_dispatch:      # Allows manual trigger from GitHub UI
 
 jobs:
-  run-script:
+  run-on-main:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies (main)
+      run: pip3 install schema-markdown
+
+    - name: Run models.py (main)
+      run: python3 static/models/models.py > static/models/models.json
+
+    - name: Commit and push changes (main)
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git commit -am "Update models.json (main)" || exit 0
+        git push
+
+  run-on-gh-pages:
     runs-on: ubuntu-latest
 
     steps:
@@ -14,16 +33,15 @@ jobs:
       with:
         ref: gh-pages
 
-    - name: Install dependencies
-      run: |
-        pip3 install schema-markdown
+    - name: Install dependencies (main)
+      run: pip3 install schema-markdown
 
-    - name: Run script
+    - name: Run models.py (gh-pages)
       run: python3 models/models.py > models/models.json
 
-    - name: Commit and push changes
+    - name: Commit and push changes (gh-pages)
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git commit -am "Update models.json" || exit 0
+        git commit -am "Update models.json (gh-pages)" || exit 0
         git push
