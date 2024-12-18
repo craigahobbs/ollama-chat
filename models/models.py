@@ -67,7 +67,7 @@ def _parse_modified(modified):
     today = datetime.date.today()
 
     # Just now?
-    if modified == 'just now':
+    if modified in ('just now', 'an hour ago'):
         return today
 
     # Yesterday?
