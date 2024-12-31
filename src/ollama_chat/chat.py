@@ -6,6 +6,7 @@ The ollama-chat chat manager
 """
 
 import argparse
+import base64
 import functools
 import itertools
 import os
@@ -55,7 +56,7 @@ class ChatManager():
                         flags = {}
                         user_content = _process_commands(exchange['user'], flags)
                         if 'do' not in flags:
-                            messages.append({'role': 'user', 'content': user_content})
+                            messages.append({'role': 'user', 'content': user_content, 'images': flags.get('images')})
                             if exchange['model'] != '':
                                 messages.append({'role': 'assistant', 'content': exchange['model']})
 
@@ -147,7 +148,7 @@ def config_template_prompts(template, variable_values):
 def _process_commands(prompt, flags):
     return _R_COMMAND.sub(functools.partial(_process_commands_sub, flags), prompt)
 
-_R_COMMAND = re.compile(r'^/(?P<cmd>\?|dir|do|file|url)(?P<args> .*)?$', re.MULTILINE)
+_R_COMMAND = re.compile(r'^/(?P<cmd>\?|dir|do|file|image|url)(?P<args> .*)?$', re.MULTILINE)
 
 
 # Command prompt regex substitution function
@@ -218,6 +219,20 @@ def _process_commands_sub(flags, match):
         with open(file_path, 'r', encoding='utf-8') as fh:
             return _command_file_content(file_path, fh.read())
 
+    # Include an image?
+    elif command == 'image':
+        # Command arguments
+        image_path = str(pathlib.Path(pathlib.PurePosixPath(args.image)))
+
+        # Add image content
+        with open(image_path, 'rb') as fh:
+            if 'images' not in flags:
+                flags['images'] = []
+            flags['images'].append(base64.b64encode(fh.read()).decode('utf-8'))
+
+        # Remove the image from the prompt
+        return ''
+
     # Include a URL?
     elif command == 'url':
         # Add URL content
@@ -264,6 +279,10 @@ _COMMAND_PARSER_FILE = _COMMAND_SUBPARSERS.add_parser('file', add_help=False, ex
 _COMMAND_PARSER_FILE.add_argument('file', help='the file path')
 _COMMAND_PARSER_FILE.add_argument('-h', dest='help', action=CommandHelpAction, help='show help')
 _COMMAND_PARSER_FILE.add_argument('-n', dest='show', action='store_true', help='respond with user prompt')
+_COMMAND_PARSER_IMAGE = _COMMAND_SUBPARSERS.add_parser('image', add_help=False, exit_on_error=False, help='include an image')
+_COMMAND_PARSER_IMAGE.add_argument('image', help='the image path')
+_COMMAND_PARSER_IMAGE.add_argument('-h', dest='help', action=CommandHelpAction, help='show help')
+_COMMAND_PARSER_IMAGE.add_argument('-n', dest='show', action='store_true', help='respond with user prompt')
 _COMMAND_PARSER_URL = _COMMAND_SUBPARSERS.add_parser('url', add_help=False, exit_on_error=False, help='include a URL resource')
 _COMMAND_PARSER_URL.add_argument('url', help='the resource URL')
 _COMMAND_PARSER_URL.add_argument('-h', dest='help', action=CommandHelpAction, help='show help')

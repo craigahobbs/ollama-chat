@@ -13,13 +13,12 @@ language models (LLMs).
 
 - Platform independent - tested on macOS, Windows, and Linux
 - Chat with any local Ollama model
-- Save conversations for later viewing and interaction
+- Prompt commands to include files, images, and URL content
 - Regenerate the most recent conversation response
 - Delete the most recent conversation exchange
 - View responses as Markdown or text
 - Save conversations as Markdown text
 - Multiple concurrent chats
-- Prompt commands for including file and URL content
 - Conversation templates for repeating prompts with variable substitutions
 - Start a converstation or template from the command line
 - Download and manage models
@@ -83,7 +82,7 @@ opened in the template editor. The other way is to click "Template" from a conve
 
 ## Prompt Commands
 
-Ollama Chat supports special **prompt commands** that allow you to include file and URL content in
+Ollama Chat supports special **prompt commands** that allow you to include files, images, and URL content in
 your prompt, among other things. The following prompt commands are available:
 
 - `/file` - include a file
@@ -92,6 +91,14 @@ your prompt, among other things. The following prompt commands are available:
   /file README.md
 
   Please summarize the README file.
+  ```
+
+- `/image` - include an image
+
+  ```
+  /image image.jpeg
+
+  Please summarize the image.
   ```
 
 - `/dir` - include files from a directory
