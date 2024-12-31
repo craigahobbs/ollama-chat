@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.42 (2024-12-31)
+
+- [d0e84de](https://github.com/craigahobbs/ollama-chat/commit/d0e84de) - add image prompt command
+
 ## 0.9.41 (2024-12-10)
 
 - [8665360](https://github.com/craigahobbs/ollama-chat/commit/8665360) - fix -m and -t arguments when used with -b argument
