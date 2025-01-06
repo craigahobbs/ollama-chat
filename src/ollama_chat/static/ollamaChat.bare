@@ -93,6 +93,7 @@ async function ollamaChatIndexPage(args):
 
     # Render the conversations
     conversations = objectGet(conversationsResponse, 'conversations')
+    anyGenerating = false
     markdownPrint('', '## Conversations')
     if !conversations:
         markdownPrint('', indent + '*No conversations*')
@@ -107,23 +108,28 @@ async function ollamaChatIndexPage(args):
             id = objectGet(conversation, 'id')
             title = objectGet(conversation, 'title')
             model = objectGet(conversation, 'model')
+            generating = objectGet(conversation, 'generating')
+            anyGenerating = anyGenerating || generating
             selected = action == 'conversation' && actionID == id
-            conversationURL = argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', id))
+            conversationURL = argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', id), false, if(generating, ollamaChatBottomID))
             selectText = if(selected, 'Cancel', 'Select')
             selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'conversation'), 'actionID', if(!selected, id)))
             arrayPush(conversationTableRows, objectNew('html', 'tr', 'elem', arrayNew( \
                 objectNew('html', 'td', 'elem', formsLinkElements(title, conversationURL)), \
                 objectNew('html', 'td', 'elem', objectNew('text', model)), \
-                objectNew('html', 'td', 'elem', arrayNew( \
-                    formsLinkElements(selectText, selectURL), \
-                    if(selected, arrayNew( \
-                        objectNew('text', spacer + '|' + spacer), \
-                        formsLinkButtonElements('Up', systemPartial(ollamaChatIndexOnConversationAction, args, id, 'up')), \
-                        objectNew('text', spacer), \
-                        formsLinkButtonElements('Down', systemPartial(ollamaChatIndexOnConversationAction, args, id, 'down')), \
-                        objectNew('text', spacer), \
-                        formsLinkButtonElements('Delete', systemPartial(ollamaChatIndexOnConversationAction, args, id, 'delete')) \
-                    )) \
+                objectNew('html', 'td', 'elem', if(generating, \
+                    objectNew('text', 'Generating...'), \
+                    arrayNew( \
+                        formsLinkElements(selectText, selectURL), \
+                        if(selected, arrayNew( \
+                            objectNew('text', spacer + '|' + spacer), \
+                            formsLinkButtonElements('Up', systemPartial(ollamaChatIndexOnConversationAction, args, id, 'up')), \
+                            objectNew('text', spacer), \
+                            formsLinkButtonElements('Down', systemPartial(ollamaChatIndexOnConversationAction, args, id, 'down')), \
+                            objectNew('text', spacer), \
+                            formsLinkButtonElements('Delete', systemPartial(ollamaChatIndexOnConversationAction, args, id, 'delete')) \
+                        )) \
+                    ) \
                 )) \
             )))
         endfor
@@ -168,7 +174,16 @@ async function ollamaChatIndexPage(args):
         endfor
         elementModelRender(templateTable)
     endif
+
+    # Refresh the page?
+    if anyGenerating:
+        windowSetTimeout(systemPartial(ollamaChatIndexPage, args), ollamaChatIndexTimeoutMs)
+    endif
 endfunction
+
+
+# The index conversation-generating refresh timeout
+ollamaChatIndexTimeoutMs = 2000
 
 
 # Add template on-click event handler

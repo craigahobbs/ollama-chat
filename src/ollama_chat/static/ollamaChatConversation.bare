@@ -16,14 +16,14 @@ async function ollamaChatConversationPage(args):
             return
         endif
         conversation = objectGet(conversationResponse, 'conversation')
-        generating = objectGet(conversationResponse, 'generating')
         title = objectGet(conversation, 'title')
         model = objectGet(conversation, 'model')
+        generating = objectGet(conversation, 'generating')
     else:
         conversation = null
-        generating = False
         title = ollamaChatTitle
         model = null
+        generating = False
     endif
 
     # Render the floating controls
@@ -161,7 +161,7 @@ async function ollamaChatOnConversationTimeout(args, originalExchangeCount):
         return
     endif
     conversation = objectGet(conversationResponse, 'conversation')
-    generating = objectGet(conversationResponse, 'generating')
+    generating = objectGet(conversation, 'generating')
 
     # Done generating? Re-render the page to update the floating controls
     if !generating:

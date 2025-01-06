@@ -195,7 +195,8 @@ def get_conversations(ctx, unused_req):
                 {
                     'id': conversation['id'],
                     'model': conversation['model'],
-                    'title': conversation['title']
+                    'title': conversation['title'],
+                    'generating': conversation['id'] in ctx.app.chats
                 }
                 for conversation in config['conversations']
             ],
@@ -396,10 +397,13 @@ def get_conversation(ctx, req):
         if conversation is None:
             raise chisel.ActionError('UnknownConversationID')
 
+        # Add the generating status
+        conversation = copy.deepcopy(conversation)
+        conversation['generating'] = id_ in ctx.app.chats
+
         # Return the conversation
         return {
-            'conversation': copy.deepcopy(conversation),
-            'generating': id_ in ctx.app.chats
+            'conversation': conversation
         }
 
 
