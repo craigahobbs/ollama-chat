@@ -293,6 +293,9 @@ action startConversation
         POST
 
     input
+        # The model ID
+        optional string model
+
         # The user prompt
         string user
 
@@ -307,6 +310,9 @@ action startTemplate
         POST
 
     input
+        # The model ID
+        optional string model
+
         # The template identifier or name
         string id
 

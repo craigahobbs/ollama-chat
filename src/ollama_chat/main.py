@@ -37,8 +37,10 @@ def main(argv=None):
                         help='the configuration file (default is "$HOME/ollama-chat.json")')
     parser.add_argument('-m', metavar='MESSAGE', dest='message',
                         help='start a conversation')
-    parser.add_argument('-t', metavar='NAME', dest='template',
+    parser.add_argument('-t', metavar='TEMPLATE', dest='template',
                         help='start a template')
+    parser.add_argument('-l', metavar='MODEL', dest='model',
+                        help='the model name (default is current model)')
     parser.add_argument('-v', nargs=2, action='append', metavar=('VAR', 'VALUE'), dest='template_vars', default = [],
                         help='the template variables')
     parser.add_argument('-p', metavar='N', dest='port', type=int, default=8080,
@@ -75,7 +77,10 @@ def main(argv=None):
     if args.message:
 
         # Start the conversation
-        request_bytes = json.dumps({'user': args.message}).encode('utf-8')
+        request_input = {'user': args.message}
+        if args.model:
+            request_input['model'] = args.model
+        request_bytes = json.dumps(request_input).encode('utf-8')
         if args.backend:
             _, _, response_bytes = application.request('POST', '/startConversation', wsgi_input=request_bytes)
         else:
@@ -92,7 +97,10 @@ def main(argv=None):
     elif args.template:
 
         # Start the template
-        request_bytes = json.dumps({'id': args.template, 'variables': dict(args.template_vars)}).encode('utf-8')
+        request_input = {'id': args.template, 'variables': dict(args.template_vars)}
+        if args.model:
+            request_input['model'] = args.model
+        request_bytes = json.dumps(request_input).encode('utf-8')
         if args.backend:
             _, _, response_bytes = application.request('POST', '/startTemplate', wsgi_input=request_bytes)
         else:

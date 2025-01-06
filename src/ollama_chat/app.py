@@ -314,7 +314,7 @@ def start_conversation(ctx, req):
         id_ = str(uuid.uuid4())
         conversation = {
             'id': id_,
-            'model': ConfigManager.get_model(config),
+            'model': req.get('model') or ConfigManager.get_model(config),
             'title': title,
             'exchanges': []
         }
@@ -355,7 +355,7 @@ def start_template(ctx, req):
         id_ = str(uuid.uuid4())
         conversation = {
             'id': id_,
-            'model': ConfigManager.get_model(config),
+            'model': req.get('model') or ConfigManager.get_model(config),
             'title': title,
             'exchanges': []
         }
