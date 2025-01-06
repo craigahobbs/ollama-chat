@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.43 (2025-01-06)
+
+- [b7b300d](https://github.com/craigahobbs/ollama-chat/commit/b7b300d) - show conversation generating state on index page
+
+- [de8ac7b](https://github.com/craigahobbs/ollama-chat/commit/de8ac7b) - add -l command line argument to specify model with -m and -t
+
 ## 0.9.42 (2024-12-31)
 
 - [d0e84de](https://github.com/craigahobbs/ollama-chat/commit/d0e84de) - add image prompt command
