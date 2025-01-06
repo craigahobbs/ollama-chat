@@ -18,11 +18,25 @@ struct ConversationInfo
     string title
 
 
+# The user-model conversation info with generating status
+struct ConversationInfoEx (ConversationInfo)
+
+    # If True, the latest exchange is actively generating
+    bool generating
+
+
 # A user-model conversation
 struct Conversation (ConversationInfo)
 
     # The conversation's exchanges
     ConversationExchange[] exchanges
+
+
+# A user-model conversation with generating status
+struct ConversationEx (Conversation)
+
+    # If True, the latest exchange is actively generating
+    bool generating
 
 
 # A conversation user-model exchange
@@ -177,7 +191,7 @@ action getConversations
         string model
 
         # The conversations
-        ConversationInfo[] conversations
+        ConversationInfoEx[] conversations
 
         # The conversation templates
         ConversationTemplateInfo[] templates
@@ -293,6 +307,9 @@ action startConversation
         POST
 
     input
+        # The model ID
+        optional string model
+
         # The user prompt
         string user
 
@@ -307,6 +324,9 @@ action startTemplate
         POST
 
     input
+        # The model ID
+        optional string model
+
         # The template identifier or name
         string id
 
@@ -347,10 +367,7 @@ action getConversation
 
     output
         # The conversation
-        Conversation conversation
-
-        # If True, the latest exchange is actively generating
-        bool generating
+        ConversationEx conversation
 
     errors
         UnknownConversationID
