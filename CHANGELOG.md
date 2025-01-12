@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.44 (2025-01-12)
+
+- [023bfe4](https://github.com/craigahobbs/ollama-chat/commit/023bfe4) - add -x command-line argument to allow cross-origin back-end requests
+
 ## 0.9.43 (2025-01-06)
 
 - [b7b300d](https://github.com/craigahobbs/ollama-chat/commit/b7b300d) - show conversation generating state on index page
