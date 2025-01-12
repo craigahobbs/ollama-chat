@@ -45,6 +45,8 @@ def main(argv=None):
                         help='the template variables')
     parser.add_argument('-p', metavar='N', dest='port', type=int, default=8080,
                         help='the application port (default is 8080)')
+    parser.add_argument('-x', dest='xorigin', action='store_true', default=False,
+                        help="enable cross-origin back-end requests")
     parser.add_argument('-b', dest='backend', action='store_false', default=True,
                         help="don't start the back-end (use existing)")
     parser.add_argument('-n', dest='browser', action='store_false', default=True,
@@ -67,7 +69,7 @@ def main(argv=None):
             config_path = os.path.join(config_path, CONFIG_FILENAME)
 
         # Create the backend application
-        application = OllamaChat(config_path)
+        application = OllamaChat(config_path, args.xorigin)
 
     # Construct the URL
     host = '127.0.0.1'

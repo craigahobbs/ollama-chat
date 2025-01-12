@@ -10,6 +10,7 @@ import copy
 import ctypes
 import json
 import os
+from functools import partial
 import importlib.resources
 import re
 import threading
@@ -24,12 +25,13 @@ from .chat import ChatManager, config_conversation, config_template_prompts
 
 # The ollama-chat back-end API WSGI application class
 class OllamaChat(chisel.Application):
-    __slots__ = ('config', 'chats', 'downloads')
+    __slots__ = ('config', 'chats', 'downloads', 'xorigin')
 
 
-    def __init__(self, config_path):
+    def __init__(self, config_path, xorigin=False):
         super().__init__()
         self.config = ConfigManager(config_path)
+        self.xorigin = xorigin
         self.chats = {}
         self.downloads = {}
 
@@ -96,6 +98,18 @@ class OllamaChat(chisel.Application):
     def add_static(self, filename, content_type, urls, doc, doc_group='Ollama Chat Statics'):
         with importlib.resources.files('ollama_chat.static').joinpath(filename).open('rb') as fh:
             self.add_request(chisel.StaticRequest(filename, fh.read(), content_type, urls, doc, doc_group))
+
+
+    def __call__(self, environ, start_response):
+        if self.xorigin:
+            return super().__call__(environ, partial(_start_response_xorigin, start_response))
+        return super().__call__(environ, start_response)
+
+
+def _start_response_xorigin(start_response, status, headers):
+    headers_inner = list(headers)
+    headers_inner.append(('Access-Control-Allow-Origin', '*'))
+    start_response(status, headers_inner)
 
 
 # The ollama-chat configuration context manager
