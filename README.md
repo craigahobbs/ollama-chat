@@ -12,7 +12,7 @@ language models (LLMs).
 ## Features
 
 - Platform independent - tested on macOS, Windows, and Linux
-- Chat with any local Ollama model
+- Chat with local LLMs (using Ollama)
 - Prompt commands to include files, images, and URL content
 - Regenerate the most recent conversation response
 - Delete the most recent conversation exchange
@@ -20,7 +20,7 @@ language models (LLMs).
 - Save conversations as Markdown text
 - Multiple concurrent chats
 - Conversation templates for repeating prompts with variable substitutions
-- Start a converstation or template from the command line
+- Start a conversation or template from the command line
 - Download and manage models
 
 
@@ -37,15 +37,6 @@ To get up and running with Ollama Chat follows these steps:
    ~~~
 
 
-### Updating
-
-To update Ollama Chat:
-
-~~~
-pip install -U ollama-chat
-~~~
-
-
 ## Start Ollama Chat
 
 To start Ollama Chat, open a terminal prompt and run the Ollama Chat application:
@@ -54,9 +45,12 @@ To start Ollama Chat, open a terminal prompt and run the Ollama Chat application
 ollama-chat
 ~~~
 
-A web browser is launched and opens the Ollama Chat web application.
+A web browser is launched and opens the Ollama Chat application.
 
 By default, a configuration file, "ollama-chat.json", is created in the user's home directory.
+
+
+### Start a Conversation from the Command Line
 
 To start a conversation from the command line, use the `-m` argument:
 
@@ -64,10 +58,13 @@ To start a conversation from the command line, use the `-m` argument:
 ollama-chat -m "Why is the sky blue?"
 ~~~
 
+
+### Start a Template from the Command Line
+
 To start a named template from the command line, use the `-t` and `-v` arguments:
 
 ~~~
-ollama-chat -t AskAristotle -v Subject "Why is the sky blue?"
+ollama-chat -t askAristotle -v question "Why is the sky blue?"
 ~~~
 
 
@@ -121,6 +118,12 @@ your prompt, among other things. The following prompt commands are available:
 
   ```
   /do city-report -v CityState "Seattle, WA"
+  ```
+
+- `/?` - list available prompt commands
+
+  ```
+  /?
   ```
 
 To get prompt command help use the `-h` option:

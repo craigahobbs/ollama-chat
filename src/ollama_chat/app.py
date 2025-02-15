@@ -25,7 +25,7 @@ from .chat import ChatManager, config_conversation, config_template_prompts
 
 # The ollama-chat back-end API WSGI application class
 class OllamaChat(chisel.Application):
-    __slots__ = ('config', 'chats', 'downloads', 'xorigin')
+    __slots__ = ('config', 'xorigin', 'chats', 'downloads')
 
 
     def __init__(self, config_path, xorigin=False):
@@ -35,10 +35,10 @@ class OllamaChat(chisel.Application):
         self.chats = {}
         self.downloads = {}
 
-        # Add the chisel documentation application
+        # Back-end documentation
         self.add_requests(chisel.create_doc_requests())
 
-        # Add the APIs
+        # Back-end APIs
         self.add_request(create_template)
         self.add_request(delete_conversation)
         self.add_request(delete_conversation_exchange)
@@ -62,42 +62,17 @@ class OllamaChat(chisel.Application):
         self.add_request(stop_model_download)
         self.add_request(update_template)
 
-        # Add the ollama-chat statics
-        self.add_static(
-            'index.html',
-            'text/html; charset=utf-8',
-            (('GET', None), ('GET', '/')),
-            'The Ollama Chat application HTML'
-        )
-        self.add_static(
-            'ollamaChat.bare',
-            'text/plain; charset=utf-8',
-            (('GET', None),),
-            'The Ollama Chat application'
-        )
-        self.add_static(
-            'ollamaChatConversation.bare',
-            'text/plain; charset=utf-8',
-            (('GET', None),),
-            'The Ollama Chat application conversation page'
-        )
-        self.add_static(
-            'ollamaChatModels.bare',
-            'text/plain; charset=utf-8',
-            (('GET', None),),
-            'The Ollama Chat application models page'
-        )
-        self.add_static(
-            'ollamaChatTemplate.bare',
-            'text/plain; charset=utf-8',
-            (('GET', None),),
-            'The Ollama Chat application template page'
-        )
+        # Front-end statics
+        self.add_static('index.html', content_type='text/html; charset=utf-8', urls=(('GET', None), ('GET', '/')))
+        self.add_static('ollamaChat.bare')
+        self.add_static('ollamaChatConversation.bare')
+        self.add_static('ollamaChatModels.bare')
+        self.add_static('ollamaChatTemplate.bare')
 
 
-    def add_static(self, filename, content_type, urls, doc, doc_group='Ollama Chat Statics'):
+    def add_static(self, filename, content_type='text/plain; charset=utf-8', urls=(('GET', None),), doc_group='Ollama Chat Statics'):
         with importlib.resources.files('ollama_chat.static').joinpath(filename).open('rb') as fh:
-            self.add_request(chisel.StaticRequest(filename, fh.read(), content_type, urls, doc, doc_group))
+            self.add_request(chisel.StaticRequest(filename, fh.read(), content_type, urls, doc_group=doc_group))
 
 
     def __call__(self, environ, start_response):
@@ -115,9 +90,6 @@ def _start_response_xorigin(start_response, status, headers):
 # The ollama-chat configuration context manager
 class ConfigManager:
     __slots__ = ('config_path', 'config_lock', 'config')
-
-
-    DEFAULT_MODEL = 'llama3.2:latest'
 
 
     def __init__(self, config_path):
@@ -148,11 +120,6 @@ class ConfigManager:
         finally:
             # Release the config lock
             self.config_lock.release()
-
-
-    @classmethod
-    def get_model(cls, config):
-        return config.get('model', cls.DEFAULT_MODEL)
 
 
 # The model download manager class
@@ -203,8 +170,7 @@ with importlib.resources.files('ollama_chat.static').joinpath('ollamaChat.smd').
 @chisel.action(name='getConversations', types=OLLAMA_CHAT_TYPES)
 def get_conversations(ctx, unused_req):
     with ctx.app.config() as config:
-        return {
-            'model': ConfigManager.get_model(config),
+        response = {
             'conversations': [
                 {
                     'id': conversation['id'],
@@ -214,21 +180,17 @@ def get_conversations(ctx, unused_req):
                 }
                 for conversation in config['conversations']
             ],
-            'templates': [
-                _create_template_info(template)
-                for template in (config.get('templates') or ())
+            'templates': [] if 'templates' not in config else [
+                {
+                    'id': template['id'],
+                    'title': template['title']
+                }
+                for template in config['templates']
             ]
         }
-
-
-def _create_template_info(template):
-    template_info = {
-        'id': template['id'],
-        'title': template['title']
-    }
-    if 'name' in template:
-        template_info['name'] = template['name']
-    return template_info
+        if 'model' in config:
+            response['model'] = config['model']
+        return response
 
 
 @chisel.action(name='setModel', types=OLLAMA_CHAT_TYPES)
@@ -326,13 +288,11 @@ def start_conversation(ctx, req):
             title = f'{title[:max_title_len - len(title_suffix)]}{title_suffix}'
 
         # Create the new conversation object
+        model = req.get('model', config.get('model'))
+        if model is None:
+            raise chisel.ActionError('NoModel')
         id_ = str(uuid.uuid4())
-        conversation = {
-            'id': id_,
-            'model': req.get('model') or ConfigManager.get_model(config),
-            'title': title,
-            'exchanges': []
-        }
+        conversation = {'id': id_, 'model': model, 'title': title, 'exchanges': []}
 
         # Add the new conversation to the application config
         config['conversations'].insert(0, conversation)
@@ -367,13 +327,11 @@ def start_template(ctx, req):
             raise chisel.ActionError(error, message)
 
         # Create the new conversation object
+        model = req.get('model', config.get('model'))
+        if model is None:
+            raise chisel.ActionError('NoModel')
         id_ = str(uuid.uuid4())
-        conversation = {
-            'id': id_,
-            'model': req.get('model') or ConfigManager.get_model(config),
-            'title': title,
-            'exchanges': []
-        }
+        conversation = {'id': id_, 'model': model, 'title': title, 'exchanges': []}
 
         # Add the new conversation to the application config
         config['conversations'].insert(0, conversation)
@@ -536,10 +494,6 @@ def regenerate_conversation_exchange(ctx, req):
 
 @chisel.action(name='getModels', types=OLLAMA_CHAT_TYPES)
 def get_models(ctx, unused_req):
-    # Get the current model
-    with ctx.app.config() as config:
-        current_model = ConfigManager.get_model(config)
-
     # Get the Ollama models
     try:
         models = ollama.list()['models'] or ()
@@ -558,26 +512,28 @@ def get_models(ctx, unused_req):
         for model in models
     ]
 
-    # Create the downloading models response
-    downloading_models = []
-    for model_id, download_manager in ctx.app.downloads.items():
-        download = {
-            'id': model_id,
-            'status': download_manager.status,
-            'completed': download_manager.completed
+    with ctx.app.config() as config:
+        # Create the downloading models response
+        downloading_models = []
+        for model_id, download_manager in ctx.app.downloads.items():
+            download = {
+                'id': model_id,
+                'status': download_manager.status,
+                'completed': download_manager.completed
+            }
+            if download_manager.total:
+                download['size'] = download_manager.total
+            downloading_models.append(download)
+
+        response = {
+            'models': sorted(response_models, key=lambda model: model['id']),
+            'downloading': sorted(downloading_models, key=lambda model: model['id'])
         }
-        if download_manager.total:
-            download['size'] = download_manager.total
-        downloading_models.append(download)
-
-    return {
-        'model': current_model,
-        'models': sorted(response_models, key=lambda model: model['id']),
-        'downloading': sorted(downloading_models, key=lambda model: model['id'])
-    }
+        if 'model' in config:
+            response['model'] = config['model']
+        return response
 
 
-# Helper function to parse parameter sizes
 def _parse_parameter_size(parameter_size):
     value = float(parameter_size[:-1])
     unit = parameter_size[-1]

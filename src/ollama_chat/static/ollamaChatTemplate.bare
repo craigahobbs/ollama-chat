@@ -22,14 +22,14 @@ async function ollamaChatTemplateVariablesPage(args):
     # Render the variable inputs
     variables = objectGet(templateResponse, 'variables')
     submitFn = systemPartial(ollamaChatTemplateVariablesOnSubmit, templateID, variables)
-    onEnterFn = if(arrayLength(variables) == 1, submitFn)
+    ixVariableLast = arrayLength(variables) - 1
     for variable, ixVariable in variables:
         name = objectGet(variable, 'name')
         nameID = 'variable-' + name
         label = objectGet(variable, 'label')
         elementModelRender(arrayNew( \
             objectNew('html', 'p', 'elem', objectNew('html', 'b', 'elem', objectNew('text', label))), \
-            objectNew('html', 'p', 'elem', formsTextElements(nameID, '', 50, onEnterFn)) \
+            objectNew('html', 'p', 'elem', formsTextElements(nameID, '', 50, if(ixVariable == ixVariableLast, submitFn))) \
         ))
         if ixVariable == 0:
             documentSetFocus(nameID)

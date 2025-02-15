@@ -77,23 +77,36 @@ async function ollamaChatIndexPage(args):
     documentSetTitle(ollamaChatTitle)
     markdownPrint('# ' + markdownEscape(ollamaChatTitle))
 
+    # Get the current model
+    currentModel = objectGet(conversationsResponse, 'model')
+    if !currentModel:
+        markdownPrint( \
+            '', \
+            'Welcome to Ollama Chat! Please select a model to begin.', \
+            '', \
+            argsLink(ollamaChatArguments, 'Select Model', objectNew('view', 'models')) \
+        )
+        return
+    endif
+
     # Render the menu
-    spacer = stringFromCharCode(160, 160)
-    indent = spacer + spacer
     markdownPrint( \
-        '**Model:** ' + objectGet(conversationsResponse, 'model') + spacer + \
-            argsLink(ollamaChatArguments, 'Select', objectNew('view', 'models')), \
+        '**Current Model:** ' + currentModel, \
+        '', \
+        argsLink(ollamaChatArguments, 'Select Model', objectNew('view', 'models')), \
         '', \
         argsLink(ollamaChatArguments, 'Start Conversation', objectNew('view', 'chat')) \
     )
     elementModelRender(objectNew( \
         'html', 'p', \
-        'elem',  formsLinkButtonElements('Add Template', ollamaChatIndexOnTemplate) \
+        'elem',  formsLinkButtonElements('Add Template', ollamaChatIndexOnAddTemplate) \
     ))
 
     # Render the conversations
     conversations = objectGet(conversationsResponse, 'conversations')
     anyGenerating = false
+    spacer = stringFromCharCode(160, 160)
+    indent = spacer + spacer
     markdownPrint('', '## Conversations')
     if !conversations:
         markdownPrint('', indent + '*No conversations*')
@@ -151,7 +164,7 @@ async function ollamaChatIndexPage(args):
         for template in templates:
             templateID = objectGet(template, 'id')
             templateTitle = objectGet(template, 'title')
-            templateStartFn = systemPartial(ollamaChatIndexOnTemplateSelect, templateID)
+            templateStartFn = systemPartial(ollamaChatIndexOnRunTemplate, templateID)
             selected = action == 'template' && actionID == templateID
             selectText = if(selected, 'Cancel', 'Select')
             selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'template'), 'actionID', if(!selected, templateID)))
@@ -187,7 +200,7 @@ ollamaChatIndexTimeoutMs = 2000
 
 
 # Add template on-click event handler
-async function ollamaChatIndexOnTemplate():
+async function ollamaChatIndexOnAddTemplate():
     # Create the new template
     templateRequest = objectNew( \
         'title', 'New template', \
@@ -228,8 +241,8 @@ async function ollamaChatIndexOnTemplateAction(args, id, action):
 endfunction
 
 
-# Select template on-click event handler
-async function ollamaChatIndexOnTemplateSelect(templateID):
+# Run template on-click event handler
+async function ollamaChatIndexOnRunTemplate(templateID):
     # Get the template
     templateResponse = systemFetch('getTemplate?id=' + templateID)
     templateResponse = if(templateResponse != null, jsonParse(templateResponse))

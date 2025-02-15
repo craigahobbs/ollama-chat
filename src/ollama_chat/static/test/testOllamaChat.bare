@@ -24,7 +24,6 @@ async function testOllamaChatIndex():
 
     ollamaChatMain()
 
-    spacer = stringFromCharCode(160, 160)
     unittestDeepEqual( \
         unittestMockEnd(), \
         arrayNew( \
@@ -32,7 +31,9 @@ async function testOllamaChatIndex():
             arrayNew('documentSetTitle', arrayNew('Ollama Chat')), \
             arrayNew('markdownPrint', arrayNew('# Ollama Chat')), \
             arrayNew('markdownPrint', arrayNew( \
-                '**Model:** llama3:latest' + spacer + "[Select](#var.vView='models')", \
+                '**Current Model:** llama3:latest', \
+                '', \
+                "[Select Model](#var.vView='models')", \
                 '', \
                 "[Start Conversation](#var.vView='chat')" \
             )), \

@@ -34,7 +34,7 @@ async function ollamaChatModelsPage(args):
         '', \
         '# ' + markdownEscape(title), \
         '', \
-        '**Model:** ' + currentModel, \
+        if(currentModel, '**Current Model:** ' + currentModel, ''), \
         '', \
         argsLink(ollamaChatArguments, 'Download Models', objectNew('view', 'download')) \
     )
@@ -245,6 +245,7 @@ async function ollamaChatModelsDownloadPage(args):
     minModified = if(filterMonths == 0, null, datetimeNew(datetimeYear(today), datetimeMonth(today) - filterMonths, datetimeDay(today)))
 
     # Render the models
+    variantIndent = stringFromCharCode(160, 160, 160, 160)
     for model in models:
         name = objectGet(model, 'name')
         description = objectGet(model, 'description')
@@ -274,19 +275,20 @@ async function ollamaChatModelsDownloadPage(args):
         endif
 
         # Render the model information
-        spacer = stringFromCharCode(160, 160)
         markdownPrint( \
-            '## [' + markdownEscape(name) + '](' + ollamaChatModelsModelURL(name) + ')', \
+            '## ' + markdownEscape(name), \
             '', \
             markdownEscape(description), \
             '', \
             '**Parameters:** ' + parametersText + ' \\', \
             '**Downloads:** ' + ollamaChatModelsFormatCount(downloads) + ' \\', \
-            '**Modified:** ' + modifiedText + ' \\', \
+            '**Modified:** ' + modifiedText, \
+            '', \
             argsLink( \
                 ollamaChatArguments, \
-                if(selected, 'Cancel', 'Select'), objectNew('action', if(!selected, 'model'), 'actionID', if(!selected, name)) \
-            ) \
+                if(selected, 'Cancel', 'Download'), objectNew('action', if(!selected, 'model'), 'actionID', if(!selected, name)) \
+            ), \
+            if(!selected, filterSpacer + '[Info](' + ollamaChatModelsModelURL(name) + ')') \
         )
         if selected:
             downloadLinks = arrayNew()
@@ -294,7 +296,7 @@ async function ollamaChatModelsDownloadPage(args):
                 modelID = objectGet(variant, 'id')
                 if !filterCompatible || objectGet(variant, 'compatible'):
                     arrayPush(downloadLinks, objectNew('html', 'p', 'elem', arrayNew( \
-                        objectNew('text', spacer + spacer), \
+                        objectNew('text', variantIndent), \
                         formsLinkButtonElements(modelID, systemPartial(ollamaChatModelsOnDownload, modelID)) \
                     )))
                 endif

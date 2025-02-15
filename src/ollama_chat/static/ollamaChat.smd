@@ -49,7 +49,7 @@ struct ConversationExchange
     string model
 
 
-# An Ollama Chat conversation template info struct
+# An conversation template info struct
 struct ConversationTemplateInfo
 
     # The template identifier
@@ -58,12 +58,12 @@ struct ConversationTemplateInfo
     # The template title
     string title
 
+
+# An conversation template
+struct ConversationTemplate (ConversationTemplateInfo)
+
     # The template command name
     optional string name
-
-
-# An Ollama Chat conversation template
-struct ConversationTemplate (ConversationTemplateInfo)
 
     # The template user prompts
     string[] prompts
@@ -72,7 +72,7 @@ struct ConversationTemplate (ConversationTemplateInfo)
     optional ConversationTemplateVariable[len > 0] variables
 
 
-# An Ollama Chat conversation template variable
+# An conversation template variable
 struct ConversationTemplateVariable
 
     # The variable name (e.g. "CityState")
@@ -146,7 +146,7 @@ typedef OllamaChatModel[len > 0] OllamaChatModels
 group
 
 
-# An Ollama Chat downloadable model
+# An downloadable model
 struct OllamaChatModel
 
     # The model name
@@ -165,7 +165,7 @@ struct OllamaChatModel
     OllamaChatModelVariant[len > 0] variants
 
 
-# An Ollama Chat downloadable model variant
+# An downloadable model variant
 struct OllamaChatModelVariant
 
     # The variant's ID
@@ -188,7 +188,7 @@ action getConversations
 
     output
         # The current model ID
-        string model
+        optional string model
 
         # The conversations
         ConversationInfoEx[] conversations
@@ -317,6 +317,9 @@ action startConversation
         # The new conversation identifier
         string id
 
+    errors
+        NoModel
+
 
 # Start a conversation
 action startTemplate
@@ -338,8 +341,9 @@ action startTemplate
         string id
 
     errors
-        UnknownTemplateID
         MissingVariable
+        NoModel
+        UnknownTemplateID
         UnknownVariable
 
 
@@ -386,8 +390,8 @@ action replyConversation
         string user
 
     errors
-        UnknownConversationID
         ConversationBusy
+        UnknownConversationID
 
 
 # Set a conversation's title
@@ -403,8 +407,8 @@ action setConversationTitle
         string title
 
     errors
-        UnknownConversationID
         ConversationBusy
+        UnknownConversationID
 
 
 # Delete a conversation
@@ -417,8 +421,8 @@ action deleteConversation
         string id
 
     errors
-        UnknownConversationID
         ConversationBusy
+        UnknownConversationID
 
 
 # Delete the most recent exchange of a conversation
@@ -431,8 +435,8 @@ action deleteConversationExchange
         string id
 
     errors
-        UnknownConversationID
         ConversationBusy
+        UnknownConversationID
 
 
 # Regnerate the model's response of the most recent exchange of a conversation
@@ -445,8 +449,8 @@ action regenerateConversationExchange
         string id
 
     errors
-        UnknownConversationID
         ConversationBusy
+        UnknownConversationID
 
 
 # Get the available models
@@ -456,7 +460,7 @@ action getModels
 
     output
         # The current model ID
-        string model
+        optional string model
 
         # The available models
         ModelInfo[] models

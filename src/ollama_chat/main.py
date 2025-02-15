@@ -18,10 +18,6 @@ import waitress
 from .app import OllamaChat
 
 
-# The default config path environment variable
-CONFIG_ENVIRONMENT = 'OLLAMA_CHAT_CONFIG'
-
-
 # The default config file name
 CONFIG_FILENAME = 'ollama-chat.json'
 
@@ -59,7 +55,7 @@ def main(argv=None):
     if args.backend:
 
         # Determine the config path
-        config_path = args.config or os.getenv(CONFIG_ENVIRONMENT)
+        config_path = args.config
         if config_path is None:
             if os.path.isfile(CONFIG_FILENAME):
                 config_path = CONFIG_FILENAME

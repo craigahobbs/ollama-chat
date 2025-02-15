@@ -27,24 +27,24 @@ async function ollamaChatConversationPage(args):
     endif
 
     # Render the floating controls
-    elementModelRender(ollamaChatPageFloatingElements(args, conversation, generating))
-    documentSetFocus(ollamaChatPromptInputID)
+    elementModelRender(ollamaChatConversationFloatingElements(args, conversation, generating))
+    documentSetFocus(ollamaChatConversationPromptID)
 
     # Render the chat title
     documentSetTitle(title)
     if conversation != null && objectGet(args, 'action') == 'title':
         markdownPrint('', '**Title:**')
-        titleClickFn = systemPartial(ollamaChatOnConversationTitleUpdate, args)
-        cancelClickFn = systemPartial(ollamaChatOnConversationClick, args, null, argsURL(ollamaChatArguments))
+        titleClickFn = systemPartial(ollamaChatConversationOnTitleUpdate, args)
+        cancelClickFn = systemPartial(ollamaChatConversationOnClick, args, null, argsURL(ollamaChatArguments))
         elementModelRender(arrayNew( \
-            objectNew('html', 'p', 'elem', formsTextElements(ollamaChatTitleInputID, title, 50, titleClickFn)), \
+            objectNew('html', 'p', 'elem', formsTextElements(ollamaChatConversationTitleID, title, 50, titleClickFn)), \
             objectNew('html', 'p', 'elem', arrayNew( \
                 formsLinkButtonElements('Update', titleClickFn), \
                 objectNew('text', stringFromCharCode(160, 160)), \
                 formsLinkButtonElements('Cancel', cancelClickFn) \
             )) \
         ))
-        documentSetFocus(ollamaChatTitleInputID)
+        documentSetFocus(ollamaChatConversationTitleID)
     elif conversation != null:
         markdownPrint('# ' + markdownEscape(title), '', '**Model:** ' + markdownEscape(model))
     endif
@@ -77,7 +77,7 @@ async function ollamaChatConversationPage(args):
     endfor
 
     # Render the document reset ID
-    elementModelRender(objectNew('html', 'div', 'attr', objectNew('id', ollamaChatDocumentResetID, 'style', 'display: none;')))
+    elementModelRender(objectNew('html', 'div', 'attr', objectNew('id', ollamaChatConversationResetID, 'style', 'display: none;')))
 
     # Render the bottom of the conversation page
     ollamaChatConversationPageBottom(args, conversation, generating)
@@ -101,8 +101,8 @@ async function ollamaChatConversationPageBottom(args, conversation, generating):
         endif
 
         # Compute button on-click functions
-        deleteExchangeFn = systemPartial(ollamaChatOnConversationClick, args, 'deleteConversationExchange')
-        regenerateExchangeFn = systemPartial(ollamaChatOnConversationClick, args, 'regenerateConversationExchange')
+        deleteExchangeFn = systemPartial(ollamaChatConversationOnClick, args, 'deleteConversationExchange')
+        regenerateExchangeFn = systemPartial(ollamaChatConversationOnClick, args, 'regenerateConversationExchange')
 
         # Render the regenerate and delete links
         if !generating:
@@ -119,23 +119,23 @@ async function ollamaChatConversationPageBottom(args, conversation, generating):
     # Render the bottom space
     fontSizePx = documentFontSize()
     bottomSpacePx = if(generating, mathFloor(0.67 * windowHeight() / fontSizePx), if(multiline, 12, 4)) * fontSizePx
-    bottomElementId = stringSlice(argsURL(ollamaChatArguments, null, false, ollamaChatBottomID), 1)
+    bottomElementId = stringSlice(argsURL(ollamaChatArguments, null, false, ollamaChatConversationBottomID), 1)
     elementModelRender(arrayNew( \
-        objectNew('html', 'div', 'attr', objectNew('style', 'height: ' + numberToFixed(bottomSpacePx, ollamaChatPrecision) + 'px')), \
+        objectNew('html', 'div', 'attr', objectNew('style', 'height: ' + numberToFixed(bottomSpacePx, ollamaChatConversationSVGPrecision) + 'px')), \
         objectNew('html', 'div', 'attr', objectNew('id', bottomElementId)) \
     ))
 
     # Set the conversation update timeout
     if generating:
-        windowSetTimeout(systemPartial(ollamaChatOnConversationTimeout, args, arrayLength(exchanges)), ollamaChatTimeoutMs)
+        windowSetTimeout(systemPartial(ollamaChatConversationOnTimeout, args, arrayLength(exchanges)), ollamaChatConversationTimeoutMs)
     endif
 endfunction
 
 
-# The Ollama Chat conversation page title-update click handler
-async function ollamaChatOnConversationTitleUpdate(args):
+# Title update click handler
+async function ollamaChatConversationOnTitleUpdate(args):
     # Update the conversation title
-    title = stringTrim(documentInputValue(ollamaChatTitleInputID))
+    title = stringTrim(documentInputValue(ollamaChatConversationTitleID))
     if title:
         systemFetch(objectNew( \
             'url', 'setConversationTitle', \
@@ -144,13 +144,13 @@ async function ollamaChatOnConversationTitleUpdate(args):
     endif
 
     # Navigate to the conversation
-    ollamaChatSavePrompt()
+    ollamaChatConversationSavePrompt()
     windowSetLocation(argsURL(ollamaChatArguments))
 endfunction
 
 
-# The Ollama Chat conversation page conversation-update timeout handler
-async function ollamaChatOnConversationTimeout(args, originalExchangeCount):
+# Conversation update timeout handler
+async function ollamaChatConversationOnTimeout(args, originalExchangeCount):
     id = objectGet(args, 'id')
 
     # Fetch the conversation
@@ -165,7 +165,7 @@ async function ollamaChatOnConversationTimeout(args, originalExchangeCount):
 
     # Done generating? Re-render the page to update the floating controls
     if !generating:
-        ollamaChatSavePrompt()
+        ollamaChatConversationSavePrompt()
         ollamaChatConversationPage(args)
         return
     endif
@@ -178,50 +178,50 @@ async function ollamaChatOnConversationTimeout(args, originalExchangeCount):
     endif
 
     # Render the page bottom
-    documentSetReset(ollamaChatDocumentResetID)
+    documentSetReset(ollamaChatConversationResetID)
     ollamaChatConversationPageBottom(args, conversation, generating)
 endfunction
 
 
 # The conversation refresh period, in milliseconds
-ollamaChatTimeoutMs = 500
+ollamaChatConversationTimeoutMs = 500
 
 
 # The conversation prompt input ID
-ollamaChatPromptInputID = 'ollama-chat-prompt'
+ollamaChatConversationPromptID = 'ollama-chat-prompt'
 
 
 # The conversation title input ID
-ollamaChatTitleInputID = 'ollama-chat-title'
+ollamaChatConversationTitleID = 'ollama-chat-title'
 
 
 # The conversation prompt session storage key
-ollamaChatSessionKey = 'ollama-chat-conversation-message'
+ollamaChatConversationSessionKey = 'ollama-chat-conversation-message'
 
 
 # The conversation document reset ID
-ollamaChatDocumentResetID = 'ollama-chat-document-reset-id'
+ollamaChatConversationResetID = 'ollama-chat-document-reset-id'
 
 
 # The conversation bottom element ID (for scroll to bottom)
-ollamaChatBottomID = 'ollama-chat-bottom-id'
+ollamaChatConversationBottomID = 'ollama-chat-bottom-id'
 
 
-# The numeric attribute precision
-ollamaChatPrecision = 3
+# The SVG numeric attribute precision
+ollamaChatConversationSVGPrecision = 3
 
 
 # Helper to save the prompt to session storage prior to a full re-render
-function ollamaChatSavePrompt():
-    prompt = stringTrim(documentInputValue(ollamaChatPromptInputID))
+function ollamaChatConversationSavePrompt():
+    prompt = stringTrim(documentInputValue(ollamaChatConversationPromptID))
     if prompt != '':
-        sessionStorageSet(ollamaChatSessionKey, prompt)
+        sessionStorageSet(ollamaChatConversationSessionKey, prompt)
     endif
 endfunction
 
 
 # Generic conversation button on-click event handler
-async function ollamaChatOnConversationClick(args, api, url, noSave):
+async function ollamaChatConversationOnClick(args, api, url, noSave):
     # Call the api, if any
     if api != null:
         systemFetch(objectNew('url', api, 'body', jsonStringify(objectNew('id', objectGet(args, 'id')))))
@@ -230,18 +230,18 @@ async function ollamaChatOnConversationClick(args, api, url, noSave):
     # Navigate?
     if url != null:
         if !noSave:
-            ollamaChatSavePrompt()
+            ollamaChatConversationSavePrompt()
         endif
         windowSetLocation(url)
     else:
-        ollamaChatSavePrompt()
+        ollamaChatConversationSavePrompt()
         ollamaChatConversationPage(args)
     endif
 endfunction
 
 
 # Conversation template on-click event handler
-async function ollamaChatOnConversationTemplate(conversation):
+async function ollamaChatConversationOnTemplate(conversation):
     # Get the template prompts
     prompts = arrayNew()
     for exchange in objectGet(conversation, 'exchanges'):
@@ -262,11 +262,11 @@ endfunction
 
 
 # Prompt on-enter/on-click event handler
-async function ollamaChatOnConversationPrompt(args, message):
+async function ollamaChatConversationOnPrompt(args, message):
     id = objectGet(args, 'id')
 
     # Get the prompt text
-    prompt = if(message != null, message, stringTrim(documentInputValue(ollamaChatPromptInputID)))
+    prompt = if(message != null, message, stringTrim(documentInputValue(ollamaChatConversationPromptID)))
     if prompt == '':
         return
     endif
@@ -295,12 +295,12 @@ async function ollamaChatOnConversationPrompt(args, message):
     ollamaChatConversationPage(args)
 
     # Scroll to the bottom
-    windowSetLocation(argsURL(ollamaChatArguments, null, false, ollamaChatBottomID))
+    windowSetLocation(argsURL(ollamaChatArguments, null, false, ollamaChatConversationBottomID))
 endfunction
 
 
 # The conversation page floating controls element model
-function ollamaChatPageFloatingElements(args, conversation, generating):
+function ollamaChatConversationFloatingElements(args, conversation, generating):
     action = objectGet(args, 'action')
     multiline = objectGet(args, 'multiline')
     textView = objectGet(args, 'text')
@@ -325,12 +325,12 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
     multilineURL = argsURL(ollamaChatArguments, objectNew('multiline', !multiline))
 
     # Compute button on-click functions
-    menuClickFn = systemPartial(ollamaChatOnConversationClick, args, null, menuURL)
-    titleClickFn = systemPartial(ollamaChatOnConversationClick, args, null, titleURL)
-    markdownClickFn = systemPartial(ollamaChatOnConversationClick, args, null, markdownURL)
-    deleteClickFn = systemPartial(ollamaChatOnConversationClick, args, 'deleteConversation', indexURL, true)
-    templateClickFn = systemPartial(ollamaChatOnConversationTemplate, conversation)
-    multilineFn = systemPartial(ollamaChatOnConversationClick, args, null, multilineURL)
+    menuClickFn = systemPartial(ollamaChatConversationOnClick, args, null, menuURL)
+    titleClickFn = systemPartial(ollamaChatConversationOnClick, args, null, titleURL)
+    markdownClickFn = systemPartial(ollamaChatConversationOnClick, args, null, markdownURL)
+    deleteClickFn = systemPartial(ollamaChatConversationOnClick, args, 'deleteConversation', indexURL, true)
+    templateClickFn = systemPartial(ollamaChatConversationOnTemplate, conversation)
+    multilineFn = systemPartial(ollamaChatConversationOnClick, args, null, multilineURL)
 
     # Generate the download URL, if necessary
     markdownDownloadURL = null
@@ -350,15 +350,15 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
     endif
 
     # Get the saved session prompt, if any
-    prompt = sessionStorageGet(ollamaChatSessionKey)
+    prompt = sessionStorageGet(ollamaChatConversationSessionKey)
     if prompt != null:
-        sessionStorageRemove(ollamaChatSessionKey)
+        sessionStorageRemove(ollamaChatConversationSessionKey)
     endif
 
     # The top space
     arrayPush(elements, objectNew( \
         'html', 'div', \
-        'attr', objectNew('style', 'height: ' + numberToFixed(topSpacePx, ollamaChatPrecision) + 'px')) \
+        'attr', objectNew('style', 'height: ' + numberToFixed(topSpacePx, ollamaChatConversationSVGPrecision) + 'px')) \
     )
 
     # The menu controls
@@ -369,13 +369,13 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
             'style', arrayJoin(arrayNew( \
                 'align-items: left', \
                 'background-color: #e0e0e0', \
-                'border-radius: ' + numberToFixed(borderRadiusPx, ollamaChatPrecision) + 'px', \
+                'border-radius: ' + numberToFixed(borderRadiusPx, ollamaChatConversationSVGPrecision) + 'px', \
                 'color: black', \
                 'display: flex', \
-                'left: ' + numberToFixed(topBottomPx, ollamaChatPrecision) + 'px', \
-                'padding: ' + numberToFixed(menuPadPx, ollamaChatPrecision) + 'px', \
+                'left: ' + numberToFixed(topBottomPx, ollamaChatConversationSVGPrecision) + 'px', \
+                'padding: ' + numberToFixed(menuPadPx, ollamaChatConversationSVGPrecision) + 'px', \
                 'position: fixed', \
-                'top: ' + numberToFixed(topBottomPx, ollamaChatPrecision) + 'px' \
+                'top: ' + numberToFixed(topBottomPx, ollamaChatConversationSVGPrecision) + 'px' \
             ), '; ') \
         ), \
         'elem', arrayNew( \
@@ -383,7 +383,7 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
             objectNew('text', separator), \
             formsLinkElements('Top', argsURL(ollamaChatArguments, null, false, '_top')), \
             objectNew('text', separator), \
-            formsLinkElements('Bottom', argsURL(ollamaChatArguments, null, false, ollamaChatBottomID)), \
+            formsLinkElements('Bottom', argsURL(ollamaChatArguments, null, false, ollamaChatConversationBottomID)), \
             if(conversation != null && !generating, arrayNew( \
                 objectNew('text', separator), \
                 formsLinkButtonElements(if(action != 'menu', '>>', '<<'), menuClickFn), \
@@ -414,22 +414,22 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
             'style', arrayJoin(arrayNew( \
                 'align-items: flex-end', \
                 'background-color: #c0c0c0', \
-                'border-radius: ' + numberToFixed(borderRadiusPx, ollamaChatPrecision) + 'px', \
-                'bottom: ' + numberToFixed(topBottomPx, ollamaChatPrecision) + 'px', \
+                'border-radius: ' + numberToFixed(borderRadiusPx, ollamaChatConversationSVGPrecision) + 'px', \
+                'bottom: ' + numberToFixed(topBottomPx, ollamaChatConversationSVGPrecision) + 'px', \
                 'display: flex', \
-                'left: ' + numberToFixed(leftRightPx, ollamaChatPrecision) + 'px', \
-                'padding: ' + numberToFixed(inputPadPx, ollamaChatPrecision) + 'px', \
+                'left: ' + numberToFixed(leftRightPx, ollamaChatConversationSVGPrecision) + 'px', \
+                'padding: ' + numberToFixed(inputPadPx, ollamaChatConversationSVGPrecision) + 'px', \
                 'position: fixed', \
-                'right: ' + numberToFixed(leftRightPx, ollamaChatPrecision) + 'px' \
+                'right: ' + numberToFixed(leftRightPx, ollamaChatConversationSVGPrecision) + 'px' \
             ), '; ') \
         ), \
         'elem', arrayNew( \
-            ollamaChatSVGButton(0.75 * buttonSize, buttonSize, 24, 'M4,6 H20 M4,12 H20 M4,18 H20', 'none', 'none', multilineFn), \
+            ollamaChatConversationSVGButton(0.75 * buttonSize, buttonSize, 24, 'M4,6 H20 M4,12 H20 M4,18 H20', 'none', 'none', multilineFn), \
             objectNew( \
                 'html', if(multiline, 'textarea', 'input'), \
                 'attr', objectNew( \
                     'autocomplete', 'off', \
-                    'id', ollamaChatPromptInputID, \
+                    'id', ollamaChatConversationPromptID, \
                     'placeholder', 'Type your message...', \
                     'rows', if(multiline, 8), \
                     'style', arrayJoin(arrayNew( \
@@ -438,11 +438,11 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
                         'flex: 1', \
                         'font-size: inherit', \
                         'font-family: inherit', \
-                        'margin-left: ' + numberToFixed(textPadPx, ollamaChatPrecision) + 'px', \
-                        'margin-right: ' + numberToFixed(textPadPx, ollamaChatPrecision) + 'px', \
+                        'margin-left: ' + numberToFixed(textPadPx, ollamaChatConversationSVGPrecision) + 'px', \
+                        'margin-right: ' + numberToFixed(textPadPx, ollamaChatConversationSVGPrecision) + 'px', \
                         'min-width: 0', \
                         'outline: none', \
-                        'padding: ' + numberToFixed(textPadPx, ollamaChatPrecision) + 'px', \
+                        'padding: ' + numberToFixed(textPadPx, ollamaChatConversationSVGPrecision) + 'px', \
                         'resize: none' \
                     ), '; '), \
                     'type', if(!multiline, 'text'), \
@@ -450,16 +450,16 @@ function ollamaChatPageFloatingElements(args, conversation, generating):
                 ), \
                 'elem', if(multiline && prompt != null, objectNew('text', prompt)), \
                 'callback', if(!multiline && !generating, \
-                    objectNew('keyup', systemPartial(formsTextOnKeyup, systemPartial(ollamaChatOnConversationPrompt, args))) \
+                    objectNew('keyup', systemPartial(formsTextOnKeyup, systemPartial(ollamaChatConversationOnPrompt, args))) \
                 ) \
             ), \
             if(!generating, \
-                ollamaChatSVGButton(buttonSize, buttonSize, 24, 'M12,18 V7 M7,12 L12,7 L17,12', 'none', 'white', \
-                    systemPartial(ollamaChatOnConversationPrompt, args)) \
+                ollamaChatConversationSVGButton(buttonSize, buttonSize, 24, 'M12,18 V7 M7,12 L12,7 L17,12', 'none', 'white', \
+                    systemPartial(ollamaChatConversationOnPrompt, args)) \
             ), \
             if(generating, \
-                ollamaChatSVGButton(buttonSize, buttonSize, 24, 'M8,8 H16 V16 H8 Z', 'black', 'white', \
-                    systemPartial(ollamaChatOnConversationClick, args, 'stopConversation')) \
+                ollamaChatConversationSVGButton(buttonSize, buttonSize, 24, 'M8,8 H16 V16 H8 Z', 'black', 'white', \
+                    systemPartial(ollamaChatConversationOnClick, args, 'stopConversation')) \
             ) \
         ) \
     ))
@@ -469,7 +469,7 @@ endfunction
 
 
 # Create an SVG button element model
-function ollamaChatSVGButton(width, height, viewSize, symbolPath, symbolFill, backgroundColor, callback):
+function ollamaChatConversationSVGButton(width, height, viewSize, symbolPath, symbolFill, backgroundColor, callback):
     return objectNew( \
         'html', 'button', \
         'attr', objectNew( \
@@ -486,8 +486,8 @@ function ollamaChatSVGButton(width, height, viewSize, symbolPath, symbolFill, ba
         'elem', objectNew( \
             'svg', 'svg', \
             'attr', objectNew( \
-                'width', numberToFixed(width, ollamaChatPrecision), \
-                'height', numberToFixed(height, ollamaChatPrecision), \
+                'width', numberToFixed(width, ollamaChatConversationSVGPrecision), \
+                'height', numberToFixed(height, ollamaChatConversationSVGPrecision), \
                 'viewBox', '0 0 ' + viewSize + ' ' + viewSize, \
                 'fill', 'none', \
                 'style', 'vertical-align: middle', \
@@ -497,9 +497,9 @@ function ollamaChatSVGButton(width, height, viewSize, symbolPath, symbolFill, ba
                 if(backgroundColor != 'none', objectNew( \
                     'svg', 'circle', \
                     'attr', objectNew( \
-                        'cx', numberToFixed(0.5 * viewSize, ollamaChatPrecision), \
-                        'cy', numberToFixed(0.5 * viewSize, ollamaChatPrecision), \
-                        'r', numberToFixed(0.5 * viewSize, ollamaChatPrecision), \
+                        'cx', numberToFixed(0.5 * viewSize, ollamaChatConversationSVGPrecision), \
+                        'cy', numberToFixed(0.5 * viewSize, ollamaChatConversationSVGPrecision), \
+                        'r', numberToFixed(0.5 * viewSize, ollamaChatConversationSVGPrecision), \
                         'stroke', 'none', \
                         'fill', backgroundColor \
                     ) \
