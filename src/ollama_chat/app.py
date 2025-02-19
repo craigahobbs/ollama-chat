@@ -37,7 +37,7 @@ class OllamaChat(chisel.Application):
         self.downloads = {}
 
         # Back-end documentation
-        self.add_requests(chisel.create_doc_requests())
+        self.add_requests(chisel.create_doc_requests(markdown_up='../markdown-up/'))
 
         # Back-end APIs
         self.add_request(create_template)
