@@ -80,7 +80,7 @@ class OllamaChat(chisel.Application):
                             tar.extractfile(member).read(),
                             content_type=_CONTENT_TYPES.get(os.path.splitext(member.name)[1], 'text/plain; charset=utf-8'),
                             urls=(('GET', None),),
-                            doc_group='Markdown-Up Statics'
+                            doc_group='MarkdownUp Statics'
                         ))
 
 
