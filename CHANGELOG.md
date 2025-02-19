@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.47 (2025-02-19)
+
+- [38619d9](https://github.com/craigahobbs/ollama-chat/commit/38619d9) - fix api docs offline
+
 ## 0.9.46 (2025-02-19)
 
 - [203d949](https://github.com/craigahobbs/ollama-chat/commit/203d949) - run entirely offline
