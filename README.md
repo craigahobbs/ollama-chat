@@ -12,7 +12,7 @@ language models (LLMs).
 ## Features
 
 - Platform independent - tested on macOS, Windows, and Linux
-- Chat with local LLMs (using Ollama)
+- Chat with local LLMs (using Ollama) entirely offline
 - Prompt commands to include files, images, and URL content
 - Regenerate the most recent conversation response
 - Delete the most recent conversation exchange
