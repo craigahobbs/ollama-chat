@@ -204,7 +204,7 @@ ollamaChatConversationResetID = 'ollama-chat-document-reset-id'
 
 
 # The conversation bottom element ID (for scroll to bottom)
-ollamaChatConversationBottomID = 'ollama-chat-bottom-id'
+ollamaChatConversationBottomID = 'chat-bottom'
 
 
 # The SVG numeric attribute precision
