@@ -13,6 +13,7 @@ import os
 from functools import partial
 import importlib.resources
 import re
+import tarfile
 import threading
 import uuid
 
@@ -63,14 +64,28 @@ class OllamaChat(chisel.Application):
         self.add_request(update_template)
 
         # Front-end statics
-        self.add_static('index.html', content_type='text/html; charset=utf-8', urls=(('GET', None), ('GET', '/')))
+        self.add_static('index.html', urls=(('GET', None), ('GET', '/')))
         self.add_static('ollamaChat.bare')
         self.add_static('ollamaChatConversation.bare')
         self.add_static('ollamaChatModels.bare')
         self.add_static('ollamaChatTemplate.bare')
 
+        # Markdown-Up application statics
+        with importlib.resources.files('ollama_chat.static').joinpath('markdown-up.tar.gz').open('rb') as tgz:
+            with tarfile.open(fileobj=tgz, mode='r:gz') as tar:
+                for member in tar.getmembers():
+                    if member.isfile():
+                        self.add_request(chisel.StaticRequest(
+                            member.name,
+                            tar.extractfile(member).read(),
+                            content_type=_CONTENT_TYPES.get(os.path.splitext(member.name)[1], 'text/plain; charset=utf-8'),
+                            urls=(('GET', None),),
+                            doc_group='Markdown-Up Statics'
+                        ))
 
-    def add_static(self, filename, content_type='text/plain; charset=utf-8', urls=(('GET', None),), doc_group='Ollama Chat Statics'):
+
+    def add_static(self, filename, urls=(('GET', None),), doc_group='Ollama Chat Statics'):
+        content_type = _CONTENT_TYPES.get(os.path.splitext(filename)[1], 'text/plain; charset=utf-8')
         with importlib.resources.files('ollama_chat.static').joinpath(filename).open('rb') as fh:
             self.add_request(chisel.StaticRequest(filename, fh.read(), content_type, urls, doc_group=doc_group))
 
@@ -85,6 +100,13 @@ def _start_response_xorigin(start_response, status, headers):
     headers_inner = list(headers)
     headers_inner.append(('Access-Control-Allow-Origin', '*'))
     start_response(status, headers_inner)
+
+
+_CONTENT_TYPES = {
+    '.css': 'text/css; charset=utf-8',
+    '.js': 'text/javascript; charset=utf-8',
+    '.html': 'text/html; charset=utf-8'
+}
 
 
 # The ollama-chat configuration context manager

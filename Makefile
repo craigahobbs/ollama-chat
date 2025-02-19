@@ -67,3 +67,8 @@ test-app: $(DEFAULT_VENV_BUILD)
 .PHONY: run
 run: $(DEFAULT_VENV_BUILD)
 	$(DEFAULT_VENV_BIN)/ollama-chat$(if $(ARGS), $(ARGS))
+
+
+.PHONY: markdown-up
+markdown-up:
+	cd src/ollama_chat/static && $(call WGET_CMD, https://craigahobbs.github.io/markdown-up/markdown-up.tar.gz)

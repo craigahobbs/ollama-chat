@@ -15,7 +15,7 @@ class TestApp(unittest.TestCase):
             self.assertEqual(app.config.config_path, 'ollama-chat.json')
             self.assertDictEqual(app.chats, {})
             self.assertListEqual(
-                [key for key in sorted(app.requests.keys()) if not key.startswith('chisel_doc')],
+                sorted(request.name for request in app.requests.values() if request.doc_group.startswith('Ollama Chat ')),
                 [
                     'createTemplate',
                     'deleteConversation',
