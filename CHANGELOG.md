@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.46 (2025-02-19)
+
+- [203d949](https://github.com/craigahobbs/ollama-chat/commit/203d949) - run entirely offline
+
+- [1031bd2](https://github.com/craigahobbs/ollama-chat/commit/1031bd2) - shorten chat bottom ID
+
+- [bb1815f](https://github.com/craigahobbs/ollama-chat/commit/bb1815f) - fix index links to generating conversations
+
 ## 0.9.45 (2025-02-14)
 
 - [947cf60](https://github.com/craigahobbs/ollama-chat/commit/947cf60) - code and ux review
