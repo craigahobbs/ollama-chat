@@ -124,7 +124,7 @@ async function ollamaChatIndexPage(args):
             generating = objectGet(conversation, 'generating')
             anyGenerating = anyGenerating || generating
             selected = action == 'conversation' && actionID == id
-            conversationURL = argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', id), false, if(generating, ollamaChatBottomID))
+            conversationURL = argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', id), false, if(generating, ollamaChatConversationBottomID))
             selectText = if(selected, 'Cancel', 'Select')
             selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'conversation'), 'actionID', if(!selected, id)))
             arrayPush(conversationTableRows, objectNew('html', 'tr', 'elem', arrayNew( \
