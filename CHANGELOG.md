@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.48 (2025-02-25)
+
+- [4929094](https://github.com/craigahobbs/ollama-chat/commit/4929094) - start conversations at the conversation bottom
+
 ## 0.9.47 (2025-02-19)
 
 - [38619d9](https://github.com/craigahobbs/ollama-chat/commit/38619d9) - fix api docs offline
