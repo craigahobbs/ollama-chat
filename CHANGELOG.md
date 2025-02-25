@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.50 (2025-02-25)
+
+- [b8fecce](https://github.com/craigahobbs/ollama-chat/commit/b8fecce) - streamline index menu
+
 ## 0.9.49 (2025-02-25)
 
 - [fa11e44](https://github.com/craigahobbs/ollama-chat/commit/fa11e44) - improve file inclusion text
