@@ -293,7 +293,7 @@ _COMMAND_PARSER_URL.add_argument('-n', dest='show', action='store_true', help='r
 def _command_file_content(file_name, content):
     content_newline = '\n' if not content.endswith('\n') else ''
     escaped_content = _R_COMMAND_FENCE_ESCAPE.sub(r'\1\```', content)
-    return f'**{_escape_markdown_text(file_name)}**\n\n```\n{escaped_content}{content_newline}```'
+    return f'<{_escape_markdown_text(file_name)}>\n```\n{escaped_content}{content_newline}```\n</ {_escape_markdown_text(file_name)}>'
 
 _R_COMMAND_FENCE_ESCAPE = re.compile(r'^( {0,3})```', re.MULTILINE)
 
