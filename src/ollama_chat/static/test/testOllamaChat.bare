@@ -30,24 +30,19 @@ async function testOllamaChatIndex():
             arrayNew('systemFetch', arrayNew('getConversations')), \
             arrayNew('documentSetTitle', arrayNew('Ollama Chat')), \
             arrayNew('markdownPrint', arrayNew('# Ollama Chat')), \
-            arrayNew('markdownPrint', arrayNew( \
-                '**Current Model:** llama3:latest', \
-                '', \
-                "[Select Model](#var.vView='models')", \
-                '', \
-                "[Start Conversation](#var.vView='chat')" \
-            )), \
-            arrayNew("elementModelRender", arrayNew( \
+            arrayNew('markdownPrint', arrayNew('**Current Model:** llama3:latest')), \
+            arrayNew('elementModelRender', arrayNew(objectNew('html', 'p', 'elem', arrayNew( \
+                objectNew('html', 'a', 'attr', objectNew('href', "#var.vView='models'"), 'elem', objectNew('text', 'Select Model')), \
+                objectNew('text', stringFromCharCode(160, 160) + '|' + stringFromCharCode(160, 160)), \
+                objectNew('html', 'a', 'attr', objectNew('href', "#var.vView='chat'"), 'elem', objectNew('text', 'Start Conversation')), \
+                objectNew('text', stringFromCharCode(160, 160) + '|' + stringFromCharCode(160, 160)), \
                 objectNew( \
-                    'html', 'p', \
-                    'elem', objectNew( \
-                        'html', 'a', \
-                        'attr', objectNew('style', 'cursor: pointer; user-select: none;'), \
-                        'elem', objectNew('text', 'Add Template'), \
-                        'callback', objectNew('click', null) \
-                    ) \
+                    'html', 'a', \
+                    'attr', objectNew('style', 'cursor: pointer; user-select: none;'), \
+                    'elem', objectNew('text', 'Add Template'), \
+                    'callback', objectNew('click', null) \
                 ) \
-            )), \
+            )))), \
             arrayNew('markdownPrint', arrayNew('', '## Conversations')), \
             arrayNew("elementModelRender", arrayNew( \
                 arrayNew( \

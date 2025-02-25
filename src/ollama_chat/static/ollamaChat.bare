@@ -90,22 +90,19 @@ async function ollamaChatIndexPage(args):
     endif
 
     # Render the menu
-    markdownPrint( \
-        '**Current Model:** ' + currentModel, \
-        '', \
-        argsLink(ollamaChatArguments, 'Select Model', objectNew('view', 'models')), \
-        '', \
-        argsLink(ollamaChatArguments, 'Start Conversation', objectNew('view', 'chat')) \
-    )
-    elementModelRender(objectNew( \
-        'html', 'p', \
-        'elem',  formsLinkButtonElements('Add Template', ollamaChatIndexOnAddTemplate) \
-    ))
+    spacer = stringFromCharCode(160, 160)
+    markdownPrint('**Current Model:** ' + currentModel)
+    elementModelRender(objectNew('html', 'p', 'elem', arrayNew( \
+        formsLinkElements('Select Model', argsURL(ollamaChatArguments, objectNew('view', 'models'))), \
+        objectNew('text', spacer + '|' + spacer), \
+        formsLinkElements('Start Conversation', argsURL(ollamaChatArguments, objectNew('view', 'chat'))), \
+        objectNew('text', spacer + '|' + spacer), \
+        formsLinkButtonElements('Add Template', ollamaChatIndexOnAddTemplate) \
+    )))
 
     # Render the conversations
     conversations = objectGet(conversationsResponse, 'conversations')
     anyGenerating = false
-    spacer = stringFromCharCode(160, 160)
     indent = spacer + spacer
     markdownPrint('', '## Conversations')
     if !conversations:
