@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.49 (2025-02-25)
+
+- [fa11e44](https://github.com/craigahobbs/ollama-chat/commit/fa11e44) - improve file inclusion text
+
 ## 0.9.48 (2025-02-25)
 
 - [4929094](https://github.com/craigahobbs/ollama-chat/commit/4929094) - start conversations at the conversation bottom
