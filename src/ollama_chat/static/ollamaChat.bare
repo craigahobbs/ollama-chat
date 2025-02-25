@@ -266,5 +266,5 @@ async function ollamaChatIndexOnRunTemplate(templateID):
     id = objectGet(startResponse, 'id')
 
     # Navigate to the conversation page
-    windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', id)))
+    windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', id), false, ollamaChatConversationBottomID))
 endfunction

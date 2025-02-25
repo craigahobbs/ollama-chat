@@ -89,7 +89,7 @@ def main(argv=None):
 
         # Update the URL
         message_args = encode_query_string({'var': {'vView': "'chat'", 'vId': f"'{response['id']}'"}})
-        url += f'#{message_args}'
+        url += f'#{message_args}&chat-bottom'
 
     # Template command?
     elif args.template:
@@ -114,7 +114,7 @@ def main(argv=None):
 
         # Update the URL
         template_args = encode_query_string({'var': {'vView': "'chat'", 'vId': f"'{response['id']}'"}})
-        url += f'#{template_args}'
+        url += f'#{template_args}&chat-bottom'
 
     # Launch the web browser on a thread (it may block)
     if args.browser:
