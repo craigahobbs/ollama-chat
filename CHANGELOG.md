@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.52 (2025-02-26)
+
+- [8fbd42a](https://github.com/craigahobbs/ollama-chat/commit/8fbd42a) - allow multiple do prompt commands in the same prompt
+
 ## 0.9.51 (2025-02-25)
 
 - [2598f20](https://github.com/craigahobbs/ollama-chat/commit/2598f20) - update markdown-up.tar.gz
