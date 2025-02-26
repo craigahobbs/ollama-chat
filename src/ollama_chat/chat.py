@@ -74,19 +74,25 @@ class ChatManager():
 
                     # Do command?
                     elif 'do' in flags:
-                        # Insert the template prompts to the chat
-                        template_name, variable_values = flags['do']
-                        templates = config['templates'] or []
-                        template = next((tmpl for tmpl in templates if tmpl.get('name') == template_name), None)
-                        if template is None:
-                            raise ValueError(f'unknown template "{template_name}"')
-                        _, template_prompts = config_template_prompts(template, variable_values)
-                        for template_prompt in reversed(template_prompts):
-                            chat.prompts.insert(0, template_prompt)
+                        messages = []
+                        for template_name, variable_values in reversed(flags['do']):
+                            # Insert the template prompts to the chat
+                            templates = config['templates'] or []
+                            template = next((tmpl for tmpl in templates if tmpl.get('name') == template_name), None)
+                            if template is None:
+                                raise ValueError(f'unknown template "{template_name}"')
+                            _, template_prompts = config_template_prompts(template, variable_values)
+                            for template_prompt in reversed(template_prompts):
+                                chat.prompts.insert(0, template_prompt)
+
+                            # Add the template message
+                            message_values = ', '.join(f'{vname} = "{vval}"' for vname, vval in sorted(variable_values.items()))
+                            message = f'Executing template "{template_name}" - {message_values}'
+                            messages.append(message)
 
                         # Update the conversation
                         exchange = conversation['exchanges'][-1]
-                        exchange['model'] = f'Executing template "{template_name}"'
+                        exchange['model'] = '\n\n'.join(reversed(messages))
                         continue
 
                 # Stream the chat response
@@ -196,16 +202,10 @@ def _process_commands_sub(flags, match):
 
     # Execute a template by name
     elif command == 'do':
-        # Compute the template variable values
-        variable_values = {}
-        if args.var:
-            for variable_name, variable_value in args.var:
-                variable_values[variable_name] = variable_value
-
         # Set the "do" flag
-        if 'do' in flags:
-            raise ValueError(f'multiple do commands provided ("{flags["do"]}", "{args.name}")')
-        flags['do'] = (args.name, variable_values)
+        if 'do' not in flags:
+            flags['do'] = []
+        flags['do'].append((args.name, dict(args.var) if args.var else {}))
 
         # Add the do-command message
         return f'Executing template "{args.name}"'
