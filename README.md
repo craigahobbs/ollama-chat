@@ -12,26 +12,16 @@ developers, or anyone wanting private, offline LLM chats.
 
 ## Features
 
-- Chat with local LLMs entirely offline
-
-- *Prompt Commands* to include files, images, and URL content
-
-- *Conversation Templates* for repeating prompts with variable substitutions
-
+- Chat with local large language models (LLMs) entirely offline
+- ***Prompt Commands*** to include files, images, and URL content
+- ***Conversation Templates*** for repeating prompts with variable substitutions
 - Browse, download, monitor, and select local models directly in the app
-
 - Multiple concurrent chats
-
 - Regenerate the most recent conversation response
-
 - Delete the most recent conversation exchange
-
 - View responses as Markdown or text
-
 - Save conversations as Markdown text
-
 - Start a conversation or template from the command line
-
 - Platform independent - tested on macOS, Windows, and Linux
 
 
