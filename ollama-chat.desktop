@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Ollama Chat
-Exec=/home/craig/venv/bin/ollama-chat
-Type=Application
-Icon=dialog-information
-Terminal=true
-Categories=Utility;
