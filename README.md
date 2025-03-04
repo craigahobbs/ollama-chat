@@ -5,28 +5,39 @@
 [![GitHub](https://img.shields.io/github/license/craigahobbs/ollama-chat)](https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ollama-chat)](https://pypi.org/project/ollama-chat/)
 
-**Ollama Chat** is a conversational AI chat client that uses [Ollama](https://ollama.com) to interact with local large
-language models (LLMs).
+**Ollama Chat** is a conversational AI chat client that uses [Ollama](https://ollama.com) to
+interact with local large language models (LLMs) entirely offline. Ideal for AI enthusiasts,
+developers, or anyone wanting private, offline LLM chats.
 
 
 ## Features
 
-- Platform independent - tested on macOS, Windows, and Linux
-- Chat with local LLMs (using Ollama) entirely offline
-- Prompt commands to include files, images, and URL content
-- Regenerate the most recent conversation response
-- Delete the most recent conversation exchange
-- View responses as Markdown or text
-- Save conversations as Markdown text
+- Chat with local LLMs entirely offline
+
+- *Prompt Commands* to include files, images, and URL content
+
+- *Conversation Templates* for repeating prompts with variable substitutions
+
+- Browse, download, monitor, and select local models directly in the app
+
 - Multiple concurrent chats
-- Conversation templates for repeating prompts with variable substitutions
+
+- Regenerate the most recent conversation response
+
+- Delete the most recent conversation exchange
+
+- View responses as Markdown or text
+
+- Save conversations as Markdown text
+
 - Start a conversation or template from the command line
-- Download and manage models
+
+- Platform independent - tested on macOS, Windows, and Linux
 
 
 ## Installation
 
-To get up and running with Ollama Chat follows these steps:
+To get up and running with Ollama Chat follow these steps:
 
 1. Install and start [Ollama](https://ollama.com)
 
@@ -48,6 +59,30 @@ ollama-chat
 A web browser is launched and opens the Ollama Chat application.
 
 By default, a configuration file, "ollama-chat.json", is created in the user's home directory.
+
+
+### Add a Desktop Launcher
+
+To add a desktop launcher, follow the steps for your OS.
+
+
+#### macOS
+
+In Finder, locate the ollama-chat executable and drag-and-drop it into the lower portion of the Dock.
+
+
+#### Windows
+
+In File Explorer, locate the ollama-chat executable, right-click it, and select "Pin to Start".
+
+
+#### GNOME (Linux)
+
+Execute the following command in a shell:
+
+~~~
+wget https://craigahobbs.github.io/ollama-chat/ollama-chat.desktop -P $HOME/.local/share/applications
+~~~
 
 
 ### Start a Conversation from the Command Line
