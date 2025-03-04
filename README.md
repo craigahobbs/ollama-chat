@@ -83,7 +83,7 @@ In File Explorer, locate the ollama-chat executable, right-click it, and select 
 2. Create the ollama-chat GNOME desktop file and paste the contents:
 
    ~~~
-   nano .local/share/applications/ollama-chat.desktop
+   nano $HOME/.local/share/applications/ollama-chat.desktop
    ~~~
 
 3. Update the "Exec" path, if necessary, and save
