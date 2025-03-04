@@ -68,11 +68,25 @@ In File Explorer, locate the ollama-chat executable, right-click it, and select 
 
 #### GNOME (Linux)
 
-Execute the following command in a shell:
+1. Copy the following ollama-chat GNOME desktop file contents:
 
-~~~
-wget https://craigahobbs.github.io/ollama-chat/ollama-chat.desktop -P $HOME/.local/share/applications
-~~~
+   ~~~
+   [Desktop Entry]
+   Name=Ollama Chat
+   Exec=sh -c "$HOME/venv/bin/ollama-chat"
+   Type=Application
+   Icon=dialog-information
+   Terminal=true
+   Categories=Utility;
+   ~~~
+
+2. Create the ollama-chat GNOME desktop file and paste the contents:
+
+   ~~~
+   nano .local/share/applications/ollama-chat.desktop
+   ~~~
+
+3. Update the "Exec" path, if necessary, and save
 
 
 ### Start a Conversation from the Command Line
