@@ -52,7 +52,10 @@ To get up and running with Ollama Chat follow these steps:
 
 ## Start Ollama Chat
 
-To start Ollama Chat, open a terminal prompt and run the Ollama Chat application:
+To start Ollama Chat, open a terminal prompt and follow the steps for your OS. When you start Ollama
+Chat, a web browser is launched and opens the Ollama Chat application.
+
+By default, a configuration file, "ollama-chat.json", is created in the user's home directory.
 
 ### macOS and Linux
 
@@ -67,49 +70,6 @@ ollama-chat
 %USERPROFILE%\venv\Scripts\activate
 ollama-chat
 ~~~
-
-A web browser is launched and opens the Ollama Chat application.
-
-By default, a configuration file, "ollama-chat.json", is created in the user's home directory.
-
-
-### Add a Desktop Launcher
-
-To add a desktop launcher, follow the steps for your OS.
-
-
-#### macOS
-
-In Finder, locate the ollama-chat executable and drag-and-drop it into the lower portion of the
-Dock.
-
-
-#### Windows
-
-In File Explorer, locate the ollama-chat executable, right-click it, and select "Pin to Start".
-
-
-#### GNOME (Linux)
-
-1. Copy the following ollama-chat GNOME desktop file contents:
-
-   ~~~
-   [Desktop Entry]
-   Name=Ollama Chat
-   Exec=sh -c "$HOME/venv/bin/ollama-chat"
-   Type=Application
-   Icon=dialog-information
-   Terminal=true
-   Categories=Utility;
-   ~~~
-
-2. Create the ollama-chat GNOME desktop file and paste the contents:
-
-   ~~~
-   nano $HOME/.local/share/applications/ollama-chat.desktop
-   ~~~
-
-3. Update the "Exec" path, if necessary, and save
 
 
 ### Start a Conversation from the Command Line
@@ -130,6 +90,45 @@ ollama-chat -t askAristotle -v question "Why is the sky blue?"
 ~~~
 
 
+## Add a Desktop Launcher
+
+To add a desktop launcher, follow the steps for your OS.
+
+
+### macOS
+
+In Finder, locate the "ollama-chat" executable and drag-and-drop it into the lower portion of the
+Dock.
+
+
+### Windows
+
+In File Explorer, locate the "ollama-chat" executable, right-click it, and select "Pin to Start".
+
+
+### GNOME (Linux)
+
+1. Copy the following Ollama Chat desktop file contents:
+
+   ~~~
+   [Desktop Entry]
+   Name=Ollama Chat
+   Exec=sh -c "$HOME/venv/bin/ollama-chat"
+   Type=Application
+   Icon=dialog-information
+   Terminal=true
+   Categories=Utility;
+   ~~~
+
+2. Create the Ollama Chat desktop file and paste the contents:
+
+   ~~~
+   nano $HOME/.local/share/applications/ollama-chat.desktop
+   ~~~
+
+3. Update the "Exec" path, if necessary, and save
+
+
 ## Conversation Templates
 
 Conversation Templates allow you to repeat a sequence of prompts. Templates can include variable
@@ -147,8 +146,8 @@ There are two ways to create a template:
 ### Run a Template
 
 To run a template, click on its title on the home page. If the template has any variables, the user
-is prompted for their values prior to running the template. To run a template, ollama-chat creates
-a new conversation and enters each prompt in sequence.
+is prompted for their values prior to running the template. When a template runs, a new conversation
+is created and each prompt is entered in sequence.
 
 
 ### Edit a Template
