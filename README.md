@@ -29,11 +29,23 @@ developers, or anyone wanting private, offline LLM chats.
 
 To get up and running with Ollama Chat follow these steps:
 
-1. Install and start [Ollama](https://ollama.com)
+1. Install [Ollama](https://ollama.com/download)
 
 2. Install Ollama Chat
 
+   **macOS and Linux**
+
    ~~~
+   python3 -m venv $HOME/venv --upgrade-deps
+   . $HOME/venv/bin/activate
+   pip install ollama-chat
+   ~~~
+
+   **Windows**
+
+   ~~~
+   python3 -m venv %USERPROFILE%\venv --upgrade-deps
+   %USERPROFILE%\venv\Scripts\activate
    pip install ollama-chat
    ~~~
 
@@ -42,7 +54,17 @@ To get up and running with Ollama Chat follow these steps:
 
 To start Ollama Chat, open a terminal prompt and run the Ollama Chat application:
 
+### macOS and Linux
+
 ~~~
+. $HOME/venv/bin/activate
+ollama-chat
+~~~
+
+### Windows
+
+~~~
+%USERPROFILE%\venv\Scripts\activate
 ollama-chat
 ~~~
 
@@ -58,7 +80,8 @@ To add a desktop launcher, follow the steps for your OS.
 
 #### macOS
 
-In Finder, locate the ollama-chat executable and drag-and-drop it into the lower portion of the Dock.
+In Finder, locate the ollama-chat executable and drag-and-drop it into the lower portion of the
+Dock.
 
 
 #### Windows
@@ -109,48 +132,59 @@ ollama-chat -t askAristotle -v question "Why is the sky blue?"
 
 ## Conversation Templates
 
-Conversation Templates allow you to repeat the same prompts with different models. Templates can define variables for
-use in the template title and prompt text (e.g., `{{var}}`).
+Conversation Templates allow you to repeat a sequence of prompts. Templates can include variable
+substitutions in the title text and the prompt text (e.g., `{{var}}`).
 
-There are two ways to create a template. Click "Add Template" from the index page, and a new template is created and
-opened in the template editor. The other way is to click "Template" from a conversation view's menu.
+
+### Create a Template
+
+There are two ways to create a template:
+
+- Click "Add Template" from the home page
+- Click "Template" on a conversation page
+
+
+### Run a Template
+
+To run a template, click on its title on the home page. If the template has any variables, the user
+is prompted for their values prior to running the template. To run a template, ollama-chat creates
+a new conversation and enters each prompt in sequence.
+
+
+### Edit a Template
+
+To edit a template, from the home page, click "Select" on the template you want to edit, and then
+click "Edit". On the template editor page you can update the template's title, set its name, add or
+remove variables, and add or remove prompts.
 
 
 ## Prompt Commands
 
-Ollama Chat supports special **prompt commands** that allow you to include files, images, and URL content in
-your prompt, among other things. The following prompt commands are available:
+Ollama Chat supports special **prompt commands** that allow you to include files, images, and URL
+content in your prompt, among other things. The following prompt commands are available:
 
 - `/file` - include a file
 
   ```
   /file README.md
-
-  Please summarize the README file.
   ```
 
 - `/image` - include an image
 
   ```
   /image image.jpeg
-
-  Please summarize the image.
   ```
 
 - `/dir` - include files from a directory
 
   ```
   /dir src/ollama_chat py
-
-  Please provide a summary for each Ollama Chat source file.
   ```
 
 - `/url` - include a URL resource
 
   ```
   /url https://craigahobbs.github.io/ollama-chat/README.md
-
-  Please summarize the README file.
   ```
 
 - `/do` - execute a conversation template by name
