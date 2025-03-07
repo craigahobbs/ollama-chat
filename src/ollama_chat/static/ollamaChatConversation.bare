@@ -283,7 +283,7 @@ async function ollamaChatConversationOnPrompt(args, message):
         id = objectGet(startResponse, 'id')
 
         # Navigate to the conversation ID
-        windowSetLocation(argsURL(ollamaChatArguments, objectNew('id', id)))
+        windowSetLocation(argsURL(ollamaChatArguments, objectNew('id', id), false, ollamaChatConversationBottomID))
         return
     endif
 
