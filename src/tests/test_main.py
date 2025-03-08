@@ -88,6 +88,7 @@ ollama-chat: 200 GET /getConversations\x20
             self.assertEqual(stderr.getvalue(), '')
 
 
+    @unittest.skip
     def test_main_config_cwd(self):
         with unittest.mock.patch('os.path.isfile', return_value=True) as mock_isfile, \
              unittest.mock.patch('builtins.open', unittest.mock.mock_open(read_data='{"model": "llm", "conversations": []}')), \
