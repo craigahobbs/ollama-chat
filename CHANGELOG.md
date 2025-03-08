@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.53 (2025-03-07)
+
+- [617618c](https://github.com/craigahobbs/ollama-chat/commit/617618c) - show/hide thinking of reasoning models
+
+- [ccd9c7c](https://github.com/craigahobbs/ollama-chat/commit/ccd9c7c) - scroll to bottom at first prompt of conversation
+
 ## 0.9.52 (2025-02-26)
 
 - [8fbd42a](https://github.com/craigahobbs/ollama-chat/commit/8fbd42a) - allow multiple do prompt commands in the same prompt
