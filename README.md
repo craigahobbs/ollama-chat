@@ -17,6 +17,7 @@ developers, or anyone wanting private, offline LLM chats.
 - ***Conversation Templates*** for repeating prompts with variable substitutions
 - Browse, download, monitor, and select local models directly in the app
 - Multiple concurrent chats
+- Show/hide thinking of reasoning models
 - Regenerate the most recent conversation response
 - Delete the most recent conversation exchange
 - View responses as Markdown or text

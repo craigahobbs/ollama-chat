@@ -5,7 +5,6 @@
 # The Ollama Chat conversation page
 async function ollamaChatConversationPage(args):
     id = objectGet(args, 'id')
-    textView = objectGet(args, 'text')
 
     # Fetch the conversation
     if id != null:
@@ -67,12 +66,9 @@ async function ollamaChatConversationPage(args):
             ), \
             objectNew('html', 'h2', 'elem', objectNew('text', 'Model:')) \
         ))
+        ollamaChatConversationResponseRenderTop(args, exchange, ixExchange)
         if ixExchange != ixExchangeLast:
-            if textView:
-                elementModelRender(objectNew('html', 'pre', 'elem', objectNew('text', objectGet(exchange, 'model'))))
-            else:
-                markdownPrint('', objectGet(exchange, 'model'))
-            endif
+            ollamaChatConversationResponseRenderBottom(args, exchange, ixExchange)
         endif
     endfor
 
@@ -87,18 +83,18 @@ endfunction
 # Helper to render the bottom of Ollama Chat conversation page
 async function ollamaChatConversationPageBottom(args, conversation, generating):
     multiline = objectGet(args, 'multiline')
-    textView = objectGet(args, 'text')
 
     # Any exchanges?
+    isThinking = false
     exchanges = objectGet(conversation, 'exchanges')
     if arrayLength(exchanges):
+        # Thinking?
+        ixLastExchange = arrayLength(exchanges) - 1
+        lastExchange = arrayGet(exchanges, ixLastExchange)
+        isThinking = ollamaChatConversationResponseThinking(lastExchange) != null
+
         # Render the model reply
-        lastExchange = arrayGet(exchanges, arrayLength(exchanges) - 1)
-        if textView:
-            elementModelRender(objectNew('html', 'pre', 'elem', objectNew('text', objectGet(lastExchange, 'model'))))
-        else:
-            markdownPrint(objectGet(lastExchange, 'model'))
-        endif
+        ollamaChatConversationResponseRenderBottom(args, lastExchange, ixLastExchange)
 
         # Compute button on-click functions
         deleteExchangeFn = systemPartial(ollamaChatConversationOnClick, args, 'deleteConversationExchange')
@@ -127,30 +123,95 @@ async function ollamaChatConversationPageBottom(args, conversation, generating):
 
     # Set the conversation update timeout
     if generating:
-        windowSetTimeout(systemPartial(ollamaChatConversationOnTimeout, args, arrayLength(exchanges)), ollamaChatConversationTimeoutMs)
+        windowSetTimeout( \
+            systemPartial(ollamaChatConversationOnTimeout, args, arrayLength(exchanges), isThinking), \
+            ollamaChatConversationTimeoutMs \
+        )
     endif
 endfunction
 
 
-# Title update click handler
-async function ollamaChatConversationOnTitleUpdate(args):
-    # Update the conversation title
-    title = stringTrim(documentInputValue(ollamaChatConversationTitleID))
-    if title:
-        systemFetch(objectNew( \
-            'url', 'setConversationTitle', \
-            'body', jsonStringify(objectNew('id', objectGet(args, 'id'), 'title', title)) \
-        ))
+# Helper to render the model response top part
+function ollamaChatConversationResponseRenderTop(args, exchange, ixExchange):
+    # Text view?
+    if objectGet(args, 'text'):
+        return
     endif
 
-    # Navigate to the conversation
-    ollamaChatConversationSavePrompt()
-    windowSetLocation(argsURL(ollamaChatArguments))
+    # Show/hide thinking link?
+    isThinking = ollamaChatConversationResponseThinking(exchange) != null
+    if isThinking:
+        if ixExchange == objectGet(args, 'think'):
+            markdownPrint('', argsLink(ollamaChatArguments, 'Hide Thinking', objectNew('think', null)))
+        else:
+            markdownPrint('', argsLink(ollamaChatArguments, 'Show Thinking', objectNew('think', ixExchange)))
+        endif
+    endif
 endfunction
+
+
+# Helper to render the model response bottom part
+function ollamaChatConversationResponseRenderBottom(args, exchange, ixExchange):
+    # Text view?
+    if objectGet(args, 'text'):
+        elementModelRender(objectNew('html', 'pre', 'elem', objectNew('text', objectGet(exchange, 'model'))))
+        return
+    endif
+
+    # Thinking response?
+    thinking = ollamaChatConversationResponseThinking(exchange)
+    if thinking:
+        showThinking = ixExchange == objectGet(args, 'think')
+        if showThinking:
+            markdownPrint('', '**<think>**', '', objectGet(thinking, 'think'), '', '**</think>**')
+        endif
+        if objectHas(thinking, 'answer'):
+            if showThinking:
+                markdownPrint('', '-----')
+            endif
+            markdownPrint('', objectGet(thinking, 'answer'))
+        endif
+        return
+    endif
+
+    # Render the response
+    markdownPrint('', objectGet(exchange, 'model'))
+endfunction
+
+
+# Helper to determine if the model response is thinking
+function ollamaChatConversationResponseThinking(exchange):
+    modelText = objectGet(exchange, 'model')
+
+    # Completed thinking?
+    mThink = regexMatch(ollamaChatConversationThinkRegex, modelText)
+    if mThink:
+        fullThink = objectGet(objectGet(mThink, 'groups'), '0')
+        return objectNew( \
+            'think', stringTrim(objectGet(objectGet(mThink, 'groups'), 'thinkText')), \
+            'answer', stringTrim(stringSlice(modelText, stringLength(fullThink))) \
+        )
+    endif
+
+    # Partial thinking?
+    mThinkPartial = regexMatch(ollamaChatConversationThinkPartialRegex, modelText)
+    if mThinkPartial:
+        fullThink = objectGet(objectGet(mThinkPartial, 'groups'), '0')
+        return objectNew( \
+            'think', stringTrim(stringSlice(modelText, stringLength(fullThink))) \
+        )
+    endif
+
+    return null
+endfunction
+
+
+ollamaChatConversationThinkRegex = regexNew('^\\s*<think>(?<thinkText>.*?)</think>', 's')
+ollamaChatConversationThinkPartialRegex = regexNew('^\\s*<think>')
 
 
 # Conversation update timeout handler
-async function ollamaChatConversationOnTimeout(args, originalExchangeCount):
+async function ollamaChatConversationOnTimeout(args, originalExchangeCount, originalThinking):
     id = objectGet(args, 'id')
 
     # Fetch the conversation
@@ -170,9 +231,12 @@ async function ollamaChatConversationOnTimeout(args, originalExchangeCount):
         return
     endif
 
-    # Has the exhange count changed?
-    exchangeCount = arrayLength(objectGet(conversation, 'exchanges'))
-    if exchangeCount != originalExchangeCount:
+    # Has anything changed that requires a re-render?
+    exchanges = objectGet(conversation, 'exchanges')
+    exchangeCount = arrayLength(exchanges)
+    lastExchange = arrayGet(exchanges, exchangeCount - 1)
+    isThinking = ollamaChatConversationResponseThinking(lastExchange) != null
+    if exchangeCount != originalExchangeCount || isThinking != originalThinking:
         ollamaChatConversationPage(args)
         return
     endif
@@ -237,6 +301,23 @@ async function ollamaChatConversationOnClick(args, api, url, noSave):
         ollamaChatConversationSavePrompt()
         ollamaChatConversationPage(args)
     endif
+endfunction
+
+
+# Title update click handler
+async function ollamaChatConversationOnTitleUpdate(args):
+    # Update the conversation title
+    title = stringTrim(documentInputValue(ollamaChatConversationTitleID))
+    if title:
+        systemFetch(objectNew( \
+            'url', 'setConversationTitle', \
+            'body', jsonStringify(objectNew('id', objectGet(args, 'id'), 'title', title)) \
+        ))
+    endif
+
+    # Navigate to the conversation
+    ollamaChatConversationSavePrompt()
+    windowSetLocation(argsURL(ollamaChatArguments))
 endfunction
 
 

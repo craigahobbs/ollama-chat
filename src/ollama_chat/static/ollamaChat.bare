@@ -39,6 +39,7 @@ ollamaChatArguments = argsValidate(arrayNew( \
     objectNew('name', 'multiline', 'type', 'bool'), \
     objectNew('name', 'sort', 'type', 'string', 'default', 'Modified'), \
     objectNew('name', 'text', 'type', 'bool'), \
+    objectNew('name', 'think', 'type', 'int'), \
     objectNew('name', 'view') \
 ))
 
