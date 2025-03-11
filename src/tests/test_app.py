@@ -6,6 +6,7 @@ import os
 import unittest
 import unittest.mock
 
+from schema_markdown import encode_query_string
 from ollama_chat.app import OllamaChat
 
 from .util import create_test_files
@@ -501,3 +502,202 @@ class TestApp(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
+
+
+    def test_delete_template_no_templates(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': []
+            }))
+        ]) as input_dir:
+            config_path = os.path.join(input_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to delete when templates key doesn't exist
+            status, headers, content_bytes = app.request(
+                'POST', '/deleteTemplate', wsgi_input=json.dumps({'id': 'tmpl1'}).encode('utf-8')
+            )
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
+
+            # Check config unchanged
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': []
+                })
+
+
+    def test_get_template_success(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [],
+                'templates': [
+                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']},
+                    {'id': 'tmpl2', 'title': 'Template 2', 'prompts': ['Prompt 2']}
+                ]
+            }))
+        ]) as input_dir:
+            config_path = os.path.join(input_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Get template 'tmpl1'
+            status, headers, content_bytes = app.request(
+                'GET', '/getTemplate', query_string=encode_query_string({'id': 'tmpl1'})
+            )
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(
+                response,
+                {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+            )
+
+
+    def test_get_template_unknown_id(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [],
+                'templates': [
+                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                ]
+            }))
+        ]) as input_dir:
+            config_path = os.path.join(input_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to get non-existent template 'tmpl2'
+            status, headers, content_bytes = app.request(
+                'GET', '/getTemplate', query_string=encode_query_string({'id': 'tmpl2'})
+            )
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
+
+
+    def test_get_template_no_templates(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': []
+            }))
+        ]) as input_dir:
+            config_path = os.path.join(input_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to get template when no templates exist
+            status, headers, content_bytes = app.request(
+                'GET', '/getTemplate', query_string=encode_query_string({'id': 'tmpl1'})
+            )
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
+
+
+    def test_update_template_success(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [],
+                'templates': [
+                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']},
+                    {'id': 'tmpl2', 'title': 'Template 2', 'prompts': ['Prompt 2']}
+                ]
+            }))
+        ]) as input_dir:
+            config_path = os.path.join(input_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Update template 'tmpl1'
+            updated_template = {
+                'id': 'tmpl1',
+                'title': 'Updated Template 1',
+                'prompts': ['Updated Prompt'],
+                'variables': [{'name': 'var1', 'label': 'Variable 1'}]
+            }
+            status, headers, content_bytes = app.request(
+                'POST', '/updateTemplate',
+                wsgi_input=json.dumps(updated_template).encode('utf-8')
+            )
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
+
+            # Check the config
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [],
+                    'templates': [
+                        updated_template,
+                        {'id': 'tmpl2', 'title': 'Template 2', 'prompts': ['Prompt 2']}
+                    ]
+                })
+
+
+    def test_update_template_unknown_id(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [],
+                'templates': [
+                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                ]
+            }))
+        ]) as input_dir:
+            config_path = os.path.join(input_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to update non-existent template 'tmpl2'
+            updated_template = {
+                'id': 'tmpl2',
+                'title': 'Updated Template 2',
+                'prompts': ['New Prompt']
+            }
+            status, headers, content_bytes = app.request(
+                'POST', '/updateTemplate',
+                wsgi_input=json.dumps(updated_template).encode('utf-8')
+            )
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
+
+            # Check config unchanged
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [],
+                    'templates': [
+                        {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                    ]
+                })
+
+
+    def test_update_template_no_templates(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': []
+            }))
+        ]) as input_dir:
+            config_path = os.path.join(input_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to update template when no templates exist
+            updated_template = {
+                'id': 'tmpl1',
+                'title': 'New Template',
+                'prompts': ['New Prompt']
+            }
+            status, headers, content_bytes = app.request(
+                'POST', '/updateTemplate',
+                wsgi_input=json.dumps(updated_template).encode('utf-8')
+            )
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
+
+            # Check config unchanged
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': []
+                })

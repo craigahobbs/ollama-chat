@@ -269,7 +269,7 @@ def move_template(ctx, req):
 def delete_template(ctx, req):
     with ctx.app.config(save=True) as config:
         id_ = req['id']
-        templates = config['templates'] or []
+        templates = config.get('templates') or []
         ix_tmpl = next((ix for ix, tmpl in enumerate(templates) if tmpl['id'] == id_), None)
         if ix_tmpl is None:
             raise chisel.ActionError('UnknownTemplateID')
