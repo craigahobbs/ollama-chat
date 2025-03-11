@@ -70,6 +70,7 @@ def main(argv=None):
     # Construct the URL
     host = '127.0.0.1'
     url = f'http://{host}:{args.port}/'
+    browser_url = url
 
     # Conversation command?
     if args.message:
@@ -87,9 +88,9 @@ def main(argv=None):
                 response_bytes = response.read()
         response = json.loads(response_bytes.decode('utf-8'))
 
-        # Update the URL
+        # Update the browser URL
         message_args = encode_query_string({'var': {'vView': "'chat'", 'vId': f"'{response['id']}'"}})
-        url += f'#{message_args}&chat-bottom'
+        browser_url = f'{url}#{message_args}&chat-bottom'
 
     # Template command?
     elif args.template:
@@ -112,13 +113,13 @@ def main(argv=None):
         if 'error' in response:
             parser.error(response.get('message') or response["error"])
 
-        # Update the URL
+        # Update the browser URL
         template_args = encode_query_string({'var': {'vView': "'chat'", 'vId': f"'{response['id']}'"}})
-        url += f'#{template_args}&chat-bottom'
+        browser_url = f'{url}#{template_args}&chat-bottom'
 
     # Launch the web browser on a thread (it may block)
     if args.browser:
-        webbrowser_thread = threading.Thread(target=webbrowser.open, args=(url,))
+        webbrowser_thread = threading.Thread(target=webbrowser.open, args=(browser_url,))
         webbrowser_thread.daemon = True
         webbrowser_thread.start()
 
