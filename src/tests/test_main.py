@@ -1,11 +1,9 @@
 # Licensed under the MIT License
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
-from contextlib import contextmanager
 from io import BytesIO, StringIO
 import json
 import os
-from tempfile import TemporaryDirectory
 import unittest
 import unittest.mock
 import urllib
@@ -14,20 +12,7 @@ import chisel
 from ollama_chat.__main__ import main as main_main
 from ollama_chat.main import main
 
-
-# Helper context manager to create a list of files in a temporary directory
-@contextmanager
-def create_test_files(file_defs):
-    tempdir = TemporaryDirectory()
-    try:
-        for path_parts, content in file_defs:
-            path = os.path.join(tempdir.name, *path_parts)
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, 'w', encoding='utf-8') as file_:
-                file_.write(content)
-        yield tempdir.name
-    finally:
-        tempdir.cleanup()
+from .util import create_test_files
 
 
 class TestMain(unittest.TestCase):
