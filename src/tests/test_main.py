@@ -2,12 +2,13 @@
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
 from contextlib import contextmanager
-from io import StringIO
+from io import BytesIO, StringIO
 import json
 import os
 from tempfile import TemporaryDirectory
 import unittest
 import unittest.mock
+import urllib
 
 import chisel
 from ollama_chat.__main__ import main as main_main
@@ -460,3 +461,167 @@ ollama-chat: 200 GET /getConversations\x20
             mock_serve.assert_not_called()
             self.assertEqual(stdout.getvalue(), '')
             self.assertEqual(stderr.getvalue(), '')
+
+
+    def test_main_start_template(self):
+        with create_test_files([]) as input_dir, \
+             unittest.mock.patch('ollama_chat.main.OllamaChat') as mock_ollama_chat, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('webbrowser.open') as mock_open, \
+             unittest.mock.patch('waitress.serve') as mock_serve, \
+             unittest.mock.patch('sys.stdout', StringIO()) as stdout, \
+             unittest.mock.patch('sys.stderr', StringIO()) as stderr:
+
+            mock_application = mock_ollama_chat.return_value
+            mock_application.request.return_value = (200, [], json.dumps({'id': 'temp1'}).encode('utf-8'))
+
+            main(['-c', input_dir, '-t', 'template1'])
+
+            mock_application.request.assert_called_once_with(
+                'POST', '/startTemplate', wsgi_input=json.dumps({'id': 'template1', 'variables': {}}).encode('utf-8')
+            )
+
+            mock_thread.assert_called_once_with(
+                target=mock_open,
+                args=('http://127.0.0.1:8080/#var.vId=%27temp1%27&var.vView=%27chat%27&chat-bottom',)
+            )
+            thread_instance = mock_thread.return_value
+            self.assertTrue(thread_instance.daemon)
+            thread_instance.start.assert_called_once_with()
+            thread_instance.join.assert_not_called()
+
+            mock_serve.assert_called_once()
+            self.assertEqual(stdout.getvalue(), 'ollama-chat: Serving at http://127.0.0.1:8080/ ...\n')
+            self.assertEqual(stderr.getvalue(), '')
+
+
+    def test_main_start_template_with_model(self):
+        with create_test_files([]) as input_dir, \
+             unittest.mock.patch('ollama_chat.main.OllamaChat') as mock_ollama_chat, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('webbrowser.open') as mock_open, \
+             unittest.mock.patch('waitress.serve') as mock_serve, \
+             unittest.mock.patch('sys.stdout', StringIO()) as stdout, \
+             unittest.mock.patch('sys.stderr', StringIO()) as stderr:
+
+            mock_application = mock_ollama_chat.return_value
+            mock_application.request.return_value = (200, [], json.dumps({'id': 'temp2'}).encode('utf-8'))
+
+            main(['-c', input_dir, '-t', 'template1', '-l', 'llm'])
+
+            mock_application.request.assert_called_once_with(
+                'POST', '/startTemplate',
+                wsgi_input=json.dumps({'id': 'template1', 'variables': {}, 'model': 'llm'}).encode('utf-8')
+            )
+
+            mock_thread.assert_called_once_with(
+                target=mock_open,
+                args=('http://127.0.0.1:8080/#var.vId=%27temp2%27&var.vView=%27chat%27&chat-bottom',)
+            )
+            thread_instance = mock_thread.return_value
+            self.assertTrue(thread_instance.daemon)
+            thread_instance.start.assert_called_once_with()
+            thread_instance.join.assert_not_called()
+
+            mock_serve.assert_called_once()
+            self.assertEqual(stdout.getvalue(), 'ollama-chat: Serving at http://127.0.0.1:8080/ ...\n')
+            self.assertEqual(stderr.getvalue(), '')
+
+
+    def test_main_start_template_with_vars(self):
+        with create_test_files([]) as input_dir, \
+             unittest.mock.patch('ollama_chat.main.OllamaChat') as mock_ollama_chat, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('webbrowser.open') as mock_open, \
+             unittest.mock.patch('waitress.serve') as mock_serve, \
+             unittest.mock.patch('sys.stdout', StringIO()) as stdout, \
+             unittest.mock.patch('sys.stderr', StringIO()) as stderr:
+
+            mock_application = mock_ollama_chat.return_value
+            mock_application.request.return_value = (200, [], json.dumps({'id': 'temp3'}).encode('utf-8'))
+
+            main(['-c', input_dir, '-t', 'template1', '-v', 'var1', 'val1', '-v', 'var2', 'val2'])
+
+            mock_application.request.assert_called_once_with(
+                'POST', '/startTemplate',
+                wsgi_input=json.dumps({'id': 'template1', 'variables': {'var1': 'val1', 'var2': 'val2'}}).encode('utf-8')
+            )
+
+            mock_thread.assert_called_once_with(
+                target=mock_open,
+                args=('http://127.0.0.1:8080/#var.vId=%27temp3%27&var.vView=%27chat%27&chat-bottom',)
+            )
+            thread_instance = mock_thread.return_value
+            self.assertTrue(thread_instance.daemon)
+            thread_instance.start.assert_called_once_with()
+            thread_instance.join.assert_not_called()
+
+            mock_serve.assert_called_once()
+            self.assertEqual(stdout.getvalue(), 'ollama-chat: Serving at http://127.0.0.1:8080/ ...\n')
+            self.assertEqual(stderr.getvalue(), '')
+
+
+    def test_main_start_template_no_backend(self):
+        with create_test_files([]) as input_dir, \
+             unittest.mock.patch('urllib.request.urlopen') as mock_urlopen, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('webbrowser.open') as mock_open, \
+             unittest.mock.patch('waitress.serve') as mock_serve, \
+             unittest.mock.patch('sys.stdout', StringIO()) as stdout, \
+             unittest.mock.patch('sys.stderr', StringIO()) as stderr:
+
+            mock_response_obj = unittest.mock.MagicMock()
+            mock_response_obj.read.return_value = json.dumps({'id': 'temp4'}).encode('utf-8')
+            mock_response = unittest.mock.MagicMock()
+            mock_response.__enter__.return_value = mock_response_obj
+            mock_urlopen.return_value = mock_response
+
+            main(['-c', input_dir, '-b', '-t', 'template1'])
+
+            mock_urlopen.assert_called_once()
+            request = mock_urlopen.call_args[0][0]
+            self.assertEqual(request.full_url, 'http://127.0.0.1:8080/startTemplate')
+            self.assertEqual(request.data, json.dumps({'id': 'template1', 'variables': {}}).encode('utf-8'))
+
+            mock_thread.assert_called_once_with(
+                target=mock_open,
+                args=('http://127.0.0.1:8080/#var.vId=%27temp4%27&var.vView=%27chat%27&chat-bottom',)
+            )
+            thread_instance = mock_thread.return_value
+            self.assertTrue(thread_instance.daemon)
+            thread_instance.start.assert_called_once_with()
+            thread_instance.join.assert_called_once_with()
+
+            mock_serve.assert_not_called()
+            self.assertEqual(stdout.getvalue(), '')
+            self.assertEqual(stderr.getvalue(), '')
+
+
+    def test_main_start_template_error(self):
+        with create_test_files([]) as input_dir, \
+             unittest.mock.patch('urllib.request.urlopen') as mock_urlopen, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('waitress.serve') as mock_serve, \
+             unittest.mock.patch('sys.stdout', StringIO()) as stdout, \
+             unittest.mock.patch('sys.stderr', StringIO()) as stderr:
+
+            mock_error = urllib.request.HTTPError(
+                url='http://127.0.0.1:8080/startTemplate',
+                code=400,
+                msg='Bad Request',
+                hdrs={},
+                fp=BytesIO(json.dumps({'error': 'Template not found', 'message': 'Invalid template'}).encode('utf-8'))
+            )
+            mock_urlopen.side_effect = mock_error
+
+            with self.assertRaises(SystemExit) as cm_exc:
+                main(['-c', input_dir, '-b', '-t', 'bad_template'])
+
+            self.assertEqual(cm_exc.exception.code, 2)
+            mock_urlopen.assert_called_once()
+
+            mock_thread.assert_not_called()
+
+            mock_serve.assert_not_called()
+            self.assertEqual(stdout.getvalue(), '')
+            self.assertTrue(stderr.getvalue().endswith('ollama-chat: error: Invalid template\n'))
