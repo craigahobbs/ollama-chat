@@ -43,6 +43,7 @@ class TestChatManaper(unittest.TestCase):
 
             # Run the thread function
             ChatManager.chat_thread_fn(chat_manager)
+            self.assertDictEqual(app.chats, {})
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'conversations': [
@@ -88,6 +89,7 @@ class TestChatManaper(unittest.TestCase):
             # Run the thread function
             ChatManager.chat_thread_fn(chat_manager)
             mock_chat.assert_not_called()
+            self.assertDictEqual(app.chats, {})
             with app.config() as config:
                 exchange = config['conversations'][0]['exchanges'][0]
                 self.assertTrue(exchange['model'].startswith('```\nusage: /{?,dir,do,file,image,url}'))
@@ -132,6 +134,7 @@ class TestChatManaper(unittest.TestCase):
             # Run the thread function
             ChatManager.chat_thread_fn(chat_manager)
             mock_chat.assert_not_called()
+            self.assertDictEqual(app.chats, {})
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'conversations': [
@@ -149,9 +152,7 @@ This file:
 This file:
 
 <{_escape_markdown_text(temp_dir)}/test.txt>
-```
 file content
-```
 </ {_escape_markdown_text(temp_dir)}/test.txt>'''
                                 }
                             ]
@@ -252,9 +253,7 @@ class TestProcessCommands(unittest.TestCase):
                 _process_commands(f'/dir {temp_dir} .txt', flags),
                 f'''\
 <{_escape_markdown_text(temp_dir)}/test.txt>
-```
 Test 1
-```
 </ {_escape_markdown_text(temp_dir)}/test.txt>'''
             )
             self.assertDictEqual(flags, {})
@@ -271,15 +270,11 @@ Test 1
                 _process_commands(f'/dir {temp_dir} .txt -d 2', flags),
                 f'''\
 <{_escape_markdown_text(temp_dir)}/subdir/test2.txt>
-```
 Test 2
-```
 </ {_escape_markdown_text(temp_dir)}/subdir/test2.txt>
 
 <{_escape_markdown_text(temp_dir)}/test.txt>
-```
 Test 1
-```
 </ {_escape_markdown_text(temp_dir)}/test.txt>'''
             )
             self.assertDictEqual(flags, {})
@@ -300,9 +295,7 @@ Test 1
                 _process_commands(f'/file {temp_dir}/test.txt', flags),
                 f'''\
 <{_escape_markdown_text(temp_dir)}/test.txt>
-```
 file content
-```
 </ {_escape_markdown_text(temp_dir)}/test.txt>'''
             )
             self.assertDictEqual(flags, {})
@@ -317,9 +310,7 @@ file content
                 _process_commands(f'/file {temp_dir}/test.txt -n', flags),
                 f'''\
 <{_escape_markdown_text(temp_dir)}/test.txt>
-```
 file content
-```
 </ {_escape_markdown_text(temp_dir)}/test.txt>'''
             )
             self.assertDictEqual(flags, {'show': True})
@@ -345,9 +336,7 @@ file content
                 _process_commands('/url http://example.com', flags),
                 '''\
 <http://example.com>
-```
 url content
-```
 </ http://example.com>'''
             )
             self.assertDictEqual(flags, {})
@@ -366,9 +355,7 @@ Hello
 Displaying top-level help
 
 <{_escape_markdown_text(temp_dir)}/test.txt>
-```
 file content
-```
 </ {_escape_markdown_text(temp_dir)}/test.txt>'''
             )
             self.assertIn('help', flags)
