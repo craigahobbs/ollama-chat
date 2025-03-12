@@ -524,7 +524,7 @@ class TestAPI(unittest.TestCase):
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
 
-            # Check config unchanged
+            # Check config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'conversations': []
@@ -664,7 +664,7 @@ class TestAPI(unittest.TestCase):
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
 
-            # Check config unchanged
+            # Check config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'conversations': [],
@@ -698,7 +698,7 @@ class TestAPI(unittest.TestCase):
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
 
-            # Check config unchanged
+            # Check config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'conversations': []
@@ -723,7 +723,7 @@ class TestAPI(unittest.TestCase):
             self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
             mock_manager.assert_called_once_with(app, response['id'], ['Hello'])
 
-            # Check config unchanged
+            # Check config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'model': 'llm',
@@ -754,7 +754,7 @@ class TestAPI(unittest.TestCase):
             self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
             mock_manager.assert_called_once_with(app, response['id'], ['Hello'])
 
-            # Check config unchanged
+            # Check config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'conversations': [
@@ -785,7 +785,7 @@ class TestAPI(unittest.TestCase):
             self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
             mock_manager.assert_called_once_with(app, response['id'], [prompt])
 
-            # Check config unchanged
+            # Check config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'conversations': [
@@ -801,7 +801,6 @@ class TestAPI(unittest.TestCase):
 
     def test_start_conversation_no_model(self):
         with create_test_files([]) as temp_dir, \
-             unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
              unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
@@ -815,8 +814,262 @@ class TestAPI(unittest.TestCase):
             self.assertDictEqual(response, {'error': 'NoModel'})
             mock_manager.assert_not_called()
 
-            # Check config unchanged
+            # Check config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'conversations': []
+                })
+
+
+    def test_start_template(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'model': 'llm',
+                'conversations': [],
+                'templates': [
+                    {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                ]
+            }))
+        ]) as temp_dir, \
+        unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
+        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to update template when no templates exist
+            request = {'id': 'tmpl1'}
+            status, headers, content_bytes = app.request('POST', '/startTemplate', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
+            mock_manager.assert_called_once_with(app, response['id'], ['Prompt 1'])
+
+            # Check config
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'model': 'llm',
+                    'conversations': [
+                        {
+                            'id': '12345678-1234-5678-1234-567812345678',
+                            'model': 'llm',
+                            'title': 'Template 1',
+                            'exchanges': []
+                        }
+                    ],
+                    'templates': [
+                        {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                    ]
+                })
+
+
+    def test_start_template_by_name(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'model': 'llm',
+                'conversations': [],
+                'templates': [
+                    {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                ]
+            }))
+        ]) as temp_dir, \
+        unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
+        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to update template when no templates exist
+            request = {'id': 'test'}
+            status, headers, content_bytes = app.request('POST', '/startTemplate', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
+            mock_manager.assert_called_once_with(app, response['id'], ['Prompt 1'])
+
+            # Check config
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'model': 'llm',
+                    'conversations': [
+                        {
+                            'id': '12345678-1234-5678-1234-567812345678',
+                            'model': 'llm',
+                            'title': 'Template 1',
+                            'exchanges': []
+                        }
+                    ],
+                    'templates': [
+                        {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                    ]
+                })
+
+
+    def test_start_template_model(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [],
+                'templates': [
+                    {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                ]
+            }))
+        ]) as temp_dir, \
+        unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
+        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to update template when no templates exist
+            request = {'model': 'llm', 'id': 'tmpl1'}
+            status, headers, content_bytes = app.request('POST', '/startTemplate', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
+            mock_manager.assert_called_once_with(app, response['id'], ['Prompt 1'])
+
+            # Check config
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [
+                        {
+                            'id': '12345678-1234-5678-1234-567812345678',
+                            'model': 'llm',
+                            'title': 'Template 1',
+                            'exchanges': []
+                        }
+                    ],
+                    'templates': [
+                        {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                    ]
+                })
+
+
+    def test_start_template_no_model(self):
+        with create_test_files([
+                (('ollama-chat.json',), json.dumps({
+                    'conversations': [],
+                    'templates': [
+                        {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                    ]
+                }))
+             ]) as temp_dir, \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to update template when no templates exist
+            request = {'id': 'tmpl1'}
+            status, headers, content_bytes = app.request('POST', '/startTemplate', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'error': 'NoModel'})
+            mock_manager.assert_not_called()
+
+            # Check config
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [],
+                    'templates': [
+                        {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                    ]
+                })
+
+
+    def test_start_template_unknown_template(self):
+        with create_test_files([]) as temp_dir, \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to update template when no templates exist
+            request = {'id': 'unknown'}
+            status, headers, content_bytes = app.request('POST', '/startTemplate', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'error': 'UnknownTemplateID', 'message': 'Unknown template "unknown"'})
+            mock_manager.assert_not_called()
+
+            # Check config
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': []
+                })
+
+
+    def test_start_template_unknown_variable(self):
+        with create_test_files([
+                (('ollama-chat.json',), json.dumps({
+                    'conversations': [],
+                    'templates': [
+                        {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                    ]
+                }))
+             ]) as temp_dir, \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to update template when no templates exist
+            request = {'id': 'tmpl1', 'variables': {'foo': 'bar'}}
+            status, headers, content_bytes = app.request('POST', '/startTemplate', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'error': 'UnknownVariable', 'message': 'unknown variable "foo"'})
+            mock_manager.assert_not_called()
+
+            # Check config
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [],
+                    'templates': [
+                        {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                    ]
+                })
+
+
+    def test_start_template_missing_variable(self):
+        with create_test_files([
+                (('ollama-chat.json',), json.dumps({
+                    'conversations': [],
+                    'templates': [
+                        {
+                            'id': 'tmpl1',
+                            'name': 'test',
+                            'title': 'Template 1',
+                            'variables': [{'name': 'name', 'label': 'Name'}],
+                            'prompts': ['Prompt {{name}}'],
+                        }
+                    ]
+                }))
+             ]) as temp_dir, \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to update template when no templates exist
+            request = {'id': 'tmpl1'}
+            status, headers, content_bytes = app.request('POST', '/startTemplate', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'error': 'MissingVariable', 'message': 'missing variable value for "name"'})
+            mock_manager.assert_not_called()
+
+            # Check config
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [],
+                    'templates': [
+                        {
+                            'id': 'tmpl1',
+                            'name': 'test',
+                            'title': 'Template 1',
+                            'variables': [{'name': 'name', 'label': 'Name'}],
+                            'prompts': ['Prompt {{name}}'],
+                        }
+                    ]
                 })
