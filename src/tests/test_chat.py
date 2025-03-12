@@ -11,9 +11,9 @@ from ollama_chat.chat import _escape_markdown_text, _process_commands, config_te
 from .util import create_test_files
 
 
-class TestTemplatePrompts(unittest.TestCase):
+class TestConfigTemplatePrompts(unittest.TestCase):
 
-    def test_config_template_prompts_basic(self):
+    def test_basic(self):
         template = {
             'title': 'Simple Template',
             'prompts': ['Hello world', 'Second prompt']
@@ -24,7 +24,7 @@ class TestTemplatePrompts(unittest.TestCase):
         self.assertListEqual(prompts, ['Hello world', 'Second prompt'])
 
 
-    def test_config_template_prompts_with_variables(self):
+    def test_variables(self):
         template = {
             'title': 'Hello {{name}}',
             'prompts': ['Greetings {{name}}', 'How are you {{name}}?'],
@@ -36,7 +36,7 @@ class TestTemplatePrompts(unittest.TestCase):
         self.assertListEqual(prompts, ['Greetings Alice', 'How are you Alice?'])
 
 
-    def test_config_template_prompts_missing_variable(self):
+    def test_missing_variable(self):
         template = {
             'title': 'Hello {{name}}',
             'prompts': ['Greetings {{name}}'],
@@ -48,7 +48,7 @@ class TestTemplatePrompts(unittest.TestCase):
         self.assertEqual(str(context.exception), 'missing variable value for "name"')
 
 
-    def test_config_template_prompts_unknown_variable(self):
+    def test_unknown_variable(self):
         template = {
             'title': 'Hello {{name}}',
             'prompts': ['Greetings {{name}}'],
@@ -60,7 +60,7 @@ class TestTemplatePrompts(unittest.TestCase):
         self.assertEqual(str(context.exception), 'unknown variable "age"')
 
 
-    def test_config_template_prompts_multiple_variables(self):
+    def test_multiple_variables(self):
         template = {
             'title': '{{greeting}} {{name}}',
             'prompts': ['{{greeting}} dear {{name}}', '{{name}}, how are you?'],
@@ -74,25 +74,25 @@ class TestTemplatePrompts(unittest.TestCase):
 
 class TestProcessCommands(unittest.TestCase):
 
-    def test_process_commands_no_commands(self):
+    def test_no_commands(self):
         flags = {}
         self.assertEqual(_process_commands('Hello, how are you?', flags), 'Hello, how are you?')
         self.assertDictEqual(flags, {})
 
 
-    def test_process_commands_help_top(self):
+    def test_help_top(self):
         flags = {}
         self.assertEqual(_process_commands('/?', flags), 'Displaying top-level help')
         self.assertTrue(flags['help'].startswith('usage: /{?,dir,do,file,image,url}'))
 
 
-    def test_process_commands_help(self):
+    def test_help(self):
         flags = {}
         self.assertEqual(_process_commands('/file test.txt -h', flags), 'Displaying help for "file" command')
         self.assertTrue(flags['help'].startswith('usage: /file [-h] [-n] file'))
 
 
-    def test_process_commands_dir(self):
+    def test_dir(self):
         with create_test_files([
             (('test.txt',), 'Test 1'),
             (('subdir', 'test2.txt',), 'Test 2'),
@@ -111,7 +111,7 @@ Test 1
             self.assertDictEqual(flags, {})
 
 
-    def test_process_commands_dir_depth(self):
+    def test_dir_depth(self):
         with create_test_files([
             (('test.txt',), 'Test 1'),
             (('subdir', 'test2.txt',), 'Test 2'),
@@ -136,13 +136,13 @@ Test 1
             self.assertDictEqual(flags, {})
 
 
-    def test_process_commands_do(self):
+    def test_do(self):
         flags = {}
         self.assertEqual(_process_commands('/do template_name -v var1 val1', flags), 'Executing template "template_name"')
         self.assertDictEqual(flags, {'do': [('template_name', {'var1': 'val1'})]})
 
 
-    def test_process_commands_file(self):
+    def test_file(self):
         with create_test_files([
             (('test.txt',), 'file content')
         ]) as temp_dir:
@@ -159,7 +159,7 @@ file content
             self.assertDictEqual(flags, {})
 
 
-    def test_process_commands_file_show(self):
+    def test_file_show(self):
         with create_test_files([
             (('test.txt',), 'file content')
         ]) as temp_dir:
@@ -176,7 +176,7 @@ file content
             self.assertDictEqual(flags, {'show': True})
 
 
-    def test_process_commands_image(self):
+    def test_image(self):
         with create_test_files([
             (('test.jpg',), 'image data')
         ]) as temp_dir:
@@ -185,7 +185,7 @@ file content
             self.assertDictEqual(flags, {'images': [base64.b64encode(b'image data').decode('utf-8')]})
 
 
-    def test_process_commands_url(self):
+    def test_url(self):
         with unittest.mock.patch('urllib.request.urlopen') as mock_urlopen:
             mock_response = unittest.mock.Mock()
             mock_response.read.return_value = b'url content'
@@ -204,7 +204,7 @@ url content
             self.assertDictEqual(flags, {})
 
 
-    def test_process_commands_multiple(self):
+    def test_multiple_commands(self):
         with create_test_files([
             (('test.txt',), 'file content')
         ]) as temp_dir:
@@ -225,7 +225,7 @@ file content
             self.assertIn('help', flags)
 
 
-    def test_process_commands_file_error(self):
+    def test_file_error(self):
         with create_test_files([]) as temp_dir:
             flags = {}
             with self.assertRaises(FileNotFoundError):
