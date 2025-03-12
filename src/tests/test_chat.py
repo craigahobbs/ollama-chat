@@ -27,15 +27,19 @@ class TestChatManaper(unittest.TestCase):
         unittest.mock.patch('threading.Thread') as mock_thread, \
         unittest.mock.patch('ollama.chat') as mock_chat:
             # Configure the ollama.chat mock
-            mock_chunks = ["Hello, ", "how ", "are ", "you?"]
-            mock_chat.return_value = iter({'message': {'content': chunk}} for chunk in mock_chunks)
+            mock_chunks = [['Hi ', 'there!'], ['Bye ', 'bye!']]
+            mock_chat.side_effect = [iter({'message': {'content': chunk}} for chunk in chunks) for chunks in mock_chunks]
 
             # Create the ChatManager instance
+            chat_prompts = ['Hello', 'Goodbye']
             config_path = os.path.join(input_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
-            chat_manager = ChatManager(app, 'conv1', ['Hello'])
+            app.chats['conv1'] = None
+            chat_manager = ChatManager(app, 'conv1', chat_prompts)
+            app.chats['conv1'] = chat_manager
             mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
             mock_thread.return_value.start.assert_called_once_with()
+            self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
             ChatManager.chat_thread_fn(chat_manager)
@@ -49,13 +53,111 @@ class TestChatManaper(unittest.TestCase):
                             'exchanges': [
                                 {
                                     'user': 'Hello',
-                                    'model': 'Hello, how are you?'
+                                    'model': 'Hi there!'
+                                },
+                                {
+                                    'user': 'Goodbye',
+                                    'model': 'Bye bye!'
                                 }
                             ]
                         }
                     ]
                 })
 
+
+    def test_chat_fn_help(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [
+                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+                ]
+            }))
+        ]) as input_dir, \
+        unittest.mock.patch('threading.Thread') as mock_thread, \
+        unittest.mock.patch('ollama.chat') as mock_chat:
+            # Create the ChatManager instance
+            chat_prompts = ['/?']
+            config_path = os.path.join(input_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+            chat_manager = ChatManager(app, 'conv1', chat_prompts)
+            app.chats['conv1'] = chat_manager
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
+            mock_thread.return_value.start.assert_called_once_with()
+            self.assertTrue(mock_thread.return_value.daemon)
+
+            # Run the thread function
+            ChatManager.chat_thread_fn(chat_manager)
+            mock_chat.assert_not_called()
+            with app.config() as config:
+                exchange = config['conversations'][0]['exchanges'][0]
+                self.assertTrue(exchange['model'].startswith('```\nusage: /{?,dir,do,file,image,url}'))
+                del exchange['model']
+                self.assertDictEqual(config, {
+                    'conversations': [
+                        {
+                            'id': 'conv1',
+                            'model': 'llm',
+                            'title': 'Conversation 1',
+                            'exchanges': [
+                                {
+                                    'user': '/?'
+                                }
+                            ]
+                        }
+                    ]
+                })
+
+
+    def test_chat_fn_show(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [
+                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+                ]
+            })),
+            (('test.txt',), 'file content')
+        ]) as input_dir, \
+        unittest.mock.patch('threading.Thread') as mock_thread, \
+        unittest.mock.patch('ollama.chat') as mock_chat:
+            # Create the ChatManager instance
+            chat_prompts = [f'This file:\n\n/file {input_dir}/test.txt -n']
+            config_path = os.path.join(input_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+            chat_manager = ChatManager(app, 'conv1', chat_prompts)
+            app.chats['conv1'] = chat_manager
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
+            mock_thread.return_value.start.assert_called_once_with()
+            self.assertTrue(mock_thread.return_value.daemon)
+
+            # Run the thread function
+            ChatManager.chat_thread_fn(chat_manager)
+            mock_chat.assert_not_called()
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [
+                        {
+                            'id': 'conv1',
+                            'model': 'llm',
+                            'title': 'Conversation 1',
+                            'exchanges': [
+                                {
+                                    'user': f'''\
+This file:
+
+/file {_escape_markdown_text(input_dir)}/test.txt -n''',
+                                    'model': f'''\
+This file:
+
+<{_escape_markdown_text(input_dir)}/test.txt>
+```
+file content
+```
+</ {_escape_markdown_text(input_dir)}/test.txt>'''
+                                }
+                            ]
+                        }
+                    ]
+                })
 
 
 class TestConfigTemplatePrompts(unittest.TestCase):
