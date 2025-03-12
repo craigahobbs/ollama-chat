@@ -100,6 +100,8 @@ class TestApp(unittest.TestCase):
             )
 
 
+class TestAPI(unittest.TestCase):
+
     def test_get_conversations(self):
         with create_test_files([
             (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
