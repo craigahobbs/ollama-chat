@@ -3,12 +3,59 @@
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
 import base64
+import json
+import os
 import unittest
 import unittest.mock
 
-from ollama_chat.chat import _escape_markdown_text, _process_commands, config_template_prompts
+from ollama_chat.app import OllamaChat
+from ollama_chat.chat import _escape_markdown_text, _process_commands, config_template_prompts, ChatManager
 
 from .util import create_test_files
+
+
+class TestChatManaper(unittest.TestCase):
+
+    def test_chat_fn(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [
+                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+                ]
+            }))
+        ]) as input_dir, \
+        unittest.mock.patch('threading.Thread') as mock_thread, \
+        unittest.mock.patch('ollama.chat') as mock_chat:
+            # Configure the ollama.chat mock
+            mock_chunks = ["Hello, ", "how ", "are ", "you?"]
+            mock_chat.return_value = iter({'message': {'content': chunk}} for chunk in mock_chunks)
+
+            # Create the ChatManager instance
+            config_path = os.path.join(input_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+            chat_manager = ChatManager(app, 'conv1', ['Hello'])
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
+            mock_thread.return_value.start.assert_called_once_with()
+
+            # Run the thread function
+            ChatManager.chat_thread_fn(chat_manager)
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [
+                        {
+                            'id': 'conv1',
+                            'model': 'llm',
+                            'title': 'Conversation 1',
+                            'exchanges': [
+                                {
+                                    'user': 'Hello',
+                                    'model': 'Hello, how are you?'
+                                }
+                            ]
+                        }
+                    ]
+                })
+
 
 
 class TestConfigTemplatePrompts(unittest.TestCase):
