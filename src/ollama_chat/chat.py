@@ -316,5 +316,5 @@ def _get_directory_files(dir_name, max_depth, file_exts, current_depth=0):
         if entry.is_file():
             if os.path.splitext(entry.name)[1] in file_exts:
                 yield entry.path
-        elif entry.is_dir():
+        elif entry.is_dir(): # pragma: no branch
             yield from _get_directory_files(entry.path, max_depth, file_exts, current_depth + 1)

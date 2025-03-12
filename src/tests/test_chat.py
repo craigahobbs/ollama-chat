@@ -6,7 +6,9 @@ import base64
 import unittest
 import unittest.mock
 
-from ollama_chat.chat import _process_commands, config_template_prompts
+from ollama_chat.chat import _escape_markdown_text, _process_commands, config_template_prompts
+
+from .util import create_test_files
 
 
 class TestTemplatePrompts(unittest.TestCase):
@@ -91,26 +93,45 @@ class TestProcessCommands(unittest.TestCase):
 
 
     def test_process_commands_dir(self):
-        with unittest.mock.patch('os.scandir') as mock_scandir, \
-             unittest.mock.patch('builtins.open', new_callable=unittest.mock.mock_open, read_data='file content'):
-
-            # Mock directory scanning
-            mock_entry = unittest.mock.Mock()
-            mock_entry.is_file.return_value = True
-            mock_entry.is_dir.return_value = False
-            mock_entry.name = 'test.txt'
-            mock_entry.path = 'path/test.txt'
-            mock_scandir.return_value = [mock_entry]
-
+        with create_test_files([
+            (('test.txt',), 'Test 1'),
+            (('subdir', 'test2.txt',), 'Test 2'),
+            (('subdir', 'test3.md',), '# Test 3')
+        ]) as temp_dir:
             flags = {}
             self.assertEqual(
-                _process_commands('/dir path .txt', flags),
-                '''\
-<path/test.txt>
+                _process_commands(f'/dir {temp_dir} .txt', flags),
+                f'''\
+<{_escape_markdown_text(temp_dir)}/test.txt>
 ```
-file content
+Test 1
 ```
-</ path/test.txt>'''
+</ {_escape_markdown_text(temp_dir)}/test.txt>'''
+            )
+            self.assertDictEqual(flags, {})
+
+
+    def test_process_commands_dir_depth(self):
+        with create_test_files([
+            (('test.txt',), 'Test 1'),
+            (('subdir', 'test2.txt',), 'Test 2'),
+            (('subdir', 'test3.md',), '# Test 3')
+        ]) as temp_dir:
+            flags = {}
+            self.assertEqual(
+                _process_commands(f'/dir {temp_dir} .txt -d 2', flags),
+                f'''\
+<{_escape_markdown_text(temp_dir)}/subdir/test2.txt>
+```
+Test 2
+```
+</ {_escape_markdown_text(temp_dir)}/subdir/test2.txt>
+
+<{_escape_markdown_text(temp_dir)}/test.txt>
+```
+Test 1
+```
+</ {_escape_markdown_text(temp_dir)}/test.txt>'''
             )
             self.assertDictEqual(flags, {})
 
@@ -122,39 +143,45 @@ file content
 
 
     def test_process_commands_file(self):
-        with unittest.mock.patch('builtins.open', new_callable=unittest.mock.mock_open, read_data='file content'):
+        with create_test_files([
+            (('test.txt',), 'file content')
+        ]) as temp_dir:
             flags = {}
             self.assertEqual(
-                _process_commands('/file test.txt', flags),
-                '''\
-<test.txt>
+                _process_commands(f'/file {temp_dir}/test.txt', flags),
+                f'''\
+<{_escape_markdown_text(temp_dir)}/test.txt>
 ```
 file content
 ```
-</ test.txt>'''
+</ {_escape_markdown_text(temp_dir)}/test.txt>'''
             )
             self.assertDictEqual(flags, {})
 
 
     def test_process_commands_file_show(self):
-        with unittest.mock.patch('builtins.open', new_callable=unittest.mock.mock_open, read_data='file content'):
+        with create_test_files([
+            (('test.txt',), 'file content')
+        ]) as temp_dir:
             flags = {}
             self.assertEqual(
-                _process_commands('/file test.txt -n', flags),
-                '''\
-<test.txt>
+                _process_commands(f'/file {temp_dir}/test.txt -n', flags),
+                f'''\
+<{_escape_markdown_text(temp_dir)}/test.txt>
 ```
 file content
 ```
-</ test.txt>'''
+</ {_escape_markdown_text(temp_dir)}/test.txt>'''
             )
             self.assertDictEqual(flags, {'show': True})
 
 
     def test_process_commands_image(self):
-        with unittest.mock.patch('builtins.open', new_callable=unittest.mock.mock_open, read_data=b'image data'):
+        with create_test_files([
+            (('test.jpg',), 'image data')
+        ]) as temp_dir:
             flags = {}
-            self.assertEqual(_process_commands('/image test.jpg', flags), '')
+            self.assertEqual(_process_commands(f'/image {temp_dir}/test.jpg', flags), '')
             self.assertDictEqual(flags, {'images': [base64.b64encode(b'image data').decode('utf-8')]})
 
 
@@ -178,28 +205,30 @@ url content
 
 
     def test_process_commands_multiple(self):
-        with unittest.mock.patch('builtins.open', new_callable=unittest.mock.mock_open, read_data='file content'):
+        with create_test_files([
+            (('test.txt',), 'file content')
+        ]) as temp_dir:
             flags = {}
             self.assertEqual(
-                _process_commands('Hello\n\n/?\n\n/file test.txt', flags),
-                '''\
+                _process_commands(f'Hello\n\n/?\n\n/file {temp_dir}/test.txt', flags),
+                f'''\
 Hello
 
 Displaying top-level help
 
-<test.txt>
+<{_escape_markdown_text(temp_dir)}/test.txt>
 ```
 file content
 ```
-</ test.txt>'''
+</ {_escape_markdown_text(temp_dir)}/test.txt>'''
             )
             self.assertIn('help', flags)
 
 
     def test_process_commands_file_error(self):
-        with unittest.mock.patch('builtins.open', side_effect=FileNotFoundError):
+        with create_test_files([]) as temp_dir:
             flags = {}
             with self.assertRaises(FileNotFoundError):
-                _process_commands('/file nonexistent.txt', flags)
+                _process_commands(f'/file {temp_dir}/nonexistent.txt', flags)
 
 # {% endraw %}
