@@ -23,7 +23,7 @@ class TestChatManaper(unittest.TestCase):
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
             }))
-        ]) as input_dir, \
+        ]) as temp_dir, \
         unittest.mock.patch('threading.Thread') as mock_thread, \
         unittest.mock.patch('ollama.chat') as mock_chat:
             # Configure the ollama.chat mock
@@ -32,7 +32,7 @@ class TestChatManaper(unittest.TestCase):
 
             # Create the ChatManager instance
             chat_prompts = ['Hello', 'Goodbye']
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
             app.chats['conv1'] = None
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
@@ -72,12 +72,12 @@ class TestChatManaper(unittest.TestCase):
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
             }))
-        ]) as input_dir, \
+        ]) as temp_dir, \
         unittest.mock.patch('threading.Thread') as mock_thread, \
         unittest.mock.patch('ollama.chat') as mock_chat:
             # Create the ChatManager instance
             chat_prompts = ['/?']
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
@@ -116,12 +116,12 @@ class TestChatManaper(unittest.TestCase):
                 ]
             })),
             (('test.txt',), 'file content')
-        ]) as input_dir, \
+        ]) as temp_dir, \
         unittest.mock.patch('threading.Thread') as mock_thread, \
         unittest.mock.patch('ollama.chat') as mock_chat:
             # Create the ChatManager instance
-            chat_prompts = [f'This file:\n\n/file {input_dir}/test.txt -n']
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+            chat_prompts = [f'This file:\n\n/file {temp_dir}/test.txt -n']
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
@@ -144,15 +144,15 @@ class TestChatManaper(unittest.TestCase):
                                     'user': f'''\
 This file:
 
-/file {_escape_markdown_text(input_dir)}/test.txt -n''',
+/file {temp_dir}/test.txt -n''',
                                     'model': f'''\
 This file:
 
-<{_escape_markdown_text(input_dir)}/test.txt>
+<{_escape_markdown_text(temp_dir)}/test.txt>
 ```
 file content
 ```
-</ {_escape_markdown_text(input_dir)}/test.txt>'''
+</ {_escape_markdown_text(temp_dir)}/test.txt>'''
                                 }
                             ]
                         }

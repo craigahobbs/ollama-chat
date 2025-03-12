@@ -17,8 +17,8 @@ class TestApp(unittest.TestCase):
     def test_init(self):
         with create_test_files([
             (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
             self.assertEqual(app.config.config_path, config_path)
             with app.config() as config:
@@ -105,8 +105,8 @@ class TestAPI(unittest.TestCase):
     def test_get_conversations(self):
         with create_test_files([
             (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             status, headers, content_bytes = app.request('GET', '/getConversations')
@@ -117,8 +117,8 @@ class TestAPI(unittest.TestCase):
 
 
     def test_get_conversations_no_model(self):
-        with create_test_files([]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        with create_test_files([]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             status, headers, content_bytes = app.request('GET', '/getConversations')
@@ -129,8 +129,8 @@ class TestAPI(unittest.TestCase):
 
 
     def test_set_model(self):
-        with create_test_files([]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        with create_test_files([]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
             with app.config() as config:
                 self.assertDictEqual(config, {'conversations': []})
@@ -154,8 +154,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Move conv2 down
@@ -186,8 +186,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Move conv2 up
@@ -218,8 +218,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Move conv3 down
@@ -250,8 +250,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Move conv1 up
@@ -280,8 +280,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Try to move a non-existent conversation
@@ -304,8 +304,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Move tmpl2 down
@@ -338,8 +338,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Move tmpl2 up
@@ -372,8 +372,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Move tmpl3 down
@@ -406,8 +406,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Move tmpl1 up
@@ -438,8 +438,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Try to move tmpl2
@@ -462,8 +462,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl2', 'title': 'Template 2', 'prompts': []}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Delete template 'tmpl1'
@@ -492,8 +492,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Try to delete 'tmpl2'
@@ -511,8 +511,8 @@ class TestAPI(unittest.TestCase):
             (('ollama-chat.json',), json.dumps({
                 'conversations': []
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Try to delete when templates key doesn't exist
@@ -540,8 +540,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl2', 'title': 'Template 2', 'prompts': ['Prompt 2']}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Get template 'tmpl1'
@@ -565,8 +565,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Try to get non-existent template 'tmpl2'
@@ -584,8 +584,8 @@ class TestAPI(unittest.TestCase):
             (('ollama-chat.json',), json.dumps({
                 'conversations': []
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Try to get template when no templates exist
@@ -607,8 +607,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl2', 'title': 'Template 2', 'prompts': ['Prompt 2']}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Update template 'tmpl1'
@@ -645,8 +645,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
                 ]
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Try to update non-existent template 'tmpl2'
@@ -679,8 +679,8 @@ class TestAPI(unittest.TestCase):
             (('ollama-chat.json',), json.dumps({
                 'conversations': []
             }))
-        ]) as input_dir:
-            config_path = os.path.join(input_dir, 'ollama-chat.json')
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Try to update template when no templates exist
