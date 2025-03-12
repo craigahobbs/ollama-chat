@@ -77,7 +77,7 @@ class ChatManager():
                         messages = []
                         for template_name, variable_values in reversed(flags['do']):
                             # Insert the template prompts to the chat
-                            templates = config['templates'] or []
+                            templates = config.get('templates') or []
                             template = next((tmpl for tmpl in templates if tmpl.get('name') == template_name), None)
                             if template is None:
                                 raise ValueError(f'unknown template "{template_name}"')
@@ -87,7 +87,10 @@ class ChatManager():
 
                             # Add the template message
                             message_values = ', '.join(f'{vname} = "{vval}"' for vname, vval in sorted(variable_values.items()))
-                            message = f'Executing template "{template_name}" - {message_values}'
+                            if message_values:
+                                message = f'Executing template "{template_name}" - {message_values}'
+                            else:
+                                message = f'Executing template "{template_name}"'
                             messages.append(message)
 
                         # Update the conversation

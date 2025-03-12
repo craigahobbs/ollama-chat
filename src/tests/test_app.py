@@ -703,3 +703,120 @@ class TestAPI(unittest.TestCase):
                 self.assertDictEqual(config, {
                     'conversations': []
                 })
+
+
+    def test_start_conversation(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
+        ]) as temp_dir, \
+        unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
+        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to update template when no templates exist
+            request = {'user': 'Hello'}
+            status, headers, content_bytes = app.request('POST', '/startConversation', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
+            mock_manager.assert_called_once_with(app, response['id'], ['Hello'])
+
+            # Check config unchanged
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'model': 'llm',
+                    'conversations': [
+                        {
+                            'id': '12345678-1234-5678-1234-567812345678',
+                            'model': 'llm',
+                            'title': 'Hello',
+                            'exchanges': []
+                        }
+                    ]
+                })
+
+
+    def test_start_conversation_model(self):
+        with create_test_files([]) as temp_dir, \
+             unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to update template when no templates exist
+            request = {'model': 'llm', 'user': 'Hello'}
+            status, headers, content_bytes = app.request('POST', '/startConversation', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
+            mock_manager.assert_called_once_with(app, response['id'], ['Hello'])
+
+            # Check config unchanged
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [
+                        {
+                            'id': '12345678-1234-5678-1234-567812345678',
+                            'model': 'llm',
+                            'title': 'Hello',
+                            'exchanges': []
+                        }
+                    ]
+                })
+
+
+    def test_start_conversation_max_title(self):
+        with create_test_files([]) as temp_dir, \
+             unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to update template when no templates exist
+            prompt = 'This is a very long title and needs to be cut off because its too long'
+            request = {'model': 'llm', 'user': prompt}
+            status, headers, content_bytes = app.request('POST', '/startConversation', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
+            mock_manager.assert_called_once_with(app, response['id'], [prompt])
+
+            # Check config unchanged
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [
+                        {
+                            'id': '12345678-1234-5678-1234-567812345678',
+                            'model': 'llm',
+                            'title': 'This is a very long title and needs to be cut o...',
+                            'exchanges': []
+                        }
+                    ]
+                })
+
+
+    def test_start_conversation_no_model(self):
+        with create_test_files([]) as temp_dir, \
+             unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to update template when no templates exist
+            request = {'user': 'Hello'}
+            status, headers, content_bytes = app.request('POST', '/startConversation', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'error': 'NoModel'})
+            mock_manager.assert_not_called()
+
+            # Check config unchanged
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': []
+                })
