@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.55 (2025-03-13)
+
+- [059690c](https://github.com/craigahobbs/ollama-chat/commit/059690c) - fix alignment of conversation page hamburger
+
+- [d748c32](https://github.com/craigahobbs/ollama-chat/commit/d748c32) - improve prompt command show response
+
 ## 0.9.54 (2025-03-13)
 
 - [d6b9240](https://github.com/craigahobbs/ollama-chat/commit/d6b9240) - fix tests on windows
