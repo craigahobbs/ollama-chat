@@ -106,6 +106,18 @@ class TestApp(unittest.TestCase):
 
 class TestAPI(unittest.TestCase):
 
+    def test_xorigin(self):
+        with create_test_files([]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path, xorigin=True)
+
+            status, headers, content_bytes = app.request('GET', '/getConversations')
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json'), ('Access-Control-Allow-Origin', '*')])
+            self.assertDictEqual(response, {'conversations': [], 'templates': []})
+
+
     def test_get_conversations(self):
         with create_test_files([
             (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
