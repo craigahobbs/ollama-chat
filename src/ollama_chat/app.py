@@ -528,7 +528,7 @@ def get_models(ctx, unused_req):
         {
             'id': model.model,
             'name': model.model[:model.model.index(':')],
-            'parameters': _parse_parameter_size(model.details.parameter_size),
+            'parameters': _parse_parameter_size(ctx, model.details.parameter_size),
             'size': model.size,
             'modified': model.modified_at
         }
@@ -557,7 +557,7 @@ def get_models(ctx, unused_req):
         return response
 
 
-def _parse_parameter_size(parameter_size):
+def _parse_parameter_size(ctx, parameter_size):
     value = float(parameter_size[:-1])
     unit = parameter_size[-1]
     if unit == 'B':
@@ -566,7 +566,9 @@ def _parse_parameter_size(parameter_size):
         return int(value * 1000000)
     elif unit == 'K':
         return int(value * 1000)
-    raise ValueError(f'Unrecognized parameter size: {parameter_size}')
+
+    ctx.log.warning(f'Invalid parameter size "{parameter_size}"')
+    return 0
 
 
 @chisel.action(name='downloadModel', types=OLLAMA_CHAT_TYPES)

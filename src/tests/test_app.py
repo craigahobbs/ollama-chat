@@ -3,7 +3,9 @@
 
 import datetime
 import json
+from io import StringIO
 import os
+import re
 import unittest
 import unittest.mock
 
@@ -131,6 +133,60 @@ class TestDownloadManaper(unittest.TestCase):
             self.assertEqual(download_manager.status, 'success')
             self.assertEqual(download_manager.completed, 1000)
             self.assertEqual(download_manager.total, 2000)
+
+
+    def test_download_fn_stop(self):
+        with create_test_files([]) as temp_dir, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('ollama.pull') as mock_pull:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Create mock models
+            progress1 = unittest.mock.Mock()
+            progress1.status = 'success'
+            progress1.completed = 1000
+            progress1.total = 2000
+            mock_pull.return_value = iter([progress1])
+
+            # Create the ChatManager instance
+            download_manager = DownloadManager(app, 'llm:latest')
+            download_manager.stop = True
+            mock_thread.assert_called_once_with(target=DownloadManager.download_thread_fn, args=(download_manager,))
+            mock_thread.return_value.start.assert_called_once_with()
+            self.assertTrue(mock_thread.return_value.daemon)
+
+            # Run the thread function
+            DownloadManager.download_thread_fn(download_manager)
+            self.assertDictEqual(app.downloads, {})
+            self.assertEqual(download_manager.status, '')
+            self.assertEqual(download_manager.completed, 0)
+            self.assertEqual(download_manager.total, 0)
+
+
+    def test_download_fn_ollama_failure(self):
+        with create_test_files([]) as temp_dir, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('ollama.pull') as mock_pull:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Mock ollama.pull failing
+            mock_pull.side_effect = Exception('Ollama failure')
+
+            # Create the ChatManager instance
+            download_manager = DownloadManager(app, 'llm:latest')
+            app.downloads['llm:latest'] = download_manager
+            mock_thread.assert_called_once_with(target=DownloadManager.download_thread_fn, args=(download_manager,))
+            mock_thread.return_value.start.assert_called_once_with()
+            self.assertTrue(mock_thread.return_value.daemon)
+
+            # Run the thread function
+            DownloadManager.download_thread_fn(download_manager)
+            self.assertDictEqual(app.downloads, {})
+            self.assertEqual(download_manager.status, '')
+            self.assertEqual(download_manager.completed, 0)
+            self.assertEqual(download_manager.total, 0)
 
 
 class TestAPI(unittest.TestCase):
@@ -2045,6 +2101,46 @@ class TestAPI(unittest.TestCase):
             })
 
 
+    def test_get_models_parameter_size_warning(self):
+        test_files = [
+                ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
+             ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama.list') as mock_ollama_list:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Create mock models
+            model1 = unittest.mock.Mock()
+            model1.model = 'llm:latest'
+            model1.details = unittest.mock.Mock(parameter_size='1000')
+            model1.size = 1000
+            model1.modified_at = datetime.datetime.fromisoformat('2023-10-01T12:00:00+00:00')
+            mock_ollama_list.return_value = {'models': [model1]}
+
+            environ = {'wsgi.errors': StringIO()}
+            status, headers, content_bytes = app.request('GET', '/getModels', environ=environ)
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {
+                'models': [
+                    {
+                        'id': 'llm:latest',
+                        'name': 'llm',
+                        'parameters': 0,
+                        'size': 1000,
+                        'modified': '2023-10-01T12:00:00+00:00'
+                    }
+                ],
+                'downloading': [],
+                'model': 'llm'
+            })
+            logs = environ['wsgi.errors'].getvalue()
+            logs = re.sub(r'\[.*?\]', '[X / Y]', logs)
+            self.assertEqual(logs, 'WARNING [X / Y] Invalid parameter size "1000"\n')
+
+
     def test_get_models_no_models(self):
         test_files = [
             ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
@@ -2080,12 +2176,17 @@ class TestAPI(unittest.TestCase):
             # Mock ollama.list to return no models
             mock_ollama_list.return_value = {'models': []}
 
-            # Add a downloading model
+            # Add downloading models
             mock_download = unittest.mock.Mock()
             mock_download.status = 'downloading'
             mock_download.completed = 5000000
             mock_download.total = 10000000
             app.downloads['downloading_model'] = mock_download
+            mock_download2 = unittest.mock.Mock()
+            mock_download2.status = 'unknown'
+            mock_download2.completed = 0
+            mock_download2.total = 0
+            app.downloads['downloading_model2'] = mock_download2
 
             status, headers, content_bytes = app.request('GET', '/getModels')
             response = json.loads(content_bytes.decode('utf-8'))
@@ -2099,6 +2200,11 @@ class TestAPI(unittest.TestCase):
                         'status': 'downloading',
                         'completed': 5000000,
                         'size': 10000000
+                    },
+                    {
+                        'id': 'downloading_model2',
+                        'status': 'unknown',
+                        'completed': 0
                     }
                 ],
                 'model': 'llm'

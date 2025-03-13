@@ -39,7 +39,7 @@ class ChatManager():
     @staticmethod
     def chat_thread_fn(chat):
         try:
-            while not chat.stop and chat.prompts:
+            while chat.prompts:
                 # Create the Ollama messages from the conversation
                 messages = []
                 flags = {}
@@ -108,6 +108,8 @@ class ChatManager():
                         conversation = config_conversation(config, chat.conversation_id)
                         exchange = conversation['exchanges'][-1]
                         exchange['model'] += chunk['message']['content']
+                if chat.stop:
+                    break
 
         except Exception as exc: # pylint: disable=broad-exception-caught
             # Communicate the error
