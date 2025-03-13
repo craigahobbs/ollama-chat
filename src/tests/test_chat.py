@@ -201,7 +201,9 @@ This file:
 This file:
 
 <{_escape_markdown_text(temp_posix)}/test.txt>
+```
 file content
+```
 </ {_escape_markdown_text(temp_posix)}/test.txt>'''
                                 }
                             ]
@@ -574,8 +576,44 @@ file content
                 _process_commands(f'/file {temp_posix}/test.txt -n', flags),
                 f'''\
 <{_escape_markdown_text(temp_posix)}/test.txt>
+```
 file content
+```
 </ {_escape_markdown_text(temp_posix)}/test.txt>'''
+            )
+            self.assertDictEqual(flags, {'show': True})
+
+
+    def test_file_show2(self):
+        test_files = [
+            ('test.txt', 'file content'),
+            ('test2.txt', 'file content 2')
+        ]
+        with create_test_files(test_files) as temp_dir:
+            temp_posix = str(pathlib.Path(temp_dir).as_posix())
+            flags = {}
+            self.assertEqual(
+                _process_commands(
+                    f'''\
+/file {temp_posix}/test.txt
+
+/file {temp_posix}/test2.txt -n
+''',
+                    flags
+                ),
+                f'''\
+<{_escape_markdown_text(temp_posix)}/test.txt>
+```
+file content
+```
+</ {_escape_markdown_text(temp_posix)}/test.txt>
+
+<{_escape_markdown_text(temp_posix)}/test2.txt>
+```
+file content 2
+```
+</ {_escape_markdown_text(temp_posix)}/test2.txt>
+'''
             )
             self.assertDictEqual(flags, {'show': True})
 

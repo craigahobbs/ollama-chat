@@ -157,7 +157,12 @@ def config_template_prompts(template, variable_values):
 
 # Process prompt commands
 def _process_commands(prompt, flags):
-    return _R_COMMAND.sub(functools.partial(_process_commands_sub, flags), prompt)
+    actual_prompt = _R_COMMAND.sub(functools.partial(_process_commands_sub, flags), prompt)
+    if 'show' in flags:
+        flags.clear()
+        flags['show'] = True
+        actual_prompt = _R_COMMAND.sub(functools.partial(_process_commands_sub, flags), prompt)
+    return actual_prompt
 
 _R_COMMAND = re.compile(r'^/(?P<cmd>\?|dir|do|file|image|url)(?P<args> .*)?$', re.MULTILINE)
 
@@ -203,7 +208,7 @@ def _process_commands_sub(flags, match):
             if any(rel_posix.startswith(dir_exclude) for dir_exclude in dir_excludes):
                 continue
             with open(file_name, 'r', encoding='utf-8') as fh:
-                file_contents.append(_command_file_content(file_posix, fh.read()))
+                file_contents.append(_command_file_content(file_posix, fh.read(), 'show' in flags))
 
         # No files?
         if not file_contents:
@@ -230,7 +235,7 @@ def _process_commands_sub(flags, match):
 
         # Add file content
         with open(file_path, 'r', encoding='utf-8') as fh:
-            return _command_file_content(file_posix, fh.read())
+            return _command_file_content(file_posix, fh.read(), 'show' in flags)
 
     # Include an image?
     elif command == 'image':
@@ -250,7 +255,7 @@ def _process_commands_sub(flags, match):
     elif command == 'url':
         # Add URL content
         with urllib.request.urlopen(args.url) as response:
-            return _command_file_content(args.url, response.read().decode())
+            return _command_file_content(args.url, response.read().decode(), 'show' in flags)
 
     # Top-level help...
     # elif command == '?':
@@ -303,9 +308,14 @@ _COMMAND_PARSER_URL.add_argument('-n', dest='show', action='store_true', help='r
 
 
 # Helper to produce file text content
-def _command_file_content(file_name, content):
+def _command_file_content(file_name, content, show):
     content_newline = '\n' if not content.endswith('\n') else ''
+    if show:
+        escaped_content = _R_COMMAND_FENCE_ESCAPE.sub(r'\1\```', content)
+        return f'<{_escape_markdown_text(file_name)}>\n```\n{escaped_content}{content_newline}```\n</ {_escape_markdown_text(file_name)}>'
     return f'<{_escape_markdown_text(file_name)}>\n{content}{content_newline}</ {_escape_markdown_text(file_name)}>'
+
+_R_COMMAND_FENCE_ESCAPE = re.compile(r'^( {0,3})```', re.MULTILINE)
 
 
 # Helper to escape a string for inclusion in Markdown text
