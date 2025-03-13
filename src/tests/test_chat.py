@@ -4,6 +4,7 @@
 import base64
 import json
 import os
+import pathlib
 import unittest
 import unittest.mock
 
@@ -169,7 +170,8 @@ class TestChatManaper(unittest.TestCase):
              unittest.mock.patch('threading.Thread') as mock_thread, \
              unittest.mock.patch('ollama.chat') as mock_chat:
             # Create the ChatManager instance
-            chat_prompts = [f'This file:\n\n/file {temp_dir}/test.txt -n']
+            temp_posix = str(pathlib.Path(temp_dir).as_posix())
+            chat_prompts = [f'This file:\n\n/file {temp_posix}/test.txt -n']
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
@@ -194,13 +196,13 @@ class TestChatManaper(unittest.TestCase):
                                     'user': f'''\
 This file:
 
-/file {temp_dir}/test.txt -n''',
+/file {temp_posix}/test.txt -n''',
                                     'model': f'''\
 This file:
 
-<{_escape_markdown_text(temp_dir)}/test.txt>
+<{_escape_markdown_text(temp_posix)}/test.txt>
 file content
-</ {_escape_markdown_text(temp_dir)}/test.txt>'''
+</ {_escape_markdown_text(temp_posix)}/test.txt>'''
                                 }
                             ]
                         }
@@ -451,13 +453,14 @@ class TestProcessCommands(unittest.TestCase):
             (('subdir', 'test3.md'), '# Test 3')
         ]
         with create_test_files(test_files) as temp_dir:
+            temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
             self.assertEqual(
-                _process_commands(f'/dir {temp_dir} .txt', flags),
+                _process_commands(f'/dir {temp_posix} .txt', flags),
                 f'''\
-<{_escape_markdown_text(temp_dir)}/test.txt>
+<{_escape_markdown_text(temp_posix)}/test.txt>
 Test 1
-</ {_escape_markdown_text(temp_dir)}/test.txt>'''
+</ {_escape_markdown_text(temp_posix)}/test.txt>'''
             )
             self.assertDictEqual(flags, {})
 
@@ -469,17 +472,18 @@ Test 1
             (('subdir', 'test3.md'), '# Test 3')
         ]
         with create_test_files(test_files) as temp_dir:
+            temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
             self.assertEqual(
-                _process_commands(f'/dir {temp_dir} .txt -d 2', flags),
+                _process_commands(f'/dir {temp_posix} .txt -d 2', flags),
                 f'''\
-<{_escape_markdown_text(temp_dir)}/subdir/test2.txt>
+<{_escape_markdown_text(temp_posix)}/subdir/test2.txt>
 Test 2
-</ {_escape_markdown_text(temp_dir)}/subdir/test2.txt>
+</ {_escape_markdown_text(temp_posix)}/subdir/test2.txt>
 
-<{_escape_markdown_text(temp_dir)}/test.txt>
+<{_escape_markdown_text(temp_posix)}/test.txt>
 Test 1
-</ {_escape_markdown_text(temp_dir)}/test.txt>'''
+</ {_escape_markdown_text(temp_posix)}/test.txt>'''
             )
             self.assertDictEqual(flags, {})
 
@@ -491,13 +495,14 @@ Test 1
             (('subdir2', 'test3.txt'), 'Test 3')
         ]
         with create_test_files(test_files) as temp_dir:
+            temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
             self.assertEqual(
-                _process_commands(f'/dir {temp_dir} .txt -d 2 -x test.txt -x subdir2/', flags),
+                _process_commands(f'/dir {temp_posix} .txt -d 2 -x test.txt -x subdir2/', flags),
                 f'''\
-<{_escape_markdown_text(temp_dir)}/subdir/test2.txt>
+<{_escape_markdown_text(temp_posix)}/subdir/test2.txt>
 Test 2
-</ {_escape_markdown_text(temp_dir)}/subdir/test2.txt>'''
+</ {_escape_markdown_text(temp_posix)}/subdir/test2.txt>'''
             )
             self.assertDictEqual(flags, {})
 
@@ -505,8 +510,9 @@ Test 2
     def test_dir_no_files(self):
         with create_test_files([]) as temp_dir, \
              self.assertRaises(ValueError) as cm_exc:
-            _process_commands(f'/dir {temp_dir} .txt', {})
-        self.assertEqual(str(cm_exc.exception), f'no files found in directory "{temp_dir}"')
+            temp_posix = pathlib.Path(temp_dir).as_posix()
+            _process_commands(f'/dir {temp_posix} .txt', {})
+        self.assertEqual(str(cm_exc.exception), f'no files found in directory "{temp_posix}"')
 
 
     def test_do(self):
@@ -545,13 +551,14 @@ Executing template "template_name"
             ('test.txt', 'file content')
         ]
         with create_test_files(test_files) as temp_dir:
+            temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
             self.assertEqual(
-                _process_commands(f'/file {temp_dir}/test.txt', flags),
+                _process_commands(f'/file {temp_posix}/test.txt', flags),
                 f'''\
-<{_escape_markdown_text(temp_dir)}/test.txt>
+<{_escape_markdown_text(temp_posix)}/test.txt>
 file content
-</ {_escape_markdown_text(temp_dir)}/test.txt>'''
+</ {_escape_markdown_text(temp_posix)}/test.txt>'''
             )
             self.assertDictEqual(flags, {})
 
@@ -561,13 +568,14 @@ file content
             ('test.txt', 'file content')
         ]
         with create_test_files(test_files) as temp_dir:
+            temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
             self.assertEqual(
-                _process_commands(f'/file {temp_dir}/test.txt -n', flags),
+                _process_commands(f'/file {temp_posix}/test.txt -n', flags),
                 f'''\
-<{_escape_markdown_text(temp_dir)}/test.txt>
+<{_escape_markdown_text(temp_posix)}/test.txt>
 file content
-</ {_escape_markdown_text(temp_dir)}/test.txt>'''
+</ {_escape_markdown_text(temp_posix)}/test.txt>'''
             )
             self.assertDictEqual(flags, {'show': True})
 
@@ -577,8 +585,9 @@ file content
             ('test.jpg', 'image data')
         ]
         with create_test_files(test_files) as temp_dir:
+            temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
-            self.assertEqual(_process_commands(f'/image {temp_dir}/test.jpg', flags), '')
+            self.assertEqual(_process_commands(f'/image {temp_posix}/test.jpg', flags), '')
             self.assertDictEqual(flags, {'images': [base64.b64encode(b'image data').decode('utf-8')]})
 
 
@@ -588,13 +597,14 @@ file content
             ('test2.jpg', 'image data 2')
         ]
         with create_test_files(test_files) as temp_dir:
+            temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
             self.assertEqual(
                 _process_commands(
                     f'''\
-/image {temp_dir}/test.jpg
+/image {temp_posix}/test.jpg
 
-/image {temp_dir}/test2.jpg
+/image {temp_posix}/test2.jpg
 ''',
                     flags
                 ),
@@ -630,17 +640,18 @@ url content
             ('test.txt', 'file content')
         ]
         with create_test_files(test_files) as temp_dir:
+            temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
             self.assertEqual(
-                _process_commands(f'Hello\n\n/?\n\n/file {temp_dir}/test.txt', flags),
+                _process_commands(f'Hello\n\n/?\n\n/file {temp_posix}/test.txt', flags),
                 f'''\
 Hello
 
 Displaying top-level help
 
-<{_escape_markdown_text(temp_dir)}/test.txt>
+<{_escape_markdown_text(temp_posix)}/test.txt>
 file content
-</ {_escape_markdown_text(temp_dir)}/test.txt>'''
+</ {_escape_markdown_text(temp_posix)}/test.txt>'''
             )
             self.assertIn('help', flags)
 

@@ -196,13 +196,14 @@ def _process_commands_sub(flags, match):
         # Get the file content
         file_contents = []
         for file_name in sorted(_get_directory_files(dir_path, max(1, args.depth) - 1, file_exts)):
-            rel_name = file_name[len(dir_path) + (0 if dir_path.endswith('/') else 1):]
-            if any(rel_name.endswith(file_exclude) for file_exclude in file_excludes):
+            file_posix = pathlib.Path(file_name).as_posix()
+            rel_posix = file_posix[len(dir_path) + (0 if dir_path.endswith('/') else 1):]
+            if any(rel_posix.endswith(file_exclude) for file_exclude in file_excludes):
                 continue
-            if any(rel_name.startswith(dir_exclude) for dir_exclude in dir_excludes):
+            if any(rel_posix.startswith(dir_exclude) for dir_exclude in dir_excludes):
                 continue
             with open(file_name, 'r', encoding='utf-8') as fh:
-                file_contents.append(_command_file_content(file_name, fh.read()))
+                file_contents.append(_command_file_content(file_posix, fh.read()))
 
         # No files?
         if not file_contents:
@@ -224,11 +225,12 @@ def _process_commands_sub(flags, match):
     # Include a file?
     elif command == 'file':
         # Command arguments
-        file_path = str(pathlib.Path(pathlib.PurePosixPath(args.file)))
+        file_posix = args.file
+        file_path = str(pathlib.Path(pathlib.PurePosixPath(file_posix)))
 
         # Add file content
         with open(file_path, 'r', encoding='utf-8') as fh:
-            return _command_file_content(file_path, fh.read())
+            return _command_file_content(file_posix, fh.read())
 
     # Include an image?
     elif command == 'image':
