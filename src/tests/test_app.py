@@ -1,3 +1,4 @@
+# {% raw %}
 # Licensed under the MIT License
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
@@ -1486,3 +1487,408 @@ class TestAPI(unittest.TestCase):
                     ]
                 })
             self.assertIs(app.chats['conv1'], mock_chat)
+
+
+    def test_create_template_basic(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [],
+                'templates': [
+                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                ]
+            }))
+        ]) as temp_dir, \
+        unittest.mock.patch('uuid.uuid4', return_value='12345678-1234-5678-1234-567812345678'):
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Create a basic template
+            request = {'title': 'New Template', 'prompts': ['New Prompt']}
+            status, headers, content_bytes = app.request('POST', '/createTemplate', wsgi_input=json.dumps(request).encode('utf-8'))
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
+
+            # Check the config
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [],
+                    'templates': [
+                        {'id': '12345678-1234-5678-1234-567812345678', 'title': 'New Template', 'prompts': ['New Prompt']},
+                        {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                    ]
+                })
+
+
+    def test_create_template_no_templates(self):
+        with create_test_files([]) as temp_dir, \
+        unittest.mock.patch('uuid.uuid4', return_value='12345678-1234-5678-1234-567812345678'):
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Create a basic template
+            request = {'title': 'New Template', 'prompts': ['New Prompt']}
+            status, headers, content_bytes = app.request('POST', '/createTemplate', wsgi_input=json.dumps(request).encode('utf-8'))
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
+
+            # Check the config
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [],
+                    'templates': [
+                        {'id': '12345678-1234-5678-1234-567812345678', 'title': 'New Template', 'prompts': ['New Prompt']}
+                    ]
+                })
+
+
+    def test_create_template_optional_arguments(self):
+        with create_test_files([]) as temp_dir, \
+        unittest.mock.patch('uuid.uuid4', return_value='12345678-1234-5678-1234-567812345678'):
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Create a template with all fields
+            request = {
+                'title': 'New Template',
+                'prompts': ['New Prompt'],
+                'name': 'test_template',
+                'variables': [{'name': 'var1', 'label': 'Variable 1'}]
+            }
+            status, headers, content_bytes = app.request('POST', '/createTemplate', wsgi_input=json.dumps(request).encode('utf-8'))
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
+
+            # Check the config
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [],
+                    'templates': [
+                        {
+                            'id': '12345678-1234-5678-1234-567812345678',
+                            'title': 'New Template',
+                            'prompts': ['New Prompt'],
+                            'name': 'test_template',
+                            'variables': [{'name': 'var1', 'label': 'Variable 1'}]
+                        }
+                    ]
+                })
+
+
+    def test_delete_conversation_exchange_success(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [
+                            {'user': 'Hello', 'model': 'Hi there'},
+                            {'user': 'How are you?', 'model': 'Good'}
+                        ]
+                    }
+                ]
+            }))
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Delete the most recent exchange from 'conv1'
+            request = {'id': 'conv1'}
+            status, headers, content_bytes = app.request(
+                'POST', '/deleteConversationExchange', wsgi_input=json.dumps(request).encode('utf-8')
+            )
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
+
+            # Check the config
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [
+                        {
+                            'id': 'conv1',
+                            'model': 'llm',
+                            'title': 'Conversation 1',
+                            'exchanges': [
+                                {'user': 'Hello', 'model': 'Hi there'}
+                            ]
+                        }
+                    ]
+                })
+            self.assertNotIn('conv1', app.chats)
+
+
+    def test_delete_conversation_exchange_unknown_id(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
+                    }
+                ]
+            }))
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to delete exchange from non-existent conversation 'conv2'
+            request = {'id': 'conv2'}
+            status, headers, content_bytes = app.request(
+                'POST', '/deleteConversationExchange', wsgi_input=json.dumps(request).encode('utf-8')
+            )
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'error': 'UnknownConversationID'})
+
+
+    def test_delete_conversation_exchange_busy(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
+                    }
+                ]
+            }))
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Simulate a busy conversation
+            mock_chat = unittest.mock.Mock()
+            app.chats['conv1'] = mock_chat
+
+            # Try to delete exchange from busy conversation 'conv1'
+            request = {'id': 'conv1'}
+            status, headers, content_bytes = app.request(
+                'POST', '/deleteConversationExchange', wsgi_input=json.dumps(request).encode('utf-8')
+            )
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'error': 'ConversationBusy'})
+            self.assertIs(app.chats['conv1'], mock_chat)
+
+
+    def test_delete_conversation_exchange_empty(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': []
+                    }
+                ]
+            }))
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to delete exchange from conversation with no exchanges
+            request = {'id': 'conv1'}
+            status, headers, content_bytes = app.request(
+                'POST', '/deleteConversationExchange', wsgi_input=json.dumps(request).encode('utf-8')
+            )
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
+
+            # Check config remains unchanged
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [
+                        {
+                            'id': 'conv1',
+                            'model': 'llm',
+                            'title': 'Conversation 1',
+                            'exchanges': []
+                        }
+                    ]
+                })
+            self.assertNotIn('conv1', app.chats)
+
+
+    def test_regenerate_conversation_exchange_success(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [
+                            {'user': 'Hello', 'model': 'Hi there'},
+                            {'user': 'How are you?', 'model': 'Good'}
+                        ]
+                    }
+                ]
+            }))
+        ]) as temp_dir, \
+        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Regenerate the last exchange for 'conv1'
+            request = {'id': 'conv1'}
+            status, headers, content_bytes = app.request(
+                'POST', '/regenerateConversationExchange', wsgi_input=json.dumps(request).encode('utf-8')
+            )
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
+
+            # Check the config - last exchange should be removed
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [
+                        {
+                            'id': 'conv1',
+                            'model': 'llm',
+                            'title': 'Conversation 1',
+                            'exchanges': [
+                                {'user': 'Hello', 'model': 'Hi there'}
+                            ]
+                        }
+                    ]
+                })
+
+            # Check that ChatManager was called with the last user prompt
+            mock_manager.assert_called_once_with(app, 'conv1', ['How are you?'])
+            self.assertIs(app.chats['conv1'], mock_manager.return_value)
+
+
+    def test_regenerate_conversation_exchange_unknown_id(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
+                    }
+                ]
+            }))
+        ]) as temp_dir, \
+        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to regenerate exchange for non-existent conversation 'conv2'
+            request = {'id': 'conv2'}
+            status, headers, content_bytes = app.request(
+                'POST', '/regenerateConversationExchange', wsgi_input=json.dumps(request).encode('utf-8')
+            )
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'error': 'UnknownConversationID'})
+            mock_manager.assert_not_called()
+            self.assertNotIn('conv2', app.chats)
+
+
+    def test_regenerate_conversation_exchange_busy(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
+                    }
+                ]
+            }))
+        ]) as temp_dir, \
+        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Simulate a busy conversation
+            mock_chat = unittest.mock.Mock()
+            app.chats['conv1'] = mock_chat
+
+            # Try to regenerate exchange for busy conversation 'conv1'
+            request = {'id': 'conv1'}
+            status, headers, content_bytes = app.request(
+                'POST', '/regenerateConversationExchange', wsgi_input=json.dumps(request).encode('utf-8')
+            )
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'error': 'ConversationBusy'})
+            mock_manager.assert_not_called()
+            self.assertIs(app.chats['conv1'], mock_chat)
+
+            # Check config remains unchanged
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [
+                        {
+                            'id': 'conv1',
+                            'model': 'llm',
+                            'title': 'Conversation 1',
+                            'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
+                        }
+                    ]
+                })
+
+
+    def test_regenerate_conversation_exchange_empty(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': []
+                    }
+                ]
+            }))
+        ]) as temp_dir, \
+        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to regenerate exchange for conversation with no exchanges
+            request = {'id': 'conv1'}
+            status, headers, content_bytes = app.request(
+                'POST', '/regenerateConversationExchange', wsgi_input=json.dumps(request).encode('utf-8')
+            )
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
+            mock_manager.assert_not_called()
+            self.assertNotIn('conv1', app.chats)
+
+            # Check config remains unchanged
+            with app.config() as config:
+                self.assertDictEqual(config, {
+                    'conversations': [
+                        {
+                            'id': 'conv1',
+                            'model': 'llm',
+                            'title': 'Conversation 1',
+                            'exchanges': []
+                        }
+                    ]
+                })
+
+# {% endraw %}
