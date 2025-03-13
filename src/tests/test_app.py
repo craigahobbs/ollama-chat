@@ -1,17 +1,14 @@
-# {% raw %}
 # Licensed under the MIT License
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
-import ctypes
 import datetime
 import json
 import os
-import platform
 import unittest
 import unittest.mock
 
 from schema_markdown import encode_query_string
-from ollama_chat.app import OllamaChat, MEMORYSTATUSEX
+from ollama_chat.app import DownloadManager, OllamaChat
 
 from .util import create_test_files
 
@@ -19,9 +16,10 @@ from .util import create_test_files
 class TestApp(unittest.TestCase):
 
     def test_init(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
             self.assertEqual(app.config.config_path, config_path)
@@ -104,6 +102,37 @@ class TestApp(unittest.TestCase):
             )
 
 
+class TestDownloadManaper(unittest.TestCase):
+
+    def test_download_fn(self):
+        with create_test_files([]) as temp_dir, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('ollama.pull') as mock_pull:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Create mock models
+            progress1 = unittest.mock.Mock()
+            progress1.status = 'success'
+            progress1.completed = 1000
+            progress1.total = 2000
+            mock_pull.return_value = iter([progress1])
+
+            # Create the ChatManager instance
+            download_manager = DownloadManager(app, 'llm:latest')
+            app.downloads['llm:latest'] = download_manager
+            mock_thread.assert_called_once_with(target=DownloadManager.download_thread_fn, args=(download_manager,))
+            mock_thread.return_value.start.assert_called_once_with()
+            self.assertTrue(mock_thread.return_value.daemon)
+
+            # Run the thread function
+            DownloadManager.download_thread_fn(download_manager)
+            self.assertDictEqual(app.downloads, {})
+            self.assertEqual(download_manager.status, 'success')
+            self.assertEqual(download_manager.completed, 1000)
+            self.assertEqual(download_manager.total, 2000)
+
+
 class TestAPI(unittest.TestCase):
 
     def test_xorigin(self):
@@ -119,9 +148,10 @@ class TestAPI(unittest.TestCase):
 
 
     def test_get_conversations(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -162,7 +192,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_move_conversation_down(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
@@ -170,7 +200,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -194,7 +225,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_move_conversation_up(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
@@ -202,7 +233,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -226,7 +258,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_move_conversation_down_last(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
@@ -234,7 +266,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -258,7 +291,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_move_conversation_up_first(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
@@ -266,7 +299,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -290,13 +324,14 @@ class TestAPI(unittest.TestCase):
 
 
     def test_move_conversation_unknown_id(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -311,7 +346,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_move_template_down(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [],
                 'templates': [
@@ -320,7 +355,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -345,7 +381,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_move_template_up(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [],
                 'templates': [
@@ -354,7 +390,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -379,7 +416,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_move_template_down_last(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [],
                 'templates': [
@@ -388,7 +425,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -413,7 +451,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_move_template_up_first(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [],
                 'templates': [
@@ -422,7 +460,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -447,14 +486,15 @@ class TestAPI(unittest.TestCase):
 
 
     def test_move_template_unknown_id(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -470,7 +510,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_delete_template_success(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [],
                 'templates': [
@@ -478,7 +518,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl2', 'title': 'Template 2', 'prompts': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -501,14 +542,15 @@ class TestAPI(unittest.TestCase):
 
 
     def test_delete_template_unknown_id(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -523,11 +565,12 @@ class TestAPI(unittest.TestCase):
 
 
     def test_delete_template_no_templates(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': []
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -548,7 +591,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_get_template_success(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [],
                 'templates': [
@@ -556,7 +599,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl2', 'title': 'Template 2', 'prompts': ['Prompt 2']}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -574,14 +618,15 @@ class TestAPI(unittest.TestCase):
 
 
     def test_get_template_unknown_id(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -596,11 +641,12 @@ class TestAPI(unittest.TestCase):
 
 
     def test_get_template_no_templates(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': []
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -615,7 +661,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_update_template_success(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [],
                 'templates': [
@@ -623,7 +669,8 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl2', 'title': 'Template 2', 'prompts': ['Prompt 2']}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -654,14 +701,15 @@ class TestAPI(unittest.TestCase):
 
 
     def test_update_template_unknown_id(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -691,11 +739,12 @@ class TestAPI(unittest.TestCase):
 
 
     def test_update_template_no_templates(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': []
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -722,11 +771,12 @@ class TestAPI(unittest.TestCase):
 
 
     def test_start_conversation(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
-        ]) as temp_dir, \
-        unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
-        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -842,7 +892,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_start_template(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'model': 'llm',
                 'conversations': [],
@@ -850,9 +900,10 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
-        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -885,7 +936,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_start_template_by_name(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'model': 'llm',
                 'conversations': [],
@@ -893,9 +944,10 @@ class TestAPI(unittest.TestCase):
                     {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
-        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -928,16 +980,17 @@ class TestAPI(unittest.TestCase):
 
 
     def test_start_template_model(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
-        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -969,14 +1022,15 @@ class TestAPI(unittest.TestCase):
 
 
     def test_start_template_no_model(self):
-        with create_test_files([
+        test_files = [
                 (('ollama-chat.json',), json.dumps({
                     'conversations': [],
                     'templates': [
                         {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
                     ]
                 }))
-             ]) as temp_dir, \
+             ]
+        with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
@@ -1025,14 +1079,15 @@ class TestAPI(unittest.TestCase):
 
 
     def test_start_template_unknown_variable(self):
-        with create_test_files([
+        test_files = [
                 (('ollama-chat.json',), json.dumps({
                     'conversations': [],
                     'templates': [
                         {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
                     ]
                 }))
-             ]) as temp_dir, \
+             ]
+        with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
@@ -1058,7 +1113,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_start_template_missing_variable(self):
-        with create_test_files([
+        test_files = [
                 (('ollama-chat.json',), json.dumps({
                     'conversations': [],
                     'templates': [
@@ -1071,7 +1126,8 @@ class TestAPI(unittest.TestCase):
                         }
                     ]
                 }))
-             ]) as temp_dir, \
+             ]
+        with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
@@ -1103,13 +1159,14 @@ class TestAPI(unittest.TestCase):
 
 
     def test_stop_conversation_success(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1129,13 +1186,14 @@ class TestAPI(unittest.TestCase):
 
 
     def test_stop_conversation_unknown_id(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1150,13 +1208,14 @@ class TestAPI(unittest.TestCase):
 
 
     def test_stop_conversation_not_generating(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1171,7 +1230,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_get_conversation_success_not_generating(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {
@@ -1182,7 +1241,8 @@ class TestAPI(unittest.TestCase):
                     }
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1206,7 +1266,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_get_conversation_success_generating(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {
@@ -1217,7 +1277,8 @@ class TestAPI(unittest.TestCase):
                     }
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1245,7 +1306,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_get_conversation_unknown_id(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {
@@ -1256,7 +1317,8 @@ class TestAPI(unittest.TestCase):
                     }
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1269,7 +1331,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_reply_conversation_success(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {
@@ -1280,8 +1342,9 @@ class TestAPI(unittest.TestCase):
                     }
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1296,7 +1359,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_reply_conversation_unknown_id(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {
@@ -1307,8 +1370,9 @@ class TestAPI(unittest.TestCase):
                     }
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1324,7 +1388,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_reply_conversation_busy(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {
@@ -1335,8 +1399,9 @@ class TestAPI(unittest.TestCase):
                     }
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1356,11 +1421,12 @@ class TestAPI(unittest.TestCase):
 
 
     def test_set_conversation_title_success(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [{'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1393,11 +1459,12 @@ class TestAPI(unittest.TestCase):
 
 
     def test_set_conversation_title_busy(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [{'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1422,14 +1489,15 @@ class TestAPI(unittest.TestCase):
 
 
     def test_delete_conversation_success(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
                     {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1472,13 +1540,14 @@ class TestAPI(unittest.TestCase):
 
 
     def test_delete_conversation_busy(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1505,15 +1574,16 @@ class TestAPI(unittest.TestCase):
 
 
     def test_create_template_basic(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('uuid.uuid4', return_value='12345678-1234-5678-1234-567812345678'):
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('uuid.uuid4', return_value='12345678-1234-5678-1234-567812345678'):
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1596,7 +1666,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_delete_conversation_exchange_success(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {
@@ -1610,7 +1680,8 @@ class TestAPI(unittest.TestCase):
                     }
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1641,7 +1712,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_delete_conversation_exchange_unknown_id(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {
@@ -1652,7 +1723,8 @@ class TestAPI(unittest.TestCase):
                     }
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1668,7 +1740,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_delete_conversation_exchange_busy(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {
@@ -1679,7 +1751,8 @@ class TestAPI(unittest.TestCase):
                     }
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1700,7 +1773,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_delete_conversation_exchange_empty(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {
@@ -1711,7 +1784,8 @@ class TestAPI(unittest.TestCase):
                     }
                 ]
             }))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1740,7 +1814,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_regenerate_conversation_exchange_success(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {
@@ -1754,8 +1828,9 @@ class TestAPI(unittest.TestCase):
                     }
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1789,7 +1864,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_regenerate_conversation_exchange_unknown_id(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {
@@ -1800,8 +1875,9 @@ class TestAPI(unittest.TestCase):
                     }
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1819,7 +1895,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_regenerate_conversation_exchange_busy(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {
@@ -1830,8 +1906,9 @@ class TestAPI(unittest.TestCase):
                     }
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1866,7 +1943,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_regenerate_conversation_exchange_empty(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {
@@ -1877,8 +1954,9 @@ class TestAPI(unittest.TestCase):
                     }
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1908,10 +1986,11 @@ class TestAPI(unittest.TestCase):
 
 
     def test_get_models_success(self):
-        with create_test_files([
-            (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
-        ]) as temp_dir, \
-        unittest.mock.patch('ollama.list') as mock_ollama_list:
+        test_files = [
+                (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
+             ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama.list') as mock_ollama_list:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1967,10 +2046,11 @@ class TestAPI(unittest.TestCase):
 
 
     def test_get_models_no_models(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
-        ]) as temp_dir, \
-        unittest.mock.patch('ollama.list') as mock_ollama_list:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama.list') as mock_ollama_list:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -1989,10 +2069,11 @@ class TestAPI(unittest.TestCase):
 
 
     def test_get_models_downloading(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
-        ]) as temp_dir, \
-        unittest.mock.patch('ollama.list') as mock_ollama_list:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama.list') as mock_ollama_list:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -2025,15 +2106,16 @@ class TestAPI(unittest.TestCase):
 
 
     def test_get_models_ollama_failure(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
-        ]) as temp_dir, \
-        unittest.mock.patch('ollama.list') as mock_ollama_list:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama.list') as mock_ollama_list:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Mock ollama.list to raise an exception
-            mock_ollama_list.side_effect = Exception("Ollama failure")
+            mock_ollama_list.side_effect = Exception('Ollama failure')
 
             status, headers, content_bytes = app.request('GET', '/getModels')
             response = json.loads(content_bytes.decode('utf-8'))
@@ -2079,10 +2161,11 @@ class TestAPI(unittest.TestCase):
 
 
     def test_download_model_success(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({'conversations': []}))
-        ]) as temp_dir, \
-        unittest.mock.patch('ollama_chat.app.DownloadManager') as mock_download_manager:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama_chat.app.DownloadManager') as mock_download_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -2101,9 +2184,10 @@ class TestAPI(unittest.TestCase):
 
 
     def test_stop_model_download_success(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({'conversations': []}))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -2123,9 +2207,10 @@ class TestAPI(unittest.TestCase):
 
 
     def test_stop_model_download_not_downloading(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({'conversations': []}))
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -2139,10 +2224,11 @@ class TestAPI(unittest.TestCase):
 
 
     def test_delete_model_success(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({'conversations': []}))
-        ]) as temp_dir, \
-        unittest.mock.patch('ollama.delete') as mock_ollama_delete:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama.delete') as mock_ollama_delete:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
@@ -2155,60 +2241,16 @@ class TestAPI(unittest.TestCase):
             mock_ollama_delete.assert_called_once_with('llm:latest')
 
 
-    @unittest.skipIf(platform.system() != 'Windows', "Skipping this test on non-Windows")
-    def test_get_system_info_windows(self): # pragma: no cover
-        with create_test_files([
-                (('ollama-chat.json',), json.dumps({'conversations': []}))
-             ]) as temp_dir, \
-             unittest.mock.patch('os.name', 'nt'), \
-             unittest.mock.patch('ctypes.windll.kernel32.GlobalMemoryStatusEx') as mock_memory_status:
+    def test_get_system_info(self):
+        with create_test_files([]) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
-
-            # Mock the MEMORYSTATUSEX structure and the ctypes call
-            mock_memory = unittest.mock.Mock()
-            mock_memory.ullTotalPhys = 8589934592
-            mock_memory_status.return_value = None
-
-            status, headers, content_bytes = app.request('GET', '/getSystemInfo')
-            response = json.loads(content_bytes.decode('utf-8'))
-            self.assertEqual(status, '200 OK')
-            self.assertListEqual(headers, [('Content-Type', 'application/json')])
-            self.assertDictEqual(response, {'memory': 8589934592})
-
-            # Verify the ctypes call was made with a MEMORYSTATUSEX instance
-            self.assertTrue(mock_memory_status.called)
-            args, _ = mock_memory_status.call_args
-            self.assertIsInstance(args[0], ctypes.Structure)
-            self.assertEqual(ctypes.sizeof(args[0]), ctypes.sizeof(MEMORYSTATUSEX))
-
-
-    @unittest.skipIf(platform.system() == 'Windows', "Skipping this test on Windows")
-    def test_get_system_info_unix(self): # pragma: no cover
-        with create_test_files([
-            (('ollama-chat.json',), json.dumps({'conversations': []}))
-        ]) as temp_dir, \
-        unittest.mock.patch('os.name', 'posix'), \
-        unittest.mock.patch('os.sysconf') as mock_sysconf:
-            config_path = os.path.join(temp_dir, 'ollama-chat.json')
-            app = OllamaChat(config_path)
-
-            # Mock os.sysconf calls
-            mock_sysconf.side_effect = lambda x: {
-                'SC_PHYS_PAGES': 2097152,
-                'SC_PAGE_SIZE': 4096
-            }[x]
 
             # Make the request
             status, headers, content_bytes = app.request('GET', '/getSystemInfo')
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
-            self.assertDictEqual(response, {'memory': 8589934592})  # 8GB in bytes
-
-            # Verify os.sysconf calls
-            mock_sysconf.assert_any_call('SC_PHYS_PAGES')
-            mock_sysconf.assert_any_call('SC_PAGE_SIZE')
-            self.assertEqual(mock_sysconf.call_count, 2)
-
-# {% endraw %}
+            self.assertTrue(response['memory'] > 0)
+            del response['memory']
+            self.assertDictEqual(response, {})

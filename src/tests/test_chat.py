@@ -16,15 +16,16 @@ from .util import create_test_files
 class TestChatManaper(unittest.TestCase):
 
     def test_chat_fn(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('threading.Thread') as mock_thread, \
-        unittest.mock.patch('ollama.chat') as mock_chat:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('ollama.chat') as mock_chat:
             # Configure the ollama.chat mock
             mock_chunks = [['Hi ', 'there!'], ['Bye ', 'bye!']]
             mock_chat.side_effect = [iter({'message': {'content': chunk}} for chunk in chunks) for chunks in mock_chunks]
@@ -66,15 +67,16 @@ class TestChatManaper(unittest.TestCase):
 
 
     def test_chat_fn_help(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('threading.Thread') as mock_thread, \
-        unittest.mock.patch('ollama.chat') as mock_chat:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('ollama.chat') as mock_chat:
             # Create the ChatManager instance
             chat_prompts = ['/?']
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -110,16 +112,17 @@ class TestChatManaper(unittest.TestCase):
 
 
     def test_chat_fn_show(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
             })),
             (('test.txt',), 'file content')
-        ]) as temp_dir, \
-        unittest.mock.patch('threading.Thread') as mock_thread, \
-        unittest.mock.patch('ollama.chat') as mock_chat:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('ollama.chat') as mock_chat:
             # Create the ChatManager instance
             chat_prompts = [f'This file:\n\n/file {temp_dir}/test.txt -n']
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -161,7 +164,7 @@ file content
 
 
     def test_chat_fn_do(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
@@ -170,9 +173,10 @@ file content
                     {'id': 'tmpl1', 'name': 'bye', 'title': 'Goodbye', 'prompts': ['Goodbye']}
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('threading.Thread') as mock_thread, \
-        unittest.mock.patch('ollama.chat') as mock_chat:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('ollama.chat') as mock_chat:
             # Configure the ollama.chat mock
             mock_chunks = [['Bye ', 'bye!']]
             mock_chat.side_effect = [iter({'message': {'content': chunk}} for chunk in chunks) for chunks in mock_chunks]
@@ -211,7 +215,7 @@ file content
 
 
     def test_chat_fn_do_variables(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
@@ -226,9 +230,10 @@ file content
                     }
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('threading.Thread') as mock_thread, \
-        unittest.mock.patch('ollama.chat') as mock_chat:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('ollama.chat') as mock_chat:
             # Configure the ollama.chat mock
             mock_chunks = [['Bye ', 'bye!']]
             mock_chat.side_effect = [iter({'message': {'content': chunk}} for chunk in chunks) for chunks in mock_chunks]
@@ -273,15 +278,16 @@ file content
 
 
     def test_chat_fn_do_unknown_template(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
             }))
-        ]) as temp_dir, \
-        unittest.mock.patch('threading.Thread') as mock_thread, \
-        unittest.mock.patch('ollama.chat') as mock_chat:
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('ollama.chat') as mock_chat:
             # Create the ChatManager instance
             chat_prompts = ['/do unknown']
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -396,11 +402,12 @@ class TestProcessCommands(unittest.TestCase):
 
 
     def test_dir(self):
-        with create_test_files([
+        test_files = [
             (('test.txt',), 'Test 1'),
             (('subdir', 'test2.txt',), 'Test 2'),
             (('subdir', 'test3.md',), '# Test 3')
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             flags = {}
             self.assertEqual(
                 _process_commands(f'/dir {temp_dir} .txt', flags),
@@ -413,11 +420,12 @@ Test 1
 
 
     def test_dir_depth(self):
-        with create_test_files([
+        test_files = [
             (('test.txt',), 'Test 1'),
             (('subdir', 'test2.txt',), 'Test 2'),
             (('subdir', 'test3.md',), '# Test 3')
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             flags = {}
             self.assertEqual(
                 _process_commands(f'/dir {temp_dir} .txt -d 2', flags),
@@ -440,9 +448,10 @@ Test 1
 
 
     def test_file(self):
-        with create_test_files([
+        test_files = [
             (('test.txt',), 'file content')
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             flags = {}
             self.assertEqual(
                 _process_commands(f'/file {temp_dir}/test.txt', flags),
@@ -455,9 +464,10 @@ file content
 
 
     def test_file_show(self):
-        with create_test_files([
+        test_files = [
             (('test.txt',), 'file content')
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             flags = {}
             self.assertEqual(
                 _process_commands(f'/file {temp_dir}/test.txt -n', flags),
@@ -470,9 +480,10 @@ file content
 
 
     def test_image(self):
-        with create_test_files([
+        test_files = [
             (('test.jpg',), 'image data')
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             flags = {}
             self.assertEqual(_process_commands(f'/image {temp_dir}/test.jpg', flags), '')
             self.assertDictEqual(flags, {'images': [base64.b64encode(b'image data').decode('utf-8')]})
@@ -496,9 +507,10 @@ url content
 
 
     def test_multiple_commands(self):
-        with create_test_files([
+        test_files = [
             (('test.txt',), 'file content')
-        ]) as temp_dir:
+        ]
+        with create_test_files(test_files) as temp_dir:
             flags = {}
             self.assertEqual(
                 _process_commands(f'Hello\n\n/?\n\n/file {temp_dir}/test.txt', flags),

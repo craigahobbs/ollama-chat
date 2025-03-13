@@ -166,9 +166,10 @@ ollama-chat: 200 GET /getConversations\x20
 
 
     def test_main_config_dir_exist(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), '{"model": "llm", "conversations": []}')
-        ]) as temp_dir, \
+        ]
+        with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
              unittest.mock.patch('webbrowser.open') as mock_open, \
              unittest.mock.patch('waitress.serve') as mock_serve, \
@@ -209,9 +210,10 @@ ollama-chat: 200 GET /getConversations\x20
 
 
     def test_main_config_file(self):
-        with create_test_files([
+        test_files = [
             (('ollama-chat.json',), '{"model": "llm", "conversations": []}')
-        ]) as temp_dir, \
+        ]
+        with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
              unittest.mock.patch('webbrowser.open') as mock_open, \
              unittest.mock.patch('waitress.serve') as mock_serve, \
