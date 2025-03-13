@@ -1,4 +1,3 @@
-# {% raw %}
 # Licensed under the MIT License
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
@@ -520,5 +519,3 @@ file content
             flags = {}
             with self.assertRaises(FileNotFoundError):
                 _process_commands(f'/file {temp_dir}/nonexistent.txt', flags)
-
-# {% endraw %}
