@@ -17,7 +17,7 @@ class TestApp(unittest.TestCase):
 
     def test_init(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
+            ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -149,7 +149,7 @@ class TestAPI(unittest.TestCase):
 
     def test_get_conversations(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
+            ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -193,7 +193,7 @@ class TestAPI(unittest.TestCase):
 
     def test_move_conversation_down(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
                     {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []},
@@ -226,7 +226,7 @@ class TestAPI(unittest.TestCase):
 
     def test_move_conversation_up(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
                     {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []},
@@ -259,7 +259,7 @@ class TestAPI(unittest.TestCase):
 
     def test_move_conversation_down_last(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
                     {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []},
@@ -292,7 +292,7 @@ class TestAPI(unittest.TestCase):
 
     def test_move_conversation_up_first(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
                     {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []},
@@ -325,7 +325,7 @@ class TestAPI(unittest.TestCase):
 
     def test_move_conversation_unknown_id(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
@@ -347,7 +347,7 @@ class TestAPI(unittest.TestCase):
 
     def test_move_template_down(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
@@ -382,7 +382,7 @@ class TestAPI(unittest.TestCase):
 
     def test_move_template_up(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
@@ -417,7 +417,7 @@ class TestAPI(unittest.TestCase):
 
     def test_move_template_down_last(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
@@ -452,7 +452,7 @@ class TestAPI(unittest.TestCase):
 
     def test_move_template_up_first(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
@@ -487,7 +487,7 @@ class TestAPI(unittest.TestCase):
 
     def test_move_template_unknown_id(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []}
@@ -511,7 +511,7 @@ class TestAPI(unittest.TestCase):
 
     def test_delete_template_success(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
@@ -543,7 +543,7 @@ class TestAPI(unittest.TestCase):
 
     def test_delete_template_unknown_id(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []}
@@ -566,7 +566,7 @@ class TestAPI(unittest.TestCase):
 
     def test_delete_template_no_templates(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': []
             }))
         ]
@@ -592,7 +592,7 @@ class TestAPI(unittest.TestCase):
 
     def test_get_template_success(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']},
@@ -619,7 +619,7 @@ class TestAPI(unittest.TestCase):
 
     def test_get_template_unknown_id(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
@@ -642,7 +642,7 @@ class TestAPI(unittest.TestCase):
 
     def test_get_template_no_templates(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': []
             }))
         ]
@@ -662,7 +662,7 @@ class TestAPI(unittest.TestCase):
 
     def test_update_template_success(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']},
@@ -702,7 +702,7 @@ class TestAPI(unittest.TestCase):
 
     def test_update_template_unknown_id(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
@@ -740,7 +740,7 @@ class TestAPI(unittest.TestCase):
 
     def test_update_template_no_templates(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': []
             }))
         ]
@@ -772,7 +772,7 @@ class TestAPI(unittest.TestCase):
 
     def test_start_conversation(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
+            ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
@@ -893,7 +893,7 @@ class TestAPI(unittest.TestCase):
 
     def test_start_template(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'model': 'llm',
                 'conversations': [],
                 'templates': [
@@ -937,7 +937,7 @@ class TestAPI(unittest.TestCase):
 
     def test_start_template_by_name(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'model': 'llm',
                 'conversations': [],
                 'templates': [
@@ -981,7 +981,7 @@ class TestAPI(unittest.TestCase):
 
     def test_start_template_model(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
@@ -1023,7 +1023,7 @@ class TestAPI(unittest.TestCase):
 
     def test_start_template_no_model(self):
         test_files = [
-                (('ollama-chat.json',), json.dumps({
+                ('ollama-chat.json', json.dumps({
                     'conversations': [],
                     'templates': [
                         {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
@@ -1080,7 +1080,7 @@ class TestAPI(unittest.TestCase):
 
     def test_start_template_unknown_variable(self):
         test_files = [
-                (('ollama-chat.json',), json.dumps({
+                ('ollama-chat.json', json.dumps({
                     'conversations': [],
                     'templates': [
                         {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
@@ -1114,7 +1114,7 @@ class TestAPI(unittest.TestCase):
 
     def test_start_template_missing_variable(self):
         test_files = [
-                (('ollama-chat.json',), json.dumps({
+                ('ollama-chat.json', json.dumps({
                     'conversations': [],
                     'templates': [
                         {
@@ -1160,7 +1160,7 @@ class TestAPI(unittest.TestCase):
 
     def test_stop_conversation_success(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
@@ -1187,7 +1187,7 @@ class TestAPI(unittest.TestCase):
 
     def test_stop_conversation_unknown_id(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
@@ -1209,7 +1209,7 @@ class TestAPI(unittest.TestCase):
 
     def test_stop_conversation_not_generating(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
@@ -1231,7 +1231,7 @@ class TestAPI(unittest.TestCase):
 
     def test_get_conversation_success_not_generating(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {
                         'id': 'conv1',
@@ -1267,7 +1267,7 @@ class TestAPI(unittest.TestCase):
 
     def test_get_conversation_success_generating(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {
                         'id': 'conv1',
@@ -1307,7 +1307,7 @@ class TestAPI(unittest.TestCase):
 
     def test_get_conversation_unknown_id(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {
                         'id': 'conv1',
@@ -1332,7 +1332,7 @@ class TestAPI(unittest.TestCase):
 
     def test_reply_conversation_success(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {
                         'id': 'conv1',
@@ -1360,7 +1360,7 @@ class TestAPI(unittest.TestCase):
 
     def test_reply_conversation_unknown_id(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {
                         'id': 'conv1',
@@ -1389,7 +1389,7 @@ class TestAPI(unittest.TestCase):
 
     def test_reply_conversation_busy(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {
                         'id': 'conv1',
@@ -1422,7 +1422,7 @@ class TestAPI(unittest.TestCase):
 
     def test_set_conversation_title_success(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [{'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}]
             }))
         ]
@@ -1460,7 +1460,7 @@ class TestAPI(unittest.TestCase):
 
     def test_set_conversation_title_busy(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [{'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}]
             }))
         ]
@@ -1490,7 +1490,7 @@ class TestAPI(unittest.TestCase):
 
     def test_delete_conversation_success(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
                     {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []}
@@ -1541,7 +1541,7 @@ class TestAPI(unittest.TestCase):
 
     def test_delete_conversation_busy(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
@@ -1575,7 +1575,7 @@ class TestAPI(unittest.TestCase):
 
     def test_create_template_basic(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [],
                 'templates': [
                     {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
@@ -1667,7 +1667,7 @@ class TestAPI(unittest.TestCase):
 
     def test_delete_conversation_exchange_success(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {
                         'id': 'conv1',
@@ -1713,7 +1713,7 @@ class TestAPI(unittest.TestCase):
 
     def test_delete_conversation_exchange_unknown_id(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {
                         'id': 'conv1',
@@ -1741,7 +1741,7 @@ class TestAPI(unittest.TestCase):
 
     def test_delete_conversation_exchange_busy(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {
                         'id': 'conv1',
@@ -1774,7 +1774,7 @@ class TestAPI(unittest.TestCase):
 
     def test_delete_conversation_exchange_empty(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {
                         'id': 'conv1',
@@ -1815,7 +1815,7 @@ class TestAPI(unittest.TestCase):
 
     def test_regenerate_conversation_exchange_success(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {
                         'id': 'conv1',
@@ -1865,7 +1865,7 @@ class TestAPI(unittest.TestCase):
 
     def test_regenerate_conversation_exchange_unknown_id(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {
                         'id': 'conv1',
@@ -1896,7 +1896,7 @@ class TestAPI(unittest.TestCase):
 
     def test_regenerate_conversation_exchange_busy(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {
                         'id': 'conv1',
@@ -1944,7 +1944,7 @@ class TestAPI(unittest.TestCase):
 
     def test_regenerate_conversation_exchange_empty(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {
                         'id': 'conv1',
@@ -1987,7 +1987,7 @@ class TestAPI(unittest.TestCase):
 
     def test_get_models_success(self):
         test_files = [
-                (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
+                ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
              ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama.list') as mock_ollama_list:
@@ -2047,7 +2047,7 @@ class TestAPI(unittest.TestCase):
 
     def test_get_models_no_models(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
+            ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama.list') as mock_ollama_list:
@@ -2070,7 +2070,7 @@ class TestAPI(unittest.TestCase):
 
     def test_get_models_downloading(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
+            ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama.list') as mock_ollama_list:
@@ -2107,7 +2107,7 @@ class TestAPI(unittest.TestCase):
 
     def test_get_models_ollama_failure(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
+            ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama.list') as mock_ollama_list:
@@ -2162,7 +2162,7 @@ class TestAPI(unittest.TestCase):
 
     def test_download_model_success(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({'conversations': []}))
+            ('ollama-chat.json', json.dumps({'conversations': []}))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama_chat.app.DownloadManager') as mock_download_manager:
@@ -2185,7 +2185,7 @@ class TestAPI(unittest.TestCase):
 
     def test_stop_model_download_success(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({'conversations': []}))
+            ('ollama-chat.json', json.dumps({'conversations': []}))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -2208,7 +2208,7 @@ class TestAPI(unittest.TestCase):
 
     def test_stop_model_download_not_downloading(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({'conversations': []}))
+            ('ollama-chat.json', json.dumps({'conversations': []}))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -2225,7 +2225,7 @@ class TestAPI(unittest.TestCase):
 
     def test_delete_model_success(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({'conversations': []}))
+            ('ollama-chat.json', json.dumps({'conversations': []}))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama.delete') as mock_ollama_delete:

@@ -17,7 +17,7 @@ class TestChatManaper(unittest.TestCase):
 
     def test_chat_fn(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
@@ -68,7 +68,7 @@ class TestChatManaper(unittest.TestCase):
 
     def test_chat_fn_help(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
@@ -113,12 +113,12 @@ class TestChatManaper(unittest.TestCase):
 
     def test_chat_fn_show(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
             })),
-            (('test.txt',), 'file content')
+            ('test.txt', 'file content')
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
@@ -165,7 +165,7 @@ file content
 
     def test_chat_fn_do(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ],
@@ -216,7 +216,7 @@ file content
 
     def test_chat_fn_do_variables(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ],
@@ -279,7 +279,7 @@ file content
 
     def test_chat_fn_do_unknown_template(self):
         test_files = [
-            (('ollama-chat.json',), json.dumps({
+            ('ollama-chat.json', json.dumps({
                 'conversations': [
                     {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
                 ]
@@ -403,9 +403,9 @@ class TestProcessCommands(unittest.TestCase):
 
     def test_dir(self):
         test_files = [
-            (('test.txt',), 'Test 1'),
-            (('subdir', 'test2.txt',), 'Test 2'),
-            (('subdir', 'test3.md',), '# Test 3')
+            ('test.txt', 'Test 1'),
+            (('subdir', 'test2.txt'), 'Test 2'),
+            (('subdir', 'test3.md'), '# Test 3')
         ]
         with create_test_files(test_files) as temp_dir:
             flags = {}
@@ -421,9 +421,9 @@ Test 1
 
     def test_dir_depth(self):
         test_files = [
-            (('test.txt',), 'Test 1'),
-            (('subdir', 'test2.txt',), 'Test 2'),
-            (('subdir', 'test3.md',), '# Test 3')
+            ('test.txt', 'Test 1'),
+            (('subdir', 'test2.txt'), 'Test 2'),
+            (('subdir', 'test3.md'), '# Test 3')
         ]
         with create_test_files(test_files) as temp_dir:
             flags = {}
@@ -449,7 +449,7 @@ Test 1
 
     def test_file(self):
         test_files = [
-            (('test.txt',), 'file content')
+            ('test.txt', 'file content')
         ]
         with create_test_files(test_files) as temp_dir:
             flags = {}
@@ -465,7 +465,7 @@ file content
 
     def test_file_show(self):
         test_files = [
-            (('test.txt',), 'file content')
+            ('test.txt', 'file content')
         ]
         with create_test_files(test_files) as temp_dir:
             flags = {}
@@ -481,7 +481,7 @@ file content
 
     def test_image(self):
         test_files = [
-            (('test.jpg',), 'image data')
+            ('test.jpg', 'image data')
         ]
         with create_test_files(test_files) as temp_dir:
             flags = {}
@@ -508,7 +508,7 @@ url content
 
     def test_multiple_commands(self):
         test_files = [
-            (('test.txt',), 'file content')
+            ('test.txt', 'file content')
         ]
         with create_test_files(test_files) as temp_dir:
             flags = {}
