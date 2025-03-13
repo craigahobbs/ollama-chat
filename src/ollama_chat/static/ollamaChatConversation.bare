@@ -493,7 +493,7 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
         'html', 'div', \
         'attr', objectNew( \
             'style', arrayJoin(arrayNew( \
-                'align-items: flex-end', \
+                'align-items: ' + if(multiline, 'flex-end', 'center'), \
                 'background-color: #c0c0c0', \
                 'border-radius: ' + numberToFixed(borderRadiusPx, ollamaChatConversationSVGPrecision) + 'px', \
                 'bottom: ' + numberToFixed(topBottomPx, ollamaChatConversationSVGPrecision) + 'px', \
