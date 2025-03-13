@@ -11,6 +11,7 @@ import ctypes
 import json
 import os
 from functools import partial
+import platform
 import importlib.resources
 import re
 import tarfile
@@ -589,13 +590,13 @@ def delete_model(unused_ctx, req):
 @chisel.action(name='getSystemInfo', types=OLLAMA_CHAT_TYPES)
 def get_system_info(unused_ctx, unused_req):
     # Compute the total memory
-    if os.name == 'nt':
+    if platform.system() == "Windows": # pragma: no cover
         memory_status = MEMORYSTATUSEX()
         # pylint: disable-next=invalid-name, attribute-defined-outside-init
         memory_status.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
         ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(memory_status))
         total_memory = memory_status.ullTotalPhys
-    else:
+    else: # pragma: no cover
         # pylint: disable-next=no-member, useless-suppression
         total_memory = os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
 

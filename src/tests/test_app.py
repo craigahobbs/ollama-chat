@@ -2,13 +2,16 @@
 # Licensed under the MIT License
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
+import ctypes
+import datetime
 import json
 import os
+import platform
 import unittest
 import unittest.mock
 
 from schema_markdown import encode_query_string
-from ollama_chat.app import OllamaChat
+from ollama_chat.app import OllamaChat, MEMORYSTATUSEX
 
 from .util import create_test_files
 
@@ -1709,7 +1712,7 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check config remains unchanged
+            # Check config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'conversations': [
@@ -1836,7 +1839,7 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_not_called()
             self.assertIs(app.chats['conv1'], mock_chat)
 
-            # Check config remains unchanged
+            # Check config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'conversations': [
@@ -1878,7 +1881,7 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_not_called()
             self.assertNotIn('conv1', app.chats)
 
-            # Check config remains unchanged
+            # Check config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'conversations': [
@@ -1890,5 +1893,310 @@ class TestAPI(unittest.TestCase):
                         }
                     ]
                 })
+
+
+    def test_get_models_success(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
+        ]) as temp_dir, \
+        unittest.mock.patch('ollama.list') as mock_ollama_list:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Create mock models
+            model1 = unittest.mock.Mock()
+            model1.model = 'llm:latest'
+            model1.details = unittest.mock.Mock(parameter_size='7B')
+            model1.size = 4100000000
+            model1.modified_at = datetime.datetime.fromisoformat('2023-10-01T12:00:00+00:00')
+            model2 = unittest.mock.Mock()
+            model2.model = 'other:tag'
+            model2.details = unittest.mock.Mock(parameter_size='3M')
+            model2.size = 1800000
+            model2.modified_at = datetime.datetime.fromisoformat('2023-10-02T12:00:00+00:00')
+            model3 = unittest.mock.Mock()
+            model3.model = 'other2:tag'
+            model3.details = unittest.mock.Mock(parameter_size='3K')
+            model3.size = 1800
+            model3.modified_at = datetime.datetime.fromisoformat('2023-10-02T12:00:00+00:00')
+            mock_ollama_list.return_value = {'models': [model1, model2, model3]}
+
+            status, headers, content_bytes = app.request('GET', '/getModels')
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {
+                'models': [
+                    {
+                        'id': 'llm:latest',
+                        'name': 'llm',
+                        'parameters': 7000000000,
+                        'size': 4100000000,
+                        'modified': '2023-10-01T12:00:00+00:00'
+                    },
+                    {
+                        'id': 'other2:tag',
+                        'modified': '2023-10-02T12:00:00+00:00',
+                        'name': 'other2',
+                        'parameters': 3000,
+                        'size': 1800
+                    },
+                    {
+                        'id': 'other:tag',
+                        'name': 'other',
+                        'parameters': 3000000,
+                        'size': 1800000,
+                        'modified': '2023-10-02T12:00:00+00:00'
+                    }
+                ],
+                'downloading': [],
+                'model': 'llm'
+            })
+
+
+    def test_get_models_no_models(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
+        ]) as temp_dir, \
+        unittest.mock.patch('ollama.list') as mock_ollama_list:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Mock ollama.list to return no models
+            mock_ollama_list.return_value = {'models': []}
+
+            status, headers, content_bytes = app.request('GET', '/getModels')
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {
+                'models': [],
+                'downloading': [],
+                'model': 'llm'
+            })
+
+
+    def test_get_models_downloading(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
+        ]) as temp_dir, \
+        unittest.mock.patch('ollama.list') as mock_ollama_list:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Mock ollama.list to return no models
+            mock_ollama_list.return_value = {'models': []}
+
+            # Add a downloading model
+            mock_download = unittest.mock.Mock()
+            mock_download.status = 'downloading'
+            mock_download.completed = 5000000
+            mock_download.total = 10000000
+            app.downloads['downloading_model'] = mock_download
+
+            status, headers, content_bytes = app.request('GET', '/getModels')
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {
+                'models': [],
+                'downloading': [
+                    {
+                        'id': 'downloading_model',
+                        'status': 'downloading',
+                        'completed': 5000000,
+                        'size': 10000000
+                    }
+                ],
+                'model': 'llm'
+            })
+
+
+    def test_get_models_ollama_failure(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({'model': 'llm', 'conversations': []}))
+        ]) as temp_dir, \
+        unittest.mock.patch('ollama.list') as mock_ollama_list:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Mock ollama.list to raise an exception
+            mock_ollama_list.side_effect = Exception("Ollama failure")
+
+            status, headers, content_bytes = app.request('GET', '/getModels')
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {
+                'models': [],
+                'downloading': [],
+                'model': 'llm'
+            })
+
+
+    def test_get_models_no_config_model(self):
+        with create_test_files([]) as temp_dir, \
+             unittest.mock.patch('ollama.list') as mock_ollama_list:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Create mock models
+            model1 = unittest.mock.Mock()
+            model1.model = 'llm:latest'
+            model1.details = unittest.mock.Mock(parameter_size='7B')
+            model1.size = 4100000000
+            model1.modified_at = datetime.datetime.fromisoformat('2023-10-01T12:00:00+00:00')
+            mock_ollama_list.return_value = {'models': [model1]}
+
+            status, headers, content_bytes = app.request('GET', '/getModels')
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {
+                'models': [
+                    {
+                        'id': 'llm:latest',
+                        'name': 'llm',
+                        'parameters': 7000000000,
+                        'size': 4100000000,
+                        'modified': '2023-10-01T12:00:00+00:00'
+                    }
+                ],
+                'downloading': []
+            })
+
+
+    def test_download_model_success(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({'conversations': []}))
+        ]) as temp_dir, \
+        unittest.mock.patch('ollama_chat.app.DownloadManager') as mock_download_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Initiate model download
+            request = {'model': 'llm:latest'}
+            status, headers, content_bytes = app.request('POST', '/downloadModel', wsgi_input=json.dumps(request).encode('utf-8'))
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {})
+
+            # Verify DownloadManager was called and stored
+            mock_download_manager.assert_called_once_with(app, 'llm:latest')
+            self.assertIn('llm:latest', app.downloads)
+            self.assertIs(app.downloads['llm:latest'], mock_download_manager.return_value)
+
+
+    def test_stop_model_download_success(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({'conversations': []}))
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Add a mock download to the downloads dictionary
+            mock_download = unittest.mock.Mock()
+            mock_download.stop = False
+            app.downloads['llm:latest'] = mock_download
+
+            # Stop the model download
+            request = {'model': 'llm:latest'}
+            status, headers, content_bytes = app.request('POST', '/stopModelDownload', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
+            self.assertTrue(mock_download.stop)  # Verify stop flag was set
+            self.assertIs(app.downloads['llm:latest'], mock_download)
+
+
+    def test_stop_model_download_not_downloading(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({'conversations': []}))
+        ]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to stop a non-existent download
+            request = {'model': 'llm:latest'}
+            status, headers, content_bytes = app.request('POST', '/stopModelDownload', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
+            self.assertDictEqual(app.downloads, {})
+
+
+    def test_delete_model_success(self):
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({'conversations': []}))
+        ]) as temp_dir, \
+        unittest.mock.patch('ollama.delete') as mock_ollama_delete:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Delete model 'llm:latest'
+            request = {'model': 'llm:latest'}
+            status, headers, content_bytes = app.request('POST', '/deleteModel', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
+            mock_ollama_delete.assert_called_once_with('llm:latest')
+
+
+    @unittest.skipIf(platform.system() != 'Windows', "Skipping this test on non-Windows")
+    def test_get_system_info_windows(self): # pragma: no cover
+        with create_test_files([
+                (('ollama-chat.json',), json.dumps({'conversations': []}))
+             ]) as temp_dir, \
+             unittest.mock.patch('os.name', 'nt'), \
+             unittest.mock.patch('ctypes.windll.kernel32.GlobalMemoryStatusEx') as mock_memory_status:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Mock the MEMORYSTATUSEX structure and the ctypes call
+            mock_memory = unittest.mock.Mock()
+            mock_memory.ullTotalPhys = 8589934592
+            mock_memory_status.return_value = None
+
+            status, headers, content_bytes = app.request('GET', '/getSystemInfo')
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {'memory': 8589934592})
+
+            # Verify the ctypes call was made with a MEMORYSTATUSEX instance
+            self.assertTrue(mock_memory_status.called)
+            args, _ = mock_memory_status.call_args
+            self.assertIsInstance(args[0], ctypes.Structure)
+            self.assertEqual(ctypes.sizeof(args[0]), ctypes.sizeof(MEMORYSTATUSEX))
+
+
+    @unittest.skipIf(platform.system() == 'Windows', "Skipping this test on Windows")
+    def test_get_system_info_unix(self): # pragma: no cover
+        with create_test_files([
+            (('ollama-chat.json',), json.dumps({'conversations': []}))
+        ]) as temp_dir, \
+        unittest.mock.patch('os.name', 'posix'), \
+        unittest.mock.patch('os.sysconf') as mock_sysconf:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Mock os.sysconf calls
+            mock_sysconf.side_effect = lambda x: {
+                'SC_PHYS_PAGES': 2097152,
+                'SC_PAGE_SIZE': 4096
+            }[x]
+
+            # Make the request
+            status, headers, content_bytes = app.request('GET', '/getSystemInfo')
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {'memory': 8589934592})  # 8GB in bytes
+
+            # Verify os.sysconf calls
+            mock_sysconf.assert_any_call('SC_PHYS_PAGES')
+            mock_sysconf.assert_any_call('SC_PAGE_SIZE')
+            self.assertEqual(mock_sysconf.call_count, 2)
 
 # {% endraw %}
