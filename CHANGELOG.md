@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.54 (2025-03-13)
+
+- [d6b9240](https://github.com/craigahobbs/ollama-chat/commit/d6b9240) - fix tests on windows
+
+- [3274ceb](https://github.com/craigahobbs/ollama-chat/commit/3274ceb) - minor fixes, 100% backend unit test coverage
+
+- [d6091e3](https://github.com/craigahobbs/ollama-chat/commit/d6091e3) - minor fixes, app tests, and chat tests
+
+- [c5305b8](https://github.com/craigahobbs/ollama-chat/commit/c5305b8) - cleanup file inclusion, test improvements
+
+- [a98afc9](https://github.com/craigahobbs/ollama-chat/commit/a98afc9) - minor fixes and additional main unit tests
+
 ## 0.9.53 (2025-03-07)
 
 - [617618c](https://github.com/craigahobbs/ollama-chat/commit/617618c) - show/hide thinking of reasoning models
