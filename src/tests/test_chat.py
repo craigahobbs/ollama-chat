@@ -484,10 +484,60 @@ Test 1
             self.assertDictEqual(flags, {})
 
 
+    def test_dir_exclude(self):
+        test_files = [
+            ('test.txt', 'Test 1'),
+            (('subdir', 'test2.txt'), 'Test 2'),
+            (('subdir2', 'test3.txt'), 'Test 3')
+        ]
+        with create_test_files(test_files) as temp_dir:
+            flags = {}
+            self.assertEqual(
+                _process_commands(f'/dir {temp_dir} .txt -d 2 -x test.txt -x subdir2/', flags),
+                f'''\
+<{_escape_markdown_text(temp_dir)}/subdir/test2.txt>
+Test 2
+</ {_escape_markdown_text(temp_dir)}/subdir/test2.txt>'''
+            )
+            self.assertDictEqual(flags, {})
+
+
+    def test_dir_no_files(self):
+        with create_test_files([]) as temp_dir, \
+             self.assertRaises(ValueError) as cm_exc:
+            _process_commands(f'/dir {temp_dir} .txt', {})
+        self.assertEqual(str(cm_exc.exception), f'no files found in directory "{temp_dir}"')
+
+
     def test_do(self):
         flags = {}
         self.assertEqual(_process_commands('/do template_name -v var1 val1', flags), 'Executing template "template_name"')
         self.assertDictEqual(flags, {'do': [('template_name', {'var1': 'val1'})]})
+
+
+    def test_do_multiple(self):
+        flags = {}
+        self.assertEqual(
+            _process_commands(
+                '''\
+/do template_name -v var1 val1
+
+/do template_name -v var1 val2
+''',
+                flags
+            ),
+            '''\
+Executing template "template_name"
+
+Executing template "template_name"
+'''
+        )
+        self.assertDictEqual(flags, {
+            'do': [
+                ('template_name', {'var1': 'val1'}),
+                ('template_name', {'var1': 'val2'})
+            ]
+        })
 
 
     def test_file(self):
@@ -530,6 +580,32 @@ file content
             flags = {}
             self.assertEqual(_process_commands(f'/image {temp_dir}/test.jpg', flags), '')
             self.assertDictEqual(flags, {'images': [base64.b64encode(b'image data').decode('utf-8')]})
+
+
+    def test_image_multiple(self):
+        test_files = [
+            ('test.jpg', 'image data'),
+            ('test2.jpg', 'image data 2')
+        ]
+        with create_test_files(test_files) as temp_dir:
+            flags = {}
+            self.assertEqual(
+                _process_commands(
+                    f'''\
+/image {temp_dir}/test.jpg
+
+/image {temp_dir}/test2.jpg
+''',
+                    flags
+                ),
+                '\n\n\n'
+            )
+            self.assertDictEqual(flags, {
+                'images': [
+                    base64.b64encode(b'image data').decode('utf-8'),
+                    base64.b64encode(b'image data 2').decode('utf-8')
+                ]
+            })
 
 
     def test_url(self):

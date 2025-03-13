@@ -188,12 +188,18 @@ def _process_commands_sub(flags, match):
         dir_excludes = []
         if args.exclude:
             for exclude in args.exclude:
-                (dir_excludes if exclude.endswith('/') else file_excludes).append(exclude)
+                if exclude.endswith('/'):
+                    dir_excludes.append(exclude)
+                else:
+                    file_excludes.append(exclude)
 
         # Get the file content
         file_contents = []
         for file_name in sorted(_get_directory_files(dir_path, max(1, args.depth) - 1, file_exts)):
-            if file_name in file_excludes or any(file_name.startswith(dir_exclude) for dir_exclude in dir_excludes):
+            rel_name = file_name[len(dir_path) + (0 if dir_path.endswith('/') else 1):]
+            if any(rel_name.endswith(file_exclude) for file_exclude in file_excludes):
+                continue
+            if any(rel_name.startswith(dir_exclude) for dir_exclude in dir_excludes):
                 continue
             with open(file_name, 'r', encoding='utf-8') as fh:
                 file_contents.append(_command_file_content(file_name, fh.read()))

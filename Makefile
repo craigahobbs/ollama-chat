@@ -27,11 +27,6 @@ include Makefile.base
 TESTS_REQUIRE := bare-script
 
 
-# Set the coverage limit
-COVERAGE_REPORT_ARGS := $(COVERAGE_REPORT_ARGS) --fail-under 99
-UNITTEST_PARALLEL_COVERAGE_ARGS := --coverage-branch --coverage-fail-under 99
-
-
 # Disable pylint docstring warnings
 PYLINT_ARGS := $(PYLINT_ARGS) static/models --disable=missing-class-docstring --disable=missing-function-docstring --disable=missing-module-docstring
 
