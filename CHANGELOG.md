@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.56 (2025-03-18)
+
+- [1635506](https://github.com/craigahobbs/ollama-chat/commit/1635506) - improved conversation menu behavior, models page fixes
+
 ## 0.9.55 (2025-03-13)
 
 - [059690c](https://github.com/craigahobbs/ollama-chat/commit/059690c) - fix alignment of conversation page hamburger
