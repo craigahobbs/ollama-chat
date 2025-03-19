@@ -127,7 +127,11 @@ async function ollamaChatIndexPage(args):
             selectText = if(selected, 'Cancel', 'Select')
             selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'conversation'), 'actionID', if(!selected, id)))
             arrayPush(conversationTableRows, objectNew('html', 'tr', 'elem', arrayNew( \
-                objectNew('html', 'td', 'elem', formsLinkElements(title, conversationURL)), \
+                objectNew( \
+                    'html', 'td', 'attr', \
+                    objectNew('style', 'min-width: 10em;'), \
+                    'elem', formsLinkElements(title, conversationURL) \
+                ), \
                 objectNew('html', 'td', 'elem', objectNew('text', model)), \
                 objectNew('html', 'td', 'elem', if(generating, \
                     objectNew('text', 'Generating...'), \
@@ -168,7 +172,11 @@ async function ollamaChatIndexPage(args):
             selectText = if(selected, 'Cancel', 'Select')
             selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'template'), 'actionID', if(!selected, templateID)))
             arrayPush(templateTableRows, objectNew('html', 'tr', 'elem', arrayNew( \
-                objectNew('html', 'td', 'elem', formsLinkButtonElements(templateTitle, templateStartFn)), \
+                objectNew( \
+                    'html', 'td', \
+                    'attr', objectNew('style', 'min-width: 10em;'), \
+                    'elem', formsLinkButtonElements(templateTitle, templateStartFn) \
+                ), \
                 objectNew('html', 'td', 'elem', arrayNew( \
                     formsLinkElements(selectText, selectURL), \
                     if(selected, arrayNew( \
