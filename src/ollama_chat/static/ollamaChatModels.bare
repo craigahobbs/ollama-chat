@@ -64,13 +64,13 @@ async function ollamaChatModelsPage(args):
                 objectNew('html', 'td', 'elem', objectNew('text', modelID)), \
                 objectNew('html', 'td', 'elem', objectNew('text', progress)), \
                 objectNew('html', 'td', 'elem', objectNew('text', status)), \
-                formsLinkButtonElements('Stop', systemPartial(ollamaChatModelsOnDownloadStop, modelID)) \
+                formsLinkButtonElements('Stop', systemPartial(ollamaChatModelsOnDownloadStop, args, modelID)) \
             )))
         endfor
         elementModelRender(downloadTable)
 
         # Set the refresh timer
-        windowSetTimeout(ollamaChatModelsPage, ollamaChatModelsDownloadTimeoutMs)
+        windowSetTimeout(systemPartial(ollamaChatModelsPage, args), ollamaChatModelsDownloadTimeoutMs)
     endif
 
     # Render the model list
@@ -119,7 +119,7 @@ async function ollamaChatModelsPage(args):
                     formsLinkElements(selectText, selectURL), \
                     if(selected, arrayNew( \
                         objectNew('text', spacer + '|' + spacer), \
-                        formsLinkButtonElements('Delete', systemPartial(ollamaChatModelsOnDelete, modelID)), \
+                        formsLinkButtonElements('Delete', systemPartial(ollamaChatModelsOnDelete, args, modelID)), \
                         objectNew('text', spacer), \
                         formsLinkButtonElements('Update', systemPartial(ollamaChatModelsOnDownload, modelID)), \
                         objectNew('text', spacer), \
@@ -169,16 +169,16 @@ endfunction
 
 
 # Stop model download on-click event handler
-async function ollamaChatModelsOnDownloadStop(model):
+async function ollamaChatModelsOnDownloadStop(args, model):
     systemFetch(objectNew('url', 'stopModelDownload', 'body', jsonStringify(objectNew('model', model))))
-    ollamaChatModelsPage()
+    ollamaChatModelsPage(args)
 endfunction
 
 
 # Delete model delete on-click event handler
-async function ollamaChatModelsOnDelete(model):
+async function ollamaChatModelsOnDelete(args, model):
     systemFetch(objectNew('url', 'deleteModel', 'body', jsonStringify(objectNew('model', model))))
-    ollamaChatModelsPage()
+    ollamaChatModelsPage(args)
 endfunction
 
 

@@ -383,6 +383,7 @@ endfunction
 # The conversation page floating controls element model
 function ollamaChatConversationFloatingElements(args, conversation, generating):
     action = objectGet(args, 'action')
+    menuShow = objectGet(args, 'menu')
     multiline = objectGet(args, 'multiline')
     textView = objectGet(args, 'text')
     elements = arrayNew()
@@ -400,8 +401,8 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
 
     # Compute button navigation URLs
     indexURL = argsURL(ollamaChatArguments, null, true)
-    menuURL = argsURL(ollamaChatArguments, objectNew('action', if(action != 'menu', 'menu')))
-    titleURL = argsURL(ollamaChatArguments, objectNew('action', 'title'))
+    menuURL = argsURL(ollamaChatArguments, objectNew('menu', !menuShow))
+    titleURL = argsURL(ollamaChatArguments, if(action != 'title', objectNew('action', 'title')))
     markdownURL = argsURL(ollamaChatArguments, objectNew('text', !textView))
     multilineURL = argsURL(ollamaChatArguments, objectNew('multiline', !multiline))
 
@@ -416,7 +417,7 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
     # Generate the download URL, if necessary
     markdownDownloadURL = null
     markdownFilename = null
-    if conversation != null && !generating && action == 'menu':
+    if conversation != null && !generating && menuShow:
         markdownTitle = objectGet(conversation, 'title')
         markdownParts = arrayNew('# ' + markdownEscape(markdownTitle), '', '**Model:** ' + markdownEscape(objectGet(conversation, 'model')))
         for exchange in objectGet(conversation, 'exchanges'):
@@ -467,8 +468,8 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
             formsLinkElements('Bottom', argsURL(ollamaChatArguments, null, false, ollamaChatConversationBottomID)), \
             if(conversation != null && !generating, arrayNew( \
                 objectNew('text', separator), \
-                formsLinkButtonElements(if(action != 'menu', '>>', '<<'), menuClickFn), \
-                if(action == 'menu', arrayNew( \
+                formsLinkButtonElements(if(menuShow, '<<', '>>'), menuClickFn), \
+                if(menuShow, arrayNew( \
                     objectNew('text', separator), \
                     formsLinkButtonElements('Title', titleClickFn), \
                     objectNew('text', separator), \
