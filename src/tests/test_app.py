@@ -104,7 +104,7 @@ class TestApp(unittest.TestCase):
             )
 
 
-class TestDownloadManaper(unittest.TestCase):
+class TestDownloadManager(unittest.TestCase):
 
     def test_download_fn(self):
         with create_test_files([]) as temp_dir, \
@@ -121,8 +121,8 @@ class TestDownloadManaper(unittest.TestCase):
             mock_pull.return_value = iter([progress1])
 
             # Create the ChatManager instance
-            download_manager = DownloadManager(app, 'llm:latest')
-            app.downloads['llm:latest'] = download_manager
+            download_manager = DownloadManager(app, 'llm:7b')
+            app.downloads['llm:7b'] = download_manager
             mock_thread.assert_called_once_with(target=DownloadManager.download_thread_fn, args=(download_manager,))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
@@ -133,6 +133,13 @@ class TestDownloadManaper(unittest.TestCase):
             self.assertEqual(download_manager.status, 'success')
             self.assertEqual(download_manager.completed, 1000)
             self.assertEqual(download_manager.total, 2000)
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, {'conversations': []})
+
+            # Verify the config file
+            self.assertFalse(os.path.exists(config_path))
 
 
     def test_download_fn_stop(self):
@@ -150,7 +157,7 @@ class TestDownloadManaper(unittest.TestCase):
             mock_pull.return_value = iter([progress1])
 
             # Create the ChatManager instance
-            download_manager = DownloadManager(app, 'llm:latest')
+            download_manager = DownloadManager(app, 'llm:7b')
             download_manager.stop = True
             mock_thread.assert_called_once_with(target=DownloadManager.download_thread_fn, args=(download_manager,))
             mock_thread.return_value.start.assert_called_once_with()
@@ -162,6 +169,13 @@ class TestDownloadManaper(unittest.TestCase):
             self.assertEqual(download_manager.status, '')
             self.assertEqual(download_manager.completed, 0)
             self.assertEqual(download_manager.total, 0)
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, {'conversations': []})
+
+            # Verify the config file
+            self.assertFalse(os.path.exists(config_path))
 
 
     def test_download_fn_ollama_failure(self):
@@ -175,8 +189,8 @@ class TestDownloadManaper(unittest.TestCase):
             mock_pull.side_effect = Exception('Ollama failure')
 
             # Create the ChatManager instance
-            download_manager = DownloadManager(app, 'llm:latest')
-            app.downloads['llm:latest'] = download_manager
+            download_manager = DownloadManager(app, 'llm:7b')
+            app.downloads['llm:7b'] = download_manager
             mock_thread.assert_called_once_with(target=DownloadManager.download_thread_fn, args=(download_manager,))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
@@ -187,6 +201,13 @@ class TestDownloadManaper(unittest.TestCase):
             self.assertEqual(download_manager.status, '')
             self.assertEqual(download_manager.completed, 0)
             self.assertEqual(download_manager.total, 0)
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, {'conversations': []})
+
+            # Verify the config file
+            self.assertFalse(os.path.exists(config_path))
 
 
 class TestAPI(unittest.TestCase):
@@ -201,6 +222,13 @@ class TestAPI(unittest.TestCase):
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json'), ('Access-Control-Allow-Origin', '*')])
             self.assertDictEqual(response, {'conversations': [], 'templates': []})
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, {'conversations': []})
+
+            # Verify the config file
+            self.assertFalse(os.path.exists(config_path))
 
 
     def test_get_conversations(self):
@@ -217,6 +245,15 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {'model': 'llm', 'conversations': [], 'templates': []})
 
+            # Verify the app config
+            expected_config = {'model': 'llm', 'conversations': []}
+            with app.config() as config:
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertDictEqual(json.load(config_fh), expected_config)
+
 
     def test_get_conversations_no_model(self):
         with create_test_files([]) as temp_dir:
@@ -228,6 +265,13 @@ class TestAPI(unittest.TestCase):
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {'conversations': [], 'templates': []})
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, {'conversations': []})
+
+            # Verify the config file
+            self.assertFalse(os.path.exists(config_path))
 
 
     def test_set_model(self):
@@ -243,8 +287,14 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {})
 
+            # Verify the app config
+            expected_config = {'model': 'llm', 'conversations': []}
             with app.config() as config:
-                self.assertDictEqual(config, {'model': 'llm', 'conversations': []})
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_move_conversation_down(self):
@@ -269,15 +319,20 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check the config
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
+                    {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []},
+                    {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []}
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
-                        {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []},
-                        {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []}
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_move_conversation_up(self):
@@ -302,26 +357,32 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check the config
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []},
+                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
+                    {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []},
-                        {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
-                        {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_move_conversation_down_last(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
+                {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []},
+                {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
-                    {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []},
-                    {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -335,26 +396,25 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check the config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
-                        {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []},
-                        {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
-                    ]
-                })
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_move_conversation_up_first(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
+                {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []},
+                {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
-                    {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []},
-                    {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -368,24 +428,23 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check the config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []},
-                        {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []},
-                        {'id': 'conv3', 'model': 'llm', 'title': 'Conversation 3', 'exchanges': []}
-                    ]
-                })
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_move_conversation_unknown_id(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -399,6 +458,14 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'UnknownConversationID'})
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_move_template_down(self):
@@ -424,16 +491,21 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check the config
+            # Verify the app config
+            expected_config = {
+                'conversations': [],
+                'templates': [
+                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
+                    {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []},
+                    {'id': 'tmpl2', 'title': 'Template 2', 'prompts': []}
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [],
-                    'templates': [
-                        {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
-                        {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []},
-                        {'id': 'tmpl2', 'title': 'Template 2', 'prompts': []}
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_move_template_up(self):
@@ -459,28 +531,34 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check the config
+            # Verify the app config
+            expected_config = {
+                'conversations': [],
+                'templates': [
+                    {'id': 'tmpl2', 'title': 'Template 2', 'prompts': []},
+                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
+                    {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [],
-                    'templates': [
-                        {'id': 'tmpl2', 'title': 'Template 2', 'prompts': []},
-                        {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
-                        {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_move_template_down_last(self):
+        original_config = {
+            'conversations': [],
+            'templates': [
+                {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
+                {'id': 'tmpl2', 'title': 'Template 2', 'prompts': []},
+                {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [],
-                'templates': [
-                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
-                    {'id': 'tmpl2', 'title': 'Template 2', 'prompts': []},
-                    {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -494,28 +572,26 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check the config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [],
-                    'templates': [
-                        {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
-                        {'id': 'tmpl2', 'title': 'Template 2', 'prompts': []},
-                        {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
-                    ]
-                })
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_move_template_up_first(self):
+        original_config = {
+            'conversations': [],
+            'templates': [
+                {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
+                {'id': 'tmpl2', 'title': 'Template 2', 'prompts': []},
+                {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [],
-                'templates': [
-                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
-                    {'id': 'tmpl2', 'title': 'Template 2', 'prompts': []},
-                    {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -529,26 +605,24 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check the config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [],
-                    'templates': [
-                        {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []},
-                        {'id': 'tmpl2', 'title': 'Template 2', 'prompts': []},
-                        {'id': 'tmpl3', 'title': 'Template 3', 'prompts': []}
-                    ]
-                })
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_move_template_unknown_id(self):
+        original_config = {
+            'conversations': [],
+            'templates': [
+                {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [],
-                'templates': [
-                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -562,6 +636,14 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
 
@@ -587,24 +669,30 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check the config
+            # Verify the app config
+            expected_config = {
+                'conversations': [],
+                'templates': [
+                    {'id': 'tmpl2', 'title': 'Template 2', 'prompts': []}
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [],
-                    'templates': [
-                        {'id': 'tmpl2', 'title': 'Template 2', 'prompts': []}
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_delete_template_unknown_id(self):
+        original_config = {
+            'conversations': [],
+            'templates': [
+                {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [],
-                'templates': [
-                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': []}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -619,12 +707,19 @@ class TestAPI(unittest.TestCase):
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_delete_template_no_templates(self):
+        original_config = {'conversations': []}
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': []
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -639,22 +734,25 @@ class TestAPI(unittest.TestCase):
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': []
-                })
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_get_template_success(self):
+        original_config = {
+            'conversations': [],
+            'templates': [
+                {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']},
+                {'id': 'tmpl2', 'title': 'Template 2', 'prompts': ['Prompt 2']}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [],
-                'templates': [
-                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']},
-                    {'id': 'tmpl2', 'title': 'Template 2', 'prompts': ['Prompt 2']}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -672,15 +770,24 @@ class TestAPI(unittest.TestCase):
                 {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
             )
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_get_template_unknown_id(self):
+        original_config = {
+            'conversations': [],
+            'templates': [
+                {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [],
-                'templates': [
-                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -695,12 +802,19 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_get_template_no_templates(self):
+        original_config = {'conversations': []}
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': []
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -715,16 +829,25 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_update_template_success(self):
+        original_config = {
+            'conversations': [],
+            'templates': [
+                {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']},
+                {'id': 'tmpl2', 'title': 'Template 2', 'prompts': ['Prompt 2']}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [],
-                'templates': [
-                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']},
-                    {'id': 'tmpl2', 'title': 'Template 2', 'prompts': ['Prompt 2']}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -745,36 +868,38 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check the config
+            # Verify the app config
+            expected_config = {
+                'conversations': [],
+                'templates': [
+                    updated_template,
+                    {'id': 'tmpl2', 'title': 'Template 2', 'prompts': ['Prompt 2']}
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [],
-                    'templates': [
-                        updated_template,
-                        {'id': 'tmpl2', 'title': 'Template 2', 'prompts': ['Prompt 2']}
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_update_template_unknown_id(self):
+        original_config = {
+            'conversations': [],
+            'templates': [
+                {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [],
-                'templates': [
-                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Try to update non-existent template 'tmpl2'
-            updated_template = {
-                'id': 'tmpl2',
-                'title': 'Updated Template 2',
-                'prompts': ['New Prompt']
-            }
+            updated_template = {'id': 'tmpl2', 'title': 'Updated Template 2', 'prompts': ['New Prompt']}
             status, headers, content_bytes = app.request(
                 'POST', '/updateTemplate',
                 wsgi_input=json.dumps(updated_template).encode('utf-8')
@@ -784,32 +909,26 @@ class TestAPI(unittest.TestCase):
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [],
-                    'templates': [
-                        {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
-                    ]
-                })
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_update_template_no_templates(self):
+        original_config = {'conversations': []}
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': []
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Try to update template when no templates exist
-            updated_template = {
-                'id': 'tmpl1',
-                'title': 'New Template',
-                'prompts': ['New Prompt']
-            }
+            updated_template = {'id': 'tmpl1', 'title': 'New Template', 'prompts': ['New Prompt']}
             status, headers, content_bytes = app.request(
                 'POST', '/updateTemplate',
                 wsgi_input=json.dumps(updated_template).encode('utf-8')
@@ -819,16 +938,19 @@ class TestAPI(unittest.TestCase):
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': []
-                })
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_start_conversation(self):
+        original_config = {'model': 'llm', 'conversations': []}
         test_files = [
-            ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
@@ -846,19 +968,18 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_called_once_with(app, response['id'], ['Hello'])
             self.assertIs(app.chats['12345678-1234-5678-1234-567812345678'], mock_manager.return_value)
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
                 self.assertDictEqual(config, {
-                    'model': 'llm',
-                    'conversations': [
-                        {
-                            'id': '12345678-1234-5678-1234-567812345678',
-                            'model': 'llm',
-                            'title': 'Hello',
-                            'exchanges': []
-                        }
-                    ]
-                })
+                'model': 'llm',
+                'conversations': [
+                    {'id': '12345678-1234-5678-1234-567812345678', 'model': 'llm', 'title': 'Hello', 'exchanges': []}
+                ]
+            })
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_start_conversation_model(self):
@@ -878,18 +999,16 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_called_once_with(app, response['id'], ['Hello'])
             self.assertIs(app.chats['12345678-1234-5678-1234-567812345678'], mock_manager.return_value)
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'conversations': [
-                        {
-                            'id': '12345678-1234-5678-1234-567812345678',
-                            'model': 'llm',
-                            'title': 'Hello',
-                            'exchanges': []
-                        }
+                        {'id': '12345678-1234-5678-1234-567812345678', 'model': 'llm', 'title': 'Hello', 'exchanges': []}
                     ]
                 })
+
+            # Verify the config file
+            self.assertFalse(os.path.exists(config_path))
 
 
     def test_start_conversation_max_title(self):
@@ -910,7 +1029,7 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_called_once_with(app, response['id'], [prompt])
             self.assertIs(app.chats['12345678-1234-5678-1234-567812345678'], mock_manager.return_value)
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'conversations': [
@@ -922,6 +1041,9 @@ class TestAPI(unittest.TestCase):
                         }
                     ]
                 })
+
+            # Verify the config file
+            self.assertFalse(os.path.exists(config_path))
 
 
     def test_start_conversation_no_model(self):
@@ -940,22 +1062,24 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_not_called()
             self.assertNotIn('12345678-1234-5678-1234-567812345678', app.chats)
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': []
-                })
+                self.assertDictEqual(config, {'conversations': []})
+
+            # Verify the config file
+            self.assertFalse(os.path.exists(config_path))
 
 
     def test_start_template(self):
+        original_config = {
+            'model': 'llm',
+            'conversations': [],
+            'templates': [
+                {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'model': 'llm',
-                'conversations': [],
-                'templates': [
-                    {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
@@ -973,33 +1097,33 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_called_once_with(app, response['id'], ['Prompt 1'])
             self.assertIs(app.chats['12345678-1234-5678-1234-567812345678'], mock_manager.return_value)
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'model': 'llm',
                     'conversations': [
-                        {
-                            'id': '12345678-1234-5678-1234-567812345678',
-                            'model': 'llm',
-                            'title': 'Template 1',
-                            'exchanges': []
-                        }
+                        {'id': '12345678-1234-5678-1234-567812345678', 'model': 'llm', 'title': 'Template 1', 'exchanges': []}
                     ],
                     'templates': [
                         {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
                     ]
                 })
 
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_start_template_by_name(self):
+        original_config = {
+            'model': 'llm',
+            'conversations': [],
+            'templates': [
+                {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'model': 'llm',
-                'conversations': [],
-                'templates': [
-                    {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
@@ -1017,32 +1141,32 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_called_once_with(app, response['id'], ['Prompt 1'])
             self.assertIs(app.chats['12345678-1234-5678-1234-567812345678'], mock_manager.return_value)
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'model': 'llm',
                     'conversations': [
-                        {
-                            'id': '12345678-1234-5678-1234-567812345678',
-                            'model': 'llm',
-                            'title': 'Template 1',
-                            'exchanges': []
-                        }
+                        {'id': '12345678-1234-5678-1234-567812345678', 'model': 'llm', 'title': 'Template 1', 'exchanges': []}
                     ],
                     'templates': [
                         {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
                     ]
                 })
 
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_start_template_model(self):
+        original_config = {
+            'conversations': [],
+            'templates': [
+                {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [],
-                'templates': [
-                    {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('uuid.uuid4', return_value = '12345678-1234-5678-1234-567812345678'), \
@@ -1060,32 +1184,32 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_called_once_with(app, response['id'], ['Prompt 1'])
             self.assertIs(app.chats['12345678-1234-5678-1234-567812345678'], mock_manager.return_value)
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
                 self.assertDictEqual(config, {
                     'conversations': [
-                        {
-                            'id': '12345678-1234-5678-1234-567812345678',
-                            'model': 'llm',
-                            'title': 'Template 1',
-                            'exchanges': []
-                        }
+                        {'id': '12345678-1234-5678-1234-567812345678', 'model': 'llm', 'title': 'Template 1', 'exchanges': []}
                     ],
                     'templates': [
                         {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
                     ]
                 })
 
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_start_template_no_model(self):
+        original_config = {
+            'conversations': [],
+            'templates': [
+                {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+            ]
+        }
         test_files = [
-                ('ollama-chat.json', json.dumps({
-                    'conversations': [],
-                    'templates': [
-                        {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
-                    ]
-                }))
-             ]
+            ('ollama-chat.json', json.dumps(original_config))
+        ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -1101,14 +1225,13 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_not_called()
             self.assertNotIn('12345678-1234-5678-1234-567812345678', app.chats)
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [],
-                    'templates': [
-                        {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
-                    ]
-                })
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_start_template_unknown_template(self):
@@ -1127,22 +1250,24 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_not_called()
             self.assertNotIn('12345678-1234-5678-1234-567812345678', app.chats)
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': []
-                })
+                self.assertDictEqual(config, {'conversations': []})
+
+            # Verify the config file
+            self.assertFalse(os.path.exists(config_path))
 
 
     def test_start_template_unknown_variable(self):
+        original_config = {
+            'conversations': [],
+            'templates': [
+                {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+            ]
+        }
         test_files = [
-                ('ollama-chat.json', json.dumps({
-                    'conversations': [],
-                    'templates': [
-                        {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
-                    ]
-                }))
-             ]
+            ('ollama-chat.json', json.dumps(original_config))
+        ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -1158,31 +1283,31 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_not_called()
             self.assertNotIn('12345678-1234-5678-1234-567812345678', app.chats)
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [],
-                    'templates': [
-                        {'id': 'tmpl1', 'name': 'test', 'title': 'Template 1', 'prompts': ['Prompt 1']}
-                    ]
-                })
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_start_template_missing_variable(self):
+        original_config = {
+            'conversations': [],
+            'templates': [
+                {
+                    'id': 'tmpl1',
+                    'name': 'test',
+                    'title': 'Template 1',
+                    'variables': [{'name': 'name', 'label': 'Name'}],
+                    'prompts': ['Prompt {{name}}'],
+                }
+            ]
+        }
         test_files = [
-                ('ollama-chat.json', json.dumps({
-                    'conversations': [],
-                    'templates': [
-                        {
-                            'id': 'tmpl1',
-                            'name': 'test',
-                            'title': 'Template 1',
-                            'variables': [{'name': 'name', 'label': 'Name'}],
-                            'prompts': ['Prompt {{name}}'],
-                        }
-                    ]
-                }))
-             ]
+            ('ollama-chat.json', json.dumps(original_config))
+        ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -1198,29 +1323,23 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_not_called()
             self.assertNotIn('12345678-1234-5678-1234-567812345678', app.chats)
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [],
-                    'templates': [
-                        {
-                            'id': 'tmpl1',
-                            'name': 'test',
-                            'title': 'Template 1',
-                            'variables': [{'name': 'name', 'label': 'Name'}],
-                            'prompts': ['Prompt {{name}}'],
-                        }
-                    ]
-                })
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_stop_conversation_success(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -1240,14 +1359,23 @@ class TestAPI(unittest.TestCase):
             self.assertTrue(mock_chat.stop)
             self.assertNotIn('conv1', app.chats)
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_stop_conversation_unknown_id(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -1262,14 +1390,23 @@ class TestAPI(unittest.TestCase):
             self.assertDictEqual(response, {'error': 'UnknownConversationID'})
             self.assertNotIn('conv2', app.chats)
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_stop_conversation_not_generating(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -1284,19 +1421,23 @@ class TestAPI(unittest.TestCase):
             self.assertDictEqual(app.chats, {})
             self.assertNotIn('conv1', app.chats)
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_get_conversation_success_not_generating(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {
-                        'id': 'conv1',
-                        'model': 'llm',
-                        'title': 'Conversation 1',
-                        'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
-                    }
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -1320,19 +1461,23 @@ class TestAPI(unittest.TestCase):
                 }
             )
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_get_conversation_success_generating(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {
-                        'id': 'conv1',
-                        'model': 'llm',
-                        'title': 'Conversation 1',
-                        'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
-                    }
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -1360,19 +1505,23 @@ class TestAPI(unittest.TestCase):
                 }
             )
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_get_conversation_unknown_id(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {
-                        'id': 'conv1',
-                        'model': 'llm',
-                        'title': 'Conversation 1',
-                        'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
-                    }
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -1385,19 +1534,23 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {'error': 'UnknownConversationID'})
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_reply_conversation_success(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {
-                        'id': 'conv1',
-                        'model': 'llm',
-                        'title': 'Conversation 1',
-                        'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
-                    }
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
@@ -1413,19 +1566,23 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_called_once_with(app, 'conv1', ['How are you?'])
             self.assertIs(app.chats['conv1'], mock_manager.return_value)
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_reply_conversation_unknown_id(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {
-                        'id': 'conv1',
-                        'model': 'llm',
-                        'title': 'Conversation 1',
-                        'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
-                    }
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
@@ -1442,19 +1599,23 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_not_called()
             self.assertNotIn('conv2', app.chats)
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_reply_conversation_busy(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {
-                        'id': 'conv1',
-                        'model': 'llm',
-                        'title': 'Conversation 1',
-                        'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
-                    }
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
@@ -1475,6 +1636,14 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_not_called()
             self.assertEqual(app.chats['conv1'], mock_chat)
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_set_conversation_title_success(self):
         test_files = [
@@ -1493,11 +1662,16 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check the config
+            # Verify the app config
+            expected_config = {
+                'conversations': [{'id': 'conv1', 'model': 'llm', 'title': 'New Title', 'exchanges': []}]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [{'id': 'conv1', 'model': 'llm', 'title': 'New Title', 'exchanges': []}]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_set_conversation_title_unknown_id(self):
@@ -1513,12 +1687,20 @@ class TestAPI(unittest.TestCase):
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'UnknownConversationID'})
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, {'conversations': []})
+
+            # Verify the config file
+            self.assertFalse(os.path.exists(config_path))
+
 
     def test_set_conversation_title_busy(self):
+        original_config = {
+            'conversations': [{'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [{'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -1536,12 +1718,13 @@ class TestAPI(unittest.TestCase):
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'ConversationBusy'})
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [{'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}]
-                })
-            self.assertIs(app.chats['conv1'], mock_chat)
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_delete_conversation_success(self):
@@ -1564,14 +1747,18 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check the config
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []}
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {'id': 'conv2', 'model': 'llm', 'title': 'Conversation 2', 'exchanges': []}
-                    ]
-                })
-            self.assertNotIn('conv1', app.chats)
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_delete_conversation_unknown_id(self):
@@ -1587,21 +1774,22 @@ class TestAPI(unittest.TestCase):
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'UnknownConversationID'})
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': []
-                })
-            self.assertNotIn('conv2', app.chats)
+                self.assertDictEqual(config, {'conversations': []})
+
+            # Verify the config file
+            self.assertFalse(os.path.exists(config_path))
 
 
     def test_delete_conversation_busy(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -1619,14 +1807,13 @@ class TestAPI(unittest.TestCase):
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'ConversationBusy'})
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
-                    ]
-                })
-            self.assertIs(app.chats['conv1'], mock_chat)
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_create_template_basic(self):
@@ -1651,15 +1838,20 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
 
-            # Check the config
+            # Verify the app config
+            expected_config = {
+                'conversations': [],
+                'templates': [
+                    {'id': '12345678-1234-5678-1234-567812345678', 'title': 'New Template', 'prompts': ['New Prompt']},
+                    {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [],
-                    'templates': [
-                        {'id': '12345678-1234-5678-1234-567812345678', 'title': 'New Template', 'prompts': ['New Prompt']},
-                        {'id': 'tmpl1', 'title': 'Template 1', 'prompts': ['Prompt 1']}
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_create_template_no_templates(self):
@@ -1676,14 +1868,19 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
 
-            # Check the config
+            # Verify the app config
+            expected_config = {
+                'conversations': [],
+                'templates': [
+                    {'id': '12345678-1234-5678-1234-567812345678', 'title': 'New Template', 'prompts': ['New Prompt']}
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [],
-                    'templates': [
-                        {'id': '12345678-1234-5678-1234-567812345678', 'title': 'New Template', 'prompts': ['New Prompt']}
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_create_template_optional_arguments(self):
@@ -1705,20 +1902,25 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {'id': '12345678-1234-5678-1234-567812345678'})
 
-            # Check the config
+            # Verify the app config
+            expected_config = {
+                'conversations': [],
+                'templates': [
+                    {
+                        'id': '12345678-1234-5678-1234-567812345678',
+                        'title': 'New Template',
+                        'prompts': ['New Prompt'],
+                        'name': 'test_template',
+                        'variables': [{'name': 'var1', 'label': 'Variable 1'}]
+                    }
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [],
-                    'templates': [
-                        {
-                            'id': '12345678-1234-5678-1234-567812345678',
-                            'title': 'New Template',
-                            'prompts': ['New Prompt'],
-                            'name': 'test_template',
-                            'variables': [{'name': 'var1', 'label': 'Variable 1'}]
-                        }
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_delete_conversation_exchange_success(self):
@@ -1750,35 +1952,28 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check the config
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]}
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {
-                            'id': 'conv1',
-                            'model': 'llm',
-                            'title': 'Conversation 1',
-                            'exchanges': [
-                                {'user': 'Hello', 'model': 'Hi there'}
-                            ]
-                        }
-                    ]
-                })
-            self.assertNotIn('conv1', app.chats)
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_delete_conversation_exchange_unknown_id(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {
-                        'id': 'conv1',
-                        'model': 'llm',
-                        'title': 'Conversation 1',
-                        'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
-                    }
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -1794,19 +1989,23 @@ class TestAPI(unittest.TestCase):
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertDictEqual(response, {'error': 'UnknownConversationID'})
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_delete_conversation_exchange_busy(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {
-                        'id': 'conv1',
-                        'model': 'llm',
-                        'title': 'Conversation 1',
-                        'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
-                    }
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -1827,19 +2026,23 @@ class TestAPI(unittest.TestCase):
             self.assertDictEqual(response, {'error': 'ConversationBusy'})
             self.assertIs(app.chats['conv1'], mock_chat)
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_delete_conversation_exchange_empty(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {
-                        'id': 'conv1',
-                        'model': 'llm',
-                        'title': 'Conversation 1',
-                        'exchanges': []
-                    }
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -1853,20 +2056,15 @@ class TestAPI(unittest.TestCase):
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
-
-            # Check config
-            with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {
-                            'id': 'conv1',
-                            'model': 'llm',
-                            'title': 'Conversation 1',
-                            'exchanges': []
-                        }
-                    ]
-                })
             self.assertNotIn('conv1', app.chats)
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_regenerate_conversation_exchange_success(self):
@@ -1899,38 +2097,32 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
 
-            # Check the config - last exchange should be removed
-            with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {
-                            'id': 'conv1',
-                            'model': 'llm',
-                            'title': 'Conversation 1',
-                            'exchanges': [
-                                {'user': 'Hello', 'model': 'Hi there'}
-                            ]
-                        }
-                    ]
-                })
-
             # Check that ChatManager was called with the last user prompt
             mock_manager.assert_called_once_with(app, 'conv1', ['How are you?'])
             self.assertIs(app.chats['conv1'], mock_manager.return_value)
 
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]}
+                ]
+            }
+            with app.config() as config:
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
+
 
     def test_regenerate_conversation_exchange_unknown_id(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {
-                        'id': 'conv1',
-                        'model': 'llm',
-                        'title': 'Conversation 1',
-                        'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
-                    }
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
@@ -1949,19 +2141,23 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_not_called()
             self.assertNotIn('conv2', app.chats)
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_regenerate_conversation_exchange_busy(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {
-                        'id': 'conv1',
-                        'model': 'llm',
-                        'title': 'Conversation 1',
-                        'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
-                    }
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
@@ -1984,32 +2180,23 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_not_called()
             self.assertIs(app.chats['conv1'], mock_chat)
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {
-                            'id': 'conv1',
-                            'model': 'llm',
-                            'title': 'Conversation 1',
-                            'exchanges': [{'user': 'Hello', 'model': 'Hi there'}]
-                        }
-                    ]
-                })
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_regenerate_conversation_exchange_empty(self):
+        original_config = {
+            'conversations': [
+                {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+            ]
+        }
         test_files = [
-            ('ollama-chat.json', json.dumps({
-                'conversations': [
-                    {
-                        'id': 'conv1',
-                        'model': 'llm',
-                        'title': 'Conversation 1',
-                        'exchanges': []
-                    }
-                ]
-            }))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama_chat.app.ChatManager') as mock_manager:
@@ -2027,23 +2214,19 @@ class TestAPI(unittest.TestCase):
             mock_manager.assert_not_called()
             self.assertNotIn('conv1', app.chats)
 
-            # Check config
+            # Verify the app config
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {
-                            'id': 'conv1',
-                            'model': 'llm',
-                            'title': 'Conversation 1',
-                            'exchanges': []
-                        }
-                    ]
-                })
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_get_models_success(self):
+        original_config = {'model': 'llm', 'conversations': []}
         test_files = [
-                ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
+                ('ollama-chat.json', json.dumps(original_config))
              ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama.list') as mock_ollama_list:
@@ -2052,7 +2235,7 @@ class TestAPI(unittest.TestCase):
 
             # Create mock models
             model1 = unittest.mock.Mock()
-            model1.model = 'llm:latest'
+            model1.model = 'llm:7b'
             model1.details = unittest.mock.Mock(parameter_size='7B')
             model1.size = 4100000000
             model1.modified_at = datetime.datetime.fromisoformat('2023-10-01T12:00:00+00:00')
@@ -2074,36 +2257,27 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {
                 'models': [
-                    {
-                        'id': 'llm:latest',
-                        'name': 'llm',
-                        'parameters': 7000000000,
-                        'size': 4100000000,
-                        'modified': '2023-10-01T12:00:00+00:00'
-                    },
-                    {
-                        'id': 'other2:tag',
-                        'modified': '2023-10-02T12:00:00+00:00',
-                        'name': 'other2',
-                        'parameters': 3000,
-                        'size': 1800
-                    },
-                    {
-                        'id': 'other:tag',
-                        'name': 'other',
-                        'parameters': 3000000,
-                        'size': 1800000,
-                        'modified': '2023-10-02T12:00:00+00:00'
-                    }
+                    {'id': 'llm:7b', 'name': 'llm', 'parameters': 7000000000, 'size': 4100000000, 'modified': '2023-10-01T12:00:00+00:00'},
+                    {'id': 'other2:tag', 'modified': '2023-10-02T12:00:00+00:00', 'name': 'other2', 'parameters': 3000, 'size': 1800},
+                    {'id': 'other:tag', 'name': 'other', 'parameters': 3000000, 'size': 1800000, 'modified': '2023-10-02T12:00:00+00:00'}
                 ],
                 'downloading': [],
                 'model': 'llm'
             })
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_get_models_parameter_size_warning(self):
+        original_config = {'model': 'llm', 'conversations': []}
         test_files = [
-                ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
+                ('ollama-chat.json', json.dumps(original_config))
              ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama.list') as mock_ollama_list:
@@ -2112,7 +2286,7 @@ class TestAPI(unittest.TestCase):
 
             # Create mock models
             model1 = unittest.mock.Mock()
-            model1.model = 'llm:latest'
+            model1.model = 'llm:7b'
             model1.details = unittest.mock.Mock(parameter_size='1000')
             model1.size = 1000
             model1.modified_at = datetime.datetime.fromisoformat('2023-10-01T12:00:00+00:00')
@@ -2125,13 +2299,7 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {
                 'models': [
-                    {
-                        'id': 'llm:latest',
-                        'name': 'llm',
-                        'parameters': 0,
-                        'size': 1000,
-                        'modified': '2023-10-01T12:00:00+00:00'
-                    }
+                    {'id': 'llm:7b', 'name': 'llm', 'parameters': 0, 'size': 1000, 'modified': '2023-10-01T12:00:00+00:00'}
                 ],
                 'downloading': [],
                 'model': 'llm'
@@ -2140,10 +2308,19 @@ class TestAPI(unittest.TestCase):
             logs = re.sub(r'\[.*?\]', '[X / Y]', logs)
             self.assertEqual(logs, 'WARNING [X / Y] Invalid parameter size "1000"\n')
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_get_models_no_models(self):
+        original_config = {'model': 'llm', 'conversations': []}
         test_files = [
-            ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama.list') as mock_ollama_list:
@@ -2157,16 +2334,21 @@ class TestAPI(unittest.TestCase):
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
-            self.assertDictEqual(response, {
-                'models': [],
-                'downloading': [],
-                'model': 'llm'
-            })
+            self.assertDictEqual(response, {'models': [], 'downloading': [], 'model': 'llm'})
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_get_models_downloading(self):
+        original_config = {'model': 'llm', 'conversations': []}
         test_files = [
-            ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama.list') as mock_ollama_list:
@@ -2195,25 +2377,25 @@ class TestAPI(unittest.TestCase):
             self.assertDictEqual(response, {
                 'models': [],
                 'downloading': [
-                    {
-                        'id': 'downloading_model',
-                        'status': 'downloading',
-                        'completed': 5000000,
-                        'size': 10000000
-                    },
-                    {
-                        'id': 'downloading_model2',
-                        'status': 'unknown',
-                        'completed': 0
-                    }
+                    {'id': 'downloading_model', 'status': 'downloading', 'completed': 5000000, 'size': 10000000},
+                    {'id': 'downloading_model2', 'status': 'unknown', 'completed': 0}
                 ],
                 'model': 'llm'
             })
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_get_models_ollama_failure(self):
+        original_config = {'model': 'llm', 'conversations': []}
         test_files = [
-            ('ollama-chat.json', json.dumps({'model': 'llm', 'conversations': []}))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama.list') as mock_ollama_list:
@@ -2227,11 +2409,15 @@ class TestAPI(unittest.TestCase):
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
-            self.assertDictEqual(response, {
-                'models': [],
-                'downloading': [],
-                'model': 'llm'
-            })
+            self.assertDictEqual(response, {'models': [], 'downloading': [], 'model': 'llm'})
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_get_models_no_config_model(self):
@@ -2242,7 +2428,7 @@ class TestAPI(unittest.TestCase):
 
             # Create mock models
             model1 = unittest.mock.Mock()
-            model1.model = 'llm:latest'
+            model1.model = 'llm:7b'
             model1.details = unittest.mock.Mock(parameter_size='7B')
             model1.size = 4100000000
             model1.modified_at = datetime.datetime.fromisoformat('2023-10-01T12:00:00+00:00')
@@ -2254,21 +2440,23 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {
                 'models': [
-                    {
-                        'id': 'llm:latest',
-                        'name': 'llm',
-                        'parameters': 7000000000,
-                        'size': 4100000000,
-                        'modified': '2023-10-01T12:00:00+00:00'
-                    }
+                    {'id': 'llm:7b', 'name': 'llm', 'parameters': 7000000000, 'size': 4100000000, 'modified': '2023-10-01T12:00:00+00:00'}
                 ],
                 'downloading': []
             })
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, {'conversations': []})
+
+            # Verify the config file
+            self.assertFalse(os.path.exists(config_path))
+
 
     def test_download_model_success(self):
+        original_config = {'conversations': []}
         test_files = [
-            ('ollama-chat.json', json.dumps({'conversations': []}))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama_chat.app.DownloadManager') as mock_download_manager:
@@ -2276,7 +2464,7 @@ class TestAPI(unittest.TestCase):
             app = OllamaChat(config_path)
 
             # Initiate model download
-            request = {'model': 'llm:latest'}
+            request = {'model': 'llm:7b'}
             status, headers, content_bytes = app.request('POST', '/downloadModel', wsgi_input=json.dumps(request).encode('utf-8'))
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertEqual(status, '200 OK')
@@ -2284,14 +2472,23 @@ class TestAPI(unittest.TestCase):
             self.assertDictEqual(response, {})
 
             # Verify DownloadManager was called and stored
-            mock_download_manager.assert_called_once_with(app, 'llm:latest')
-            self.assertIn('llm:latest', app.downloads)
-            self.assertIs(app.downloads['llm:latest'], mock_download_manager.return_value)
+            mock_download_manager.assert_called_once_with(app, 'llm:7b')
+            self.assertIn('llm:7b', app.downloads)
+            self.assertIs(app.downloads['llm:7b'], mock_download_manager.return_value)
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_stop_model_download_success(self):
+        original_config = {'conversations': []}
         test_files = [
-            ('ollama-chat.json', json.dumps({'conversations': []}))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
@@ -2300,51 +2497,77 @@ class TestAPI(unittest.TestCase):
             # Add a mock download to the downloads dictionary
             mock_download = unittest.mock.Mock()
             mock_download.stop = False
-            app.downloads['llm:latest'] = mock_download
+            app.downloads['llm:7b'] = mock_download
 
             # Stop the model download
-            request = {'model': 'llm:latest'}
+            request = {'model': 'llm:7b'}
             status, headers, content_bytes = app.request('POST', '/stopModelDownload', wsgi_input=json.dumps(request).encode('utf-8'))
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
             self.assertTrue(mock_download.stop)  # Verify stop flag was set
-            self.assertIs(app.downloads['llm:latest'], mock_download)
+            self.assertIs(app.downloads['llm:7b'], mock_download)
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_stop_model_download_not_downloading(self):
+        original_config = {'conversations': []}
         test_files = [
-            ('ollama-chat.json', json.dumps({'conversations': []}))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
             # Try to stop a non-existent download
-            request = {'model': 'llm:latest'}
+            request = {'model': 'llm:7b'}
             status, headers, content_bytes = app.request('POST', '/stopModelDownload', wsgi_input=json.dumps(request).encode('utf-8'))
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
             self.assertDictEqual(app.downloads, {})
 
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_delete_model_success(self):
+        original_config = {'conversations': []}
         test_files = [
-            ('ollama-chat.json', json.dumps({'conversations': []}))
+            ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('ollama.delete') as mock_ollama_delete:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
-            # Delete model 'llm:latest'
-            request = {'model': 'llm:latest'}
+            # Delete model 'llm:7b'
+            request = {'model': 'llm:7b'}
             status, headers, content_bytes = app.request('POST', '/deleteModel', wsgi_input=json.dumps(request).encode('utf-8'))
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
-            mock_ollama_delete.assert_called_once_with('llm:latest')
+            mock_ollama_delete.assert_called_once_with('llm:7b')
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
 
 
     def test_get_system_info(self):
@@ -2360,3 +2583,10 @@ class TestAPI(unittest.TestCase):
             self.assertTrue(response['memory'] > 0)
             del response['memory']
             self.assertDictEqual(response, {})
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, {'conversations': []})
+
+            # Verify the config file
+            self.assertFalse(os.path.exists(config_path))

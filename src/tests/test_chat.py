@@ -14,7 +14,7 @@ from ollama_chat.chat import _escape_markdown_text, _process_commands, config_te
 from .util import create_test_files
 
 
-class TestChatManaper(unittest.TestCase):
+class TestChatManager(unittest.TestCase):
 
     def test_chat_fn(self):
         test_files = [
@@ -44,26 +44,33 @@ class TestChatManaper(unittest.TestCase):
             # Run the thread function
             ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
+
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [
+                            {
+                                'user': 'Hello',
+                                'model': 'Hi there!'
+                            },
+                            {
+                                'user': 'Goodbye',
+                                'model': 'Bye bye!'
+                            }
+                        ]
+                    }
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {
-                            'id': 'conv1',
-                            'model': 'llm',
-                            'title': 'Conversation 1',
-                            'exchanges': [
-                                {
-                                    'user': 'Hello',
-                                    'model': 'Hi there!'
-                                },
-                                {
-                                    'user': 'Goodbye',
-                                    'model': 'Bye bye!'
-                                }
-                            ]
-                        }
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
     def test_chat_fn_stop(self):
         test_files = [
@@ -94,22 +101,19 @@ class TestChatManaper(unittest.TestCase):
             # Run the thread function
             ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
+
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': [{'user': 'Hello','model': ''}]}
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {
-                            'id': 'conv1',
-                            'model': 'llm',
-                            'title': 'Conversation 1',
-                            'exchanges': [
-                                {
-                                    'user': 'Hello',
-                                    'model': ''
-                                }
-                            ]
-                        }
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_chat_fn_help(self):
@@ -137,24 +141,26 @@ class TestChatManaper(unittest.TestCase):
             ChatManager.chat_thread_fn(chat_manager)
             mock_chat.assert_not_called()
             self.assertDictEqual(app.chats, {})
+
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': [{'user': '/?'}]}
+                ]
+            }
             with app.config() as config:
                 exchange = config['conversations'][0]['exchanges'][0]
                 self.assertTrue(exchange['model'].startswith('```\nusage: /{?,dir,do,file,image,url}'))
                 del exchange['model']
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {
-                            'id': 'conv1',
-                            'model': 'llm',
-                            'title': 'Conversation 1',
-                            'exchanges': [
-                                {
-                                    'user': '/?'
-                                }
-                            ]
-                        }
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                config = json.load(config_fh)
+                exchange = config['conversations'][0]['exchanges'][0]
+                self.assertTrue(exchange['model'].startswith('```\nusage: /{?,dir,do,file,image,url}'))
+                del exchange['model']
+                self.assertEqual(config, expected_config)
 
 
     def test_chat_fn_show(self):
@@ -184,20 +190,21 @@ class TestChatManaper(unittest.TestCase):
             ChatManager.chat_thread_fn(chat_manager)
             mock_chat.assert_not_called()
             self.assertDictEqual(app.chats, {})
-            with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {
-                            'id': 'conv1',
-                            'model': 'llm',
-                            'title': 'Conversation 1',
-                            'exchanges': [
-                                {
-                                    'user': f'''\
+
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [
+                            {
+                                'user': f'''\
 This file:
 
 /file {temp_posix}/test.txt -n''',
-                                    'model': f'''\
+                                'model': f'''\
 This file:
 
 <{_escape_markdown_text(temp_posix)}/test.txt>
@@ -205,11 +212,17 @@ This file:
 file content
 ```
 </ {_escape_markdown_text(temp_posix)}/test.txt>'''
-                                }
-                            ]
-                        }
-                    ]
-                })
+                            }
+                        ]
+                    }
+                ]
+            }
+            with app.config() as config:
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_chat_fn_do(self):
@@ -243,23 +256,30 @@ file content
             # Run the thread function
             ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
+
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [
+                            {'user': '/do bye', 'model': 'Executing template "bye"'},
+                            {'user': 'Goodbye', 'model': 'Bye bye!'}
+                        ]
+                    }
+                ],
+                'templates': [
+                    {'id': 'tmpl1', 'name': 'bye', 'title': 'Goodbye', 'prompts': ['Goodbye']}
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {
-                            'id': 'conv1',
-                            'model': 'llm',
-                            'title': 'Conversation 1',
-                            'exchanges': [
-                                {'user': '/do bye', 'model': 'Executing template "bye"'},
-                                {'user': 'Goodbye', 'model': 'Bye bye!'}
-                            ]
-                        }
-                    ],
-                    'templates': [
-                        {'id': 'tmpl1', 'name': 'bye', 'title': 'Goodbye', 'prompts': ['Goodbye']}
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_chat_fn_do_variables(self):
@@ -299,29 +319,36 @@ file content
             # Run the thread function
             ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
+
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [
+                            {'user': '/do bye -v name Joe', 'model': 'Executing template "bye" - name = "Joe"'},
+                            {'user': 'Goodbye, Joe', 'model': 'Bye bye!'}
+                        ]
+                    }
+                ],
+                'templates': [
+                    {
+                        'id': 'tmpl1',
+                        'name': 'bye',
+                        'title': 'Goodbye',
+                        'variables': [{'name': 'name', 'label': 'Name'}],
+                        'prompts': ['Goodbye, {{name}}']
+                    }
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {
-                            'id': 'conv1',
-                            'model': 'llm',
-                            'title': 'Conversation 1',
-                            'exchanges': [
-                                {'user': '/do bye -v name Joe', 'model': 'Executing template "bye" - name = "Joe"'},
-                                {'user': 'Goodbye, Joe', 'model': 'Bye bye!'}
-                            ]
-                        }
-                    ],
-                    'templates': [
-                        {
-                            'id': 'tmpl1',
-                            'name': 'bye',
-                            'title': 'Goodbye',
-                            'variables': [{'name': 'name', 'label': 'Name'}],
-                            'prompts': ['Goodbye, {{name}}']
-                        }
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
     def test_chat_fn_do_unknown_template(self):
@@ -349,22 +376,29 @@ file content
             ChatManager.chat_thread_fn(chat_manager)
             mock_chat.assert_not_called()
             self.assertDictEqual(app.chats, {})
+
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [
+                            {
+                                'user': '/do unknown',
+                                'model': '\n**ERROR:** unknown template "unknown"'
+                            }
+                        ]
+                    }
+                ]
+            }
             with app.config() as config:
-                self.assertDictEqual(config, {
-                    'conversations': [
-                        {
-                            'id': 'conv1',
-                            'model': 'llm',
-                            'title': 'Conversation 1',
-                            'exchanges': [
-                                {
-                                    'user': '/do unknown',
-                                    'model': '\n**ERROR:** unknown template "unknown"'
-                                }
-                            ]
-                        }
-                    ]
-                })
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
 
 
 class TestConfigTemplatePrompts(unittest.TestCase):
