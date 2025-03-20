@@ -34,7 +34,7 @@ async function testOllamaChatIndex():
                     'html', 'a', \
                     'attr', objectNew('style', 'cursor: pointer; user-select: none;'), \
                     'elem', objectNew('text', 'Add Template'), \
-                    'callback', objectNew('click', ollamaChatIndexOnAddTemplate) \
+                    'callback', objectNew('click', '<function>') \
                 ) \
             )))), \
             arrayNew('markdownPrint', arrayNew('', '## Conversations')), \
