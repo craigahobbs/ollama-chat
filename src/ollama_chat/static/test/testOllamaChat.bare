@@ -8,12 +8,11 @@ async function testOllamaChatIndex():
     unittestMockAll(objectNew( \
         'systemFetch', objectNew( \
             'getConversations', jsonStringify(objectNew( \
-                'model', 'llama3:latest', \
-                'models', arrayNew('llama3:latest'), \
+                'model', 'llm:7b', \
                 'conversations', arrayNew( \
                     objectNew( \
                         'id', 'ID', \
-                        'model', 'llama3:latest', \
+                        'model', 'llm:7b', \
                         'title', 'Hello', \
                         'generating', false \
                     ) \
@@ -30,7 +29,7 @@ async function testOllamaChatIndex():
             arrayNew('systemFetch', arrayNew('getConversations')), \
             arrayNew('documentSetTitle', arrayNew('Ollama Chat')), \
             arrayNew('markdownPrint', arrayNew('# Ollama Chat')), \
-            arrayNew('markdownPrint', arrayNew('**Current Model:** llama3:latest')), \
+            arrayNew('markdownPrint', arrayNew('**Current Model:** llm:7b')), \
             arrayNew('elementModelRender', arrayNew(objectNew('html', 'p', 'elem', arrayNew( \
                 objectNew('html', 'a', 'attr', objectNew('href', "#var.vView='models'"), 'elem', objectNew('text', 'Select Model')), \
                 objectNew('text', stringFromCharCode(160, 160) + '|' + stringFromCharCode(160, 160)), \
@@ -40,7 +39,7 @@ async function testOllamaChatIndex():
                     'html', 'a', \
                     'attr', objectNew('style', 'cursor: pointer; user-select: none;'), \
                     'elem', objectNew('text', 'Add Template'), \
-                    'callback', objectNew('click', null) \
+                    'callback', objectNew('click', ollamaChatIndexOnAddTemplate) \
                 ) \
             )))), \
             arrayNew('markdownPrint', arrayNew('', '## Conversations')), \
@@ -66,7 +65,7 @@ async function testOllamaChatIndex():
                                             ), \
                                             objectNew( \
                                                 'html', 'td', \
-                                                'elem', objectNew('text', 'llama3:latest') \
+                                                'elem', objectNew('text', 'llm:7b') \
                                             ), \
                                             objectNew( \
                                                 'html', 'td', \
