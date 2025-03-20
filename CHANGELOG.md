@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.57 (2025-03-20)
+
+- [55aa0d1](https://github.com/craigahobbs/ollama-chat/commit/55aa0d1) - update markdown-up tarball
+
+- [09f35c2](https://github.com/craigahobbs/ollama-chat/commit/09f35c2) - use 6-month filter by default on model page \(up from 3\)
+
+- [a143b3a](https://github.com/craigahobbs/ollama-chat/commit/a143b3a) - set minimum width on index page title columns
+
 ## 0.9.56 (2025-03-18)
 
 - [1635506](https://github.com/craigahobbs/ollama-chat/commit/1635506) - improved conversation menu behavior, models page fixes
