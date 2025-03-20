@@ -10,12 +10,7 @@ async function testOllamaChatIndex():
             'getConversations', jsonStringify(objectNew( \
                 'model', 'llm:7b', \
                 'conversations', arrayNew( \
-                    objectNew( \
-                        'id', 'ID', \
-                        'model', 'llm:7b', \
-                        'title', 'Hello', \
-                        'generating', false \
-                    ) \
+                    objectNew('id', 'ID', 'model', 'llm:7b', 'title', 'Hello', 'generating', false) \
                 ) \
             )) \
         ) \
