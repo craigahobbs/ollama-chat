@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.58 (2025-03-21)
+
+- [48b93da](https://github.com/craigahobbs/ollama-chat/commit/48b93da) - fix chisel dependency specification
+
 ## 0.9.57 (2025-03-20)
 
 - [55aa0d1](https://github.com/craigahobbs/ollama-chat/commit/55aa0d1) - update markdown-up tarball
