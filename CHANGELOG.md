@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.59 (2025-03-21)
+
+- [a0a6fd9](https://github.com/craigahobbs/ollama-chat/commit/a0a6fd9) - chisel 1.4
+
 ## 0.9.58 (2025-03-21)
 
 - [48b93da](https://github.com/craigahobbs/ollama-chat/commit/48b93da) - fix chisel dependency specification
