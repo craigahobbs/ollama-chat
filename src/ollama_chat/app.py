@@ -14,7 +14,6 @@ from functools import partial
 import platform
 import importlib.resources
 import re
-import tarfile
 import threading
 import uuid
 
@@ -38,7 +37,7 @@ class OllamaChat(chisel.Application):
         self.downloads = {}
 
         # Back-end documentation
-        self.add_requests(chisel.create_doc_requests(markdown_up='../markdown-up/'))
+        self.add_requests(chisel.create_doc_requests())
 
         # Back-end APIs
         self.add_request(create_template)
@@ -70,19 +69,6 @@ class OllamaChat(chisel.Application):
         self.add_static('ollamaChatConversation.bare')
         self.add_static('ollamaChatModels.bare')
         self.add_static('ollamaChatTemplate.bare')
-
-        # Markdown-Up application statics
-        with importlib.resources.files('ollama_chat.static').joinpath('markdown-up.tar.gz').open('rb') as tgz:
-            with tarfile.open(fileobj=tgz, mode='r:gz') as tar:
-                for member in tar.getmembers():
-                    if member.isfile():
-                        self.add_request(chisel.StaticRequest(
-                            member.name,
-                            tar.extractfile(member).read(),
-                            content_type=_CONTENT_TYPES.get(os.path.splitext(member.name)[1], 'text/plain; charset=utf-8'),
-                            urls=(('GET', None),),
-                            doc_group='MarkdownUp Statics'
-                        ))
 
 
     def add_static(self, filename, urls=(('GET', None),), doc_group='Ollama Chat Statics'):
