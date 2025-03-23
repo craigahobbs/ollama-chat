@@ -206,8 +206,8 @@ function ollamaChatConversationResponseThinking(exchange):
 endfunction
 
 
-ollamaChatConversationThinkRegex = regexNew('^\\s*<think>(?<thinkText>.*?)</think>', 's')
-ollamaChatConversationThinkPartialRegex = regexNew('^\\s*<think>')
+ollamaChatConversationThinkRegex = regexNew('^\\s*<(?:think|thought)>(?<thinkText>.*?)<//\k<1>>', 's')
+ollamaChatConversationThinkPartialRegex = regexNew('^\\s*<(?:think|thought)>')
 
 
 # Conversation update timeout handler
