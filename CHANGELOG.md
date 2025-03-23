@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.60 (2025-03-23)
+
+- [67a450b](https://github.com/craigahobbs/ollama-chat/commit/67a450b) - fix thinking for exaone-deep
+
 ## 0.9.59 (2025-03-21)
 
 - [a0a6fd9](https://github.com/craigahobbs/ollama-chat/commit/a0a6fd9) - chisel 1.4
