@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.61 (2025-03-23)
+
+- [d5a6f22](https://github.com/craigahobbs/ollama-chat/commit/d5a6f22) - fix show/hide thinking
+
 ## 0.9.60 (2025-03-23)
 
 - [67a450b](https://github.com/craigahobbs/ollama-chat/commit/67a450b) - fix thinking for exaone-deep
