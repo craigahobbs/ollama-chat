@@ -1,8 +1,8 @@
 # Licensed under the MIT License
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
-include <args.mds>
-include <forms.mds>
+include <args.bare>
+include <forms.bare>
 
 include 'ollamaChatConversation.bare'
 include 'ollamaChatModels.bare'

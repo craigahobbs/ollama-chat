@@ -1,8 +1,8 @@
 # Licensed under the MIT License
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
-include <unittest.mds>
-include <unittestMock.mds>
+include <unittest.bare>
+include <unittestMock.bare>
 
 
 # Test includes
