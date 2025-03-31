@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.62 (2025-03-31)
+
+- [2d42290](https://github.com/craigahobbs/ollama-chat/commit/2d42290) - eliminate use of .mds
+
+- [7a99e43](https://github.com/craigahobbs/ollama-chat/commit/7a99e43) - remove setup.cfg license classifier
+
 ## 0.9.61 (2025-03-23)
 
 - [d5a6f22](https://github.com/craigahobbs/ollama-chat/commit/d5a6f22) - fix show/hide thinking
