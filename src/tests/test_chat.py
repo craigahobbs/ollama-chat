@@ -28,11 +28,11 @@ class TestChatManager(unittest.TestCase):
              unittest.mock.patch('threading.Thread') as mock_thread, \
              unittest.mock.patch('ollama.chat') as mock_chat:
             # Configure the ollama.chat mock
-            mock_chunks = [['Hi ', 'there!'], ['Bye ', 'bye!']]
+            mock_chunks = [['Hi ', 'there!'], ['<think>Hmm</think>', 'Bye ', 'bye!'], ['Hoo-ey!']]
             mock_chat.side_effect = [iter({'message': {'content': chunk}} for chunk in chunks) for chunks in mock_chunks]
 
             # Create the ChatManager instance
-            chat_prompts = ['Hello', 'Goodbye']
+            chat_prompts = ['Hello', 'Goodbye', 'Yee-haw!']
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
@@ -44,6 +44,35 @@ class TestChatManager(unittest.TestCase):
             # Run the thread function
             ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
+
+            # Verify the ollama.chat calls
+            self.assertEqual(mock_chat.call_count, 3)
+            self.assertListEqual(
+                mock_chat.call_args_list,
+                [
+                    unittest.mock.call(model='llm', messages=[{'role': 'user', 'content': 'Hello', 'images': None}], stream=True),
+                    unittest.mock.call(
+                        model='llm',
+                        messages=[
+                            {'role': 'user', 'content': 'Hello', 'images': None},
+                            {'role': 'assistant', 'content': 'Hi there!'},
+                            {'role': 'user', 'content': 'Goodbye', 'images': None}
+                        ],
+                        stream=True
+                    ),
+                    unittest.mock.call(
+                        model='llm',
+                        messages=[
+                            {'role': 'user', 'content': 'Hello', 'images': None},
+                            {'role': 'assistant', 'content': 'Hi there!'},
+                            {'role': 'user', 'content': 'Goodbye', 'images': None},
+                            {'role': 'assistant', 'content': 'Bye bye!'},
+                            {'role': 'user', 'content': 'Yee-haw!', 'images': None}
+                        ],
+                        stream=True
+                    )
+                ]
+            )
 
             # Verify the app config
             expected_config = {
@@ -59,7 +88,11 @@ class TestChatManager(unittest.TestCase):
                             },
                             {
                                 'user': 'Goodbye',
-                                'model': 'Bye bye!'
+                                'model': '<think>Hmm</think>Bye bye!'
+                            },
+                            {
+                                'user': 'Yee-haw!',
+                                'model': 'Hoo-ey!'
                             }
                         ]
                     }
@@ -71,6 +104,7 @@ class TestChatManager(unittest.TestCase):
             # Verify the config file
             with open(config_path, 'r', encoding='utf-8') as config_fh:
                 self.assertEqual(json.load(config_fh), expected_config)
+
 
     def test_chat_fn_stop(self):
         test_files = [

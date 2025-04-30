@@ -27,10 +27,6 @@ GHPAGES_SRC := build/doc/
 include Makefile.base
 
 
-# Development dependencies
-TESTS_REQUIRE := bare-script
-
-
 # Disable pylint docstring warnings
 PYLINT_ARGS := $(PYLINT_ARGS) static/models --disable=missing-class-docstring --disable=missing-function-docstring --disable=missing-module-docstring
 
