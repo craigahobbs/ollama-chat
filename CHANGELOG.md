@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.63 (2025-04-30)
+
+- [9244ddb](https://github.com/craigahobbs/ollama-chat/commit/9244ddb) - remove prior thinking of reasoning models in ollama.chat calls to reduce context bloat
+
 ## 0.9.62 (2025-03-31)
 
 - [2d42290](https://github.com/craigahobbs/ollama-chat/commit/2d42290) - eliminate use of .mds
