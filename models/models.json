@@ -331,7 +331,7 @@
         "name": "command-r7b-arabic",
         "description": "A new state-of-the-art version of the lightweight Command R7B model that excels in advanced Arabic language capabilities for enterprises in the Middle East and Northern Africa.",
         "modified": "2025-03-16",
-        "downloads": 5861,
+        "downloads": 5862,
         "variants": [
             {
                 "id": "command-r7b-arabic:7b",
@@ -653,7 +653,7 @@
         "name": "exaone-deep",
         "description": "EXAONE Deep exhibits superior capabilities in various reasoning tasks including math and coding benchmarks, ranging from 2.4B to 32B parameters developed and released by LG AI Research.",
         "modified": "2025-04-15",
-        "downloads": 36900,
+        "downloads": 37000,
         "variants": [
             {
                 "id": "exaone-deep:2.4b",
@@ -1317,6 +1317,24 @@
         ]
     },
     {
+        "name": "llama4",
+        "description": "Meta's latest collection of multimodal models.",
+        "modified": "2025-05-08",
+        "downloads": 306100,
+        "variants": [
+            {
+                "id": "llama4:maverick",
+                "size": "maverick",
+                "parameters": 254000000000.0
+            },
+            {
+                "id": "llama4:scout",
+                "size": "scout",
+                "parameters": 67000000000.0
+            }
+        ]
+    },
+    {
         "name": "llava",
         "description": "\ud83c\udf0b LLaVA is a novel end-to-end trained large multimodal model that combines a vision encoder and Vicuna for general-purpose visual and language understanding. Updated to version 1.6.",
         "modified": "2025-05-15",
@@ -1517,7 +1535,7 @@
         "name": "mistral-small",
         "description": "Mistral Small 3 sets a new benchmark in the \u201csmall\u201d Large Language Models category below 70B.",
         "modified": "2025-02-14",
-        "downloads": 779700,
+        "downloads": 779800,
         "variants": [
             {
                 "id": "mistral-small:22b",
@@ -1954,7 +1972,7 @@
         "name": "phi4-mini-reasoning",
         "description": "Phi 4 mini reasoning is a lightweight open model that balances efficiency with advanced reasoning ability.",
         "modified": "2025-05-01",
-        "downloads": 12000,
+        "downloads": 12100,
         "variants": [
             {
                 "id": "phi4-mini-reasoning:3.8b",
@@ -2378,7 +2396,7 @@
         "name": "smollm2",
         "description": "SmolLM2 is a family of compact language models available in three size: 135M, 360M, and 1.7B parameters.",
         "modified": "2024-11-16",
-        "downloads": 777200,
+        "downloads": 777300,
         "variants": [
             {
                 "id": "smollm2:135m",
@@ -2434,7 +2452,7 @@
         "name": "snowflake-arctic-embed2",
         "description": "Snowflake's frontier embedding model. Arctic Embed 2.0 adds multilingual support without sacrificing English performance or scalability.",
         "modified": "2024-12-16",
-        "downloads": 69500,
+        "downloads": 70300,
         "variants": [
             {
                 "id": "snowflake-arctic-embed2:568m",
