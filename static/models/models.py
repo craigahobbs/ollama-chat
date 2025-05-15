@@ -99,12 +99,6 @@ _regex_about = re.compile(r'^about\s+an?\s+(hour|minute)\s+ago$')
 
 
 def _parse_count(count):
-    # Hack for llama4
-    if count == 'maverick':
-        return 254 * 1e9
-    elif count == 'scout':
-        return 67 * 1e9
-
     # Mixture of experts?
     multiplier = 1
     m_moe = _regex_count_moe.match(count)
@@ -139,33 +133,26 @@ def main():
     # Parse scraped model info values
     models = []
     for model_name, raw_model in raw_models.items():
-        if not raw_model['sizes']:
-            # Hack for llama4
-            if model_name == 'llama4':
-                raw_model['sizes'] = ['maverick', 'scout']
-            else:
-                print(f'Warning: "{model_name}" has no sizes')
-                continue
-
-        models.append({
-            'name': model_name,
-            'description': raw_model['description'],
-            'modified': _parse_modified(raw_model['modified']).isoformat(),
-            'downloads': _parse_count(raw_model['downloads']),
-            'variants': [
-                {
-                    'id': f'{model_name}:{size}',
-                    'size': size,
-                    'parameters': _parse_count(size)
-                }
-                for size in raw_model['sizes']
-            ]
-        })
+        if raw_model['sizes']:
+            models.append({
+                'name': model_name,
+                'description': raw_model['description'],
+                'modified': _parse_modified(raw_model['modified']).isoformat(),
+                'downloads': _parse_count(raw_model['downloads']),
+                'variants': [
+                    {
+                        'id': f'{model_name}:{size}',
+                        'size': size,
+                        'parameters': _parse_count(size)
+                    }
+                    for size in raw_model['sizes']
+                ]
+            })
 
     # Validate the model JSON
     ollama_chat_smd = 'ollamaChat.smd'
     if not os.path.isfile(ollama_chat_smd):
-        ollama_chat_smd = '../../src/ollama_chat/static/ollamaChat.smd'
+        ollama_chat_smd = 'src/ollama_chat/static/ollamaChat.smd'
     with open(ollama_chat_smd, 'r', encoding='utf-8') as fh:
         ollama_chat_types = schema_markdown.parse_schema_markdown(fh.read())
     schema_markdown.validate_type(ollama_chat_types, 'OllamaChatModels', models)
