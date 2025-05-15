@@ -3,6 +3,7 @@ from html.parser import HTMLParser
 import json
 import os
 import re
+import sys
 import urllib.request
 
 import schema_markdown
@@ -144,7 +145,7 @@ def main():
             if model_name == 'llama4':
                 raw_model['sizes'] = ['maverick', 'scout']
             else:
-                print(f'Warning: "{model_name}" has no sizes')
+                print(f'Warning: "{model_name}" has no sizes', file=sys.stderr)
                 continue
 
         models.append({
