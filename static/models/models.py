@@ -94,7 +94,7 @@ def _parse_modified(modified):
 
     raise ValueError(f'Unrecognized modified string: {modified}')
 
-_regex_modified_ago = re.compile(r'^(?P<count>\d+)\s+(?P<unit>minute|hour|day|week|month)s?\s+ago$')
+_regex_modified_ago = re.compile(r'^(?P<count>\d+)\s+(?P<unit>minute|hour|day|week|month|year)s?\s+ago$')
 _regex_about = re.compile(r'^about\s+an?\s+(hour|minute)\s+ago$')
 
 
