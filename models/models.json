@@ -1,3 +1,8 @@
+Warning: "nomic-embed-text" has no sizes
+Warning: "openhermes" has no sizes
+Warning: "wizardlm" has no sizes
+Warning: "llama-pro" has no sizes
+Warning: "goliath" has no sizes
 [
     {
         "name": "alfred",
@@ -16,7 +21,7 @@
         "name": "all-minilm",
         "description": "Embedding models on very large sentence level datasets.",
         "modified": "2025-05-15",
-        "downloads": 466800,
+        "downloads": 466900,
         "variants": [
             {
                 "id": "all-minilm:22m",
@@ -109,7 +114,7 @@
         "name": "bge-large",
         "description": "Embedding model from BAAI mapping texts to vectors.",
         "modified": "2024-08-18",
-        "downloads": 102100,
+        "downloads": 102200,
         "variants": [
             {
                 "id": "bge-large:335m",
@@ -388,7 +393,7 @@
         "name": "deepseek-coder",
         "description": "DeepSeek Coder is a capable coding model trained on two trillion code and natural language tokens.",
         "modified": "2025-05-15",
-        "downloads": 708200,
+        "downloads": 708300,
         "variants": [
             {
                 "id": "deepseek-coder:1.3b",
@@ -411,7 +416,7 @@
         "name": "deepseek-coder-v2",
         "description": "An open-source Mixture-of-Experts code language model that achieves performance comparable to GPT4-Turbo in code-specific tasks.",
         "modified": "2024-09-17",
-        "downloads": 817900,
+        "downloads": 818000,
         "variants": [
             {
                 "id": "deepseek-coder-v2:16b",
@@ -552,7 +557,7 @@
         "name": "dolphin-mistral",
         "description": "The uncensored Dolphin model based on Mistral that excels at coding tasks. Updated to version 2.8.",
         "modified": "2025-05-15",
-        "downloads": 343500,
+        "downloads": 343600,
         "variants": [
             {
                 "id": "dolphin-mistral:7b",
@@ -1071,7 +1076,7 @@
         "name": "internlm2",
         "description": "InternLM2.5 is a 7B parameter model tailored for practical scenarios with outstanding reasoning capability.",
         "modified": "2024-08-18",
-        "downloads": 79300,
+        "downloads": 79400,
         "variants": [
             {
                 "id": "internlm2:1m",
@@ -1317,6 +1322,24 @@
         ]
     },
     {
+        "name": "llama4",
+        "description": "Meta's latest collection of multimodal models.",
+        "modified": "2025-05-08",
+        "downloads": 306100,
+        "variants": [
+            {
+                "id": "llama4:maverick",
+                "size": "maverick",
+                "parameters": 254000000000.0
+            },
+            {
+                "id": "llama4:scout",
+                "size": "scout",
+                "parameters": 67000000000.0
+            }
+        ]
+    },
+    {
         "name": "llava",
         "description": "\ud83c\udf0b LLaVA is a novel end-to-end trained large multimodal model that combines a vision encoder and Vicuna for general-purpose visual and language understanding. Updated to version 1.6.",
         "modified": "2025-05-15",
@@ -1343,7 +1366,7 @@
         "name": "llava-llama3",
         "description": "A LLaVA model fine-tuned from Llama 3 Instruct with better scores in several benchmarks.",
         "modified": "2025-05-15",
-        "downloads": 842200,
+        "downloads": 842400,
         "variants": [
             {
                 "id": "llava-llama3:8b",
@@ -1517,7 +1540,7 @@
         "name": "mistral-small",
         "description": "Mistral Small 3 sets a new benchmark in the \u201csmall\u201d Large Language Models category below 70B.",
         "modified": "2025-02-14",
-        "downloads": 779500,
+        "downloads": 779700,
         "variants": [
             {
                 "id": "mistral-small:22b",
@@ -1535,7 +1558,7 @@
         "name": "mistral-small3.1",
         "description": "Building upon Mistral Small 3, Mistral Small 3.1 (2503) adds state-of-the-art vision understanding and enhances long context capabilities up to 128k tokens without compromising text performance.",
         "modified": "2025-04-15",
-        "downloads": 90800,
+        "downloads": 90900,
         "variants": [
             {
                 "id": "mistral-small3.1:24b",
@@ -1884,7 +1907,7 @@
         "name": "phi",
         "description": "Phi-2: a 2.7B language model by Microsoft Research that demonstrates outstanding reasoning and language understanding capabilities.",
         "modified": "2025-05-15",
-        "downloads": 535400,
+        "downloads": 535500,
         "variants": [
             {
                 "id": "phi:2.7b",
@@ -2355,7 +2378,7 @@
         "name": "smollm",
         "description": "\ud83e\ude90 A family of small models with 135M, 360M, and 1.7B parameters, trained on a new high-quality dataset.",
         "modified": "2024-09-17",
-        "downloads": 256300,
+        "downloads": 256399,
         "variants": [
             {
                 "id": "smollm:135m",
@@ -2378,7 +2401,7 @@
         "name": "smollm2",
         "description": "SmolLM2 is a family of compact language models available in three size: 135M, 360M, and 1.7B parameters.",
         "modified": "2024-11-16",
-        "downloads": 777100,
+        "downloads": 777200,
         "variants": [
             {
                 "id": "smollm2:135m",
@@ -2434,7 +2457,7 @@
         "name": "snowflake-arctic-embed2",
         "description": "Snowflake's frontier embedding model. Arctic Embed 2.0 adds multilingual support without sacrificing English performance or scalability.",
         "modified": "2024-12-16",
-        "downloads": 67300,
+        "downloads": 69300,
         "variants": [
             {
                 "id": "snowflake-arctic-embed2:568m",
@@ -2473,7 +2496,7 @@
         "name": "sqlcoder",
         "description": "SQLCoder is a code completion model fined-tuned on StarCoder for SQL generation tasks",
         "modified": "2025-05-15",
-        "downloads": 103900,
+        "downloads": 104000,
         "variants": [
             {
                 "id": "sqlcoder:7b",
