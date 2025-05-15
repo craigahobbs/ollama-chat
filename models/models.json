@@ -1,8 +1,3 @@
-Warning: "nomic-embed-text" has no sizes
-Warning: "openhermes" has no sizes
-Warning: "wizardlm" has no sizes
-Warning: "llama-pro" has no sizes
-Warning: "goliath" has no sizes
 [
     {
         "name": "alfred",
@@ -1322,24 +1317,6 @@ Warning: "goliath" has no sizes
         ]
     },
     {
-        "name": "llama4",
-        "description": "Meta's latest collection of multimodal models.",
-        "modified": "2025-05-08",
-        "downloads": 306100,
-        "variants": [
-            {
-                "id": "llama4:maverick",
-                "size": "maverick",
-                "parameters": 254000000000.0
-            },
-            {
-                "id": "llama4:scout",
-                "size": "scout",
-                "parameters": 67000000000.0
-            }
-        ]
-    },
-    {
         "name": "llava",
         "description": "\ud83c\udf0b LLaVA is a novel end-to-end trained large multimodal model that combines a vision encoder and Vicuna for general-purpose visual and language understanding. Updated to version 1.6.",
         "modified": "2025-05-15",
@@ -2457,7 +2434,7 @@ Warning: "goliath" has no sizes
         "name": "snowflake-arctic-embed2",
         "description": "Snowflake's frontier embedding model. Arctic Embed 2.0 adds multilingual support without sacrificing English performance or scalability.",
         "modified": "2024-12-16",
-        "downloads": 69300,
+        "downloads": 69500,
         "variants": [
             {
                 "id": "snowflake-arctic-embed2:568m",
