@@ -2,7 +2,7 @@
     {
         "name": "alfred",
         "description": "A robust conversational model designed to be used for both chat and instruct use cases.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 17100,
         "variants": [
             {
@@ -15,8 +15,8 @@
     {
         "name": "all-minilm",
         "description": "Embedding models on very large sentence level datasets.",
-        "modified": "2025-06-02",
-        "downloads": 532800,
+        "modified": "2025-06-03",
+        "downloads": 538200,
         "variants": [
             {
                 "id": "all-minilm:22m",
@@ -33,8 +33,8 @@
     {
         "name": "athene-v2",
         "description": "Athene-V2 is a 72B parameter model which excels at code completion, mathematics, and log extraction tasks.",
-        "modified": "2024-12-04",
-        "downloads": 82200,
+        "modified": "2024-12-05",
+        "downloads": 82300,
         "variants": [
             {
                 "id": "athene-v2:72b",
@@ -46,8 +46,8 @@
     {
         "name": "aya",
         "description": "Aya 23, released by Cohere, is a new family of state-of-the-art, multilingual models that support 23 languages.",
-        "modified": "2025-06-02",
-        "downloads": 144300,
+        "modified": "2025-06-03",
+        "downloads": 144400,
         "variants": [
             {
                 "id": "aya:8b",
@@ -64,8 +64,8 @@
     {
         "name": "aya-expanse",
         "description": "Cohere For AI's language models trained to perform well across 23 different languages.",
-        "modified": "2024-11-04",
-        "downloads": 63700,
+        "modified": "2024-11-05",
+        "downloads": 63800,
         "variants": [
             {
                 "id": "aya-expanse:8b",
@@ -82,8 +82,8 @@
     {
         "name": "bakllava",
         "description": "BakLLaVA is a multimodal model consisting of the Mistral 7B base model augmented with the LLaVA  architecture.",
-        "modified": "2025-06-02",
-        "downloads": 118700,
+        "modified": "2025-06-03",
+        "downloads": 118900,
         "variants": [
             {
                 "id": "bakllava:7b",
@@ -95,7 +95,7 @@
     {
         "name": "bespoke-minicheck",
         "description": "A state-of-the-art fact-checking model developed by Bespoke Labs.",
-        "modified": "2024-10-05",
+        "modified": "2024-10-06",
         "downloads": 27300,
         "variants": [
             {
@@ -108,8 +108,8 @@
     {
         "name": "bge-large",
         "description": "Embedding model from BAAI mapping texts to vectors.",
-        "modified": "2024-09-05",
-        "downloads": 104800,
+        "modified": "2024-08-07",
+        "downloads": 104900,
         "variants": [
             {
                 "id": "bge-large:335m",
@@ -121,7 +121,7 @@
     {
         "name": "bge-m3",
         "description": "BGE-M3 is a new model from BAAI distinguished for its versatility in Multi-Functionality, Multi-Linguality, and Multi-Granularity.",
-        "modified": "2024-09-05",
+        "modified": "2024-08-07",
         "downloads": 1200000,
         "variants": [
             {
@@ -134,7 +134,7 @@
     {
         "name": "codebooga",
         "description": "A high-performing code instruct model created by merging two existing code models.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 33000,
         "variants": [
             {
@@ -147,8 +147,8 @@
     {
         "name": "codegeex4",
         "description": "A versatile model for AI software development scenarios, including code completion.",
-        "modified": "2024-08-06",
-        "downloads": 145200,
+        "modified": "2024-08-07",
+        "downloads": 145300,
         "variants": [
             {
                 "id": "codegeex4:9b",
@@ -160,8 +160,8 @@
     {
         "name": "codegemma",
         "description": "CodeGemma is a collection of powerful, lightweight models that can perform a variety of coding tasks like fill-in-the-middle code completion, code generation, natural language understanding, mathematical reasoning, and instruction following.",
-        "modified": "2024-08-06",
-        "downloads": 616200,
+        "modified": "2024-08-07",
+        "downloads": 617400,
         "variants": [
             {
                 "id": "codegemma:2b",
@@ -178,7 +178,7 @@
     {
         "name": "codellama",
         "description": "A large language model that can use text prompts to generate and discuss code.",
-        "modified": "2024-08-06",
+        "modified": "2024-08-07",
         "downloads": 2100000,
         "variants": [
             {
@@ -206,8 +206,8 @@
     {
         "name": "codeqwen",
         "description": "CodeQwen1.5 is a large language model pretrained on a large amount of code data.",
-        "modified": "2024-07-07",
-        "downloads": 146800,
+        "modified": "2024-07-08",
+        "downloads": 146900,
         "variants": [
             {
                 "id": "codeqwen:7b",
@@ -219,8 +219,8 @@
     {
         "name": "codestral",
         "description": "Codestral is Mistral AI\u2019s first-ever code model designed for code generation tasks.",
-        "modified": "2024-09-05",
-        "downloads": 296800,
+        "modified": "2024-09-06",
+        "downloads": 297600,
         "variants": [
             {
                 "id": "codestral:22b",
@@ -232,7 +232,7 @@
     {
         "name": "codeup",
         "description": "Great code generation model based on Llama2.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 41500,
         "variants": [
             {
@@ -245,8 +245,8 @@
     {
         "name": "cogito",
         "description": "Cogito v1 Preview is a family of hybrid reasoning models by Deep Cogito that outperform the best available open models of the same size, including counterparts from LLaMA, DeepSeek, and Qwen across most standard benchmarks.",
-        "modified": "2025-05-03",
-        "downloads": 97600,
+        "modified": "2025-05-04",
+        "downloads": 99400,
         "variants": [
             {
                 "id": "cogito:3b",
@@ -278,8 +278,8 @@
     {
         "name": "command-a",
         "description": "111 billion parameter model optimized for demanding enterprises that require fast, secure, and high-quality AI",
-        "modified": "2025-04-03",
-        "downloads": 15800,
+        "modified": "2025-04-04",
+        "downloads": 16000,
         "variants": [
             {
                 "id": "command-a:111b",
@@ -291,8 +291,8 @@
     {
         "name": "command-r",
         "description": "Command R is a Large Language Model optimized for conversational interaction and long context tasks.",
-        "modified": "2024-09-05",
-        "downloads": 296400,
+        "modified": "2024-09-06",
+        "downloads": 296700,
         "variants": [
             {
                 "id": "command-r:35b",
@@ -304,7 +304,7 @@
     {
         "name": "command-r-plus",
         "description": "Command R+ is a powerful, scalable large language model purpose-built to excel at real-world enterprise use cases.",
-        "modified": "2024-09-05",
+        "modified": "2024-09-06",
         "downloads": 126900,
         "variants": [
             {
@@ -317,8 +317,8 @@
     {
         "name": "command-r7b",
         "description": "The smallest model in Cohere's R series delivers top-tier speed, efficiency, and quality to build powerful AI applications on commodity GPUs and edge devices.",
-        "modified": "2025-02-02",
-        "downloads": 35200,
+        "modified": "2025-02-03",
+        "downloads": 35300,
         "variants": [
             {
                 "id": "command-r7b:7b",
@@ -330,8 +330,8 @@
     {
         "name": "command-r7b-arabic",
         "description": "A new state-of-the-art version of the lightweight Command R7B model that excels in advanced Arabic language capabilities for enterprises in the Middle East and Northern Africa.",
-        "modified": "2025-03-04",
-        "downloads": 6384,
+        "modified": "2025-03-05",
+        "downloads": 6421,
         "variants": [
             {
                 "id": "command-r7b-arabic:7b",
@@ -343,8 +343,8 @@
     {
         "name": "dbrx",
         "description": "DBRX is an open, general-purpose LLM created by Databricks.",
-        "modified": "2025-06-02",
-        "downloads": 19300,
+        "modified": "2025-06-03",
+        "downloads": 19400,
         "variants": [
             {
                 "id": "dbrx:132b",
@@ -356,8 +356,8 @@
     {
         "name": "deepcoder",
         "description": "DeepCoder is a fully open-Source 14B coder model at O3-mini level, with a 1.5B version also available.",
-        "modified": "2025-05-03",
-        "downloads": 131100,
+        "modified": "2025-05-04",
+        "downloads": 132100,
         "variants": [
             {
                 "id": "deepcoder:1.5b",
@@ -374,8 +374,8 @@
     {
         "name": "deepscaler",
         "description": "A fine-tuned version of Deepseek-R1-Distilled-Qwen-1.5B that surpasses the performance of OpenAI\u2019s o1-preview with just 1.5B parameters on popular math evaluations.",
-        "modified": "2025-03-04",
-        "downloads": 81200,
+        "modified": "2025-03-05",
+        "downloads": 81300,
         "variants": [
             {
                 "id": "deepscaler:1.5b",
@@ -387,8 +387,8 @@
     {
         "name": "deepseek-coder",
         "description": "DeepSeek Coder is a capable coding model trained on two trillion code and natural language tokens.",
-        "modified": "2025-06-02",
-        "downloads": 741700,
+        "modified": "2025-06-03",
+        "downloads": 743400,
         "variants": [
             {
                 "id": "deepseek-coder:1.3b",
@@ -410,8 +410,8 @@
     {
         "name": "deepseek-coder-v2",
         "description": "An open-source Mixture-of-Experts code language model that achieves performance comparable to GPT4-Turbo in code-specific tasks.",
-        "modified": "2024-10-05",
-        "downloads": 839500,
+        "modified": "2024-09-06",
+        "downloads": 840800,
         "variants": [
             {
                 "id": "deepseek-coder-v2:16b",
@@ -428,8 +428,8 @@
     {
         "name": "deepseek-llm",
         "description": "An advanced language model crafted with 2 trillion bilingual tokens.",
-        "modified": "2025-06-02",
-        "downloads": 151000,
+        "modified": "2025-06-03",
+        "downloads": 151100,
         "variants": [
             {
                 "id": "deepseek-llm:7b",
@@ -447,7 +447,7 @@
         "name": "deepseek-r1",
         "description": "DeepSeek-R1 is a family of open reasoning models with performance approaching that of leading models, such as O3 and Gemini 2.5 Pro.",
         "modified": "2025-06-02",
-        "downloads": 46600000,
+        "downloads": 46700000,
         "variants": [
             {
                 "id": "deepseek-r1:1.5b",
@@ -489,8 +489,8 @@
     {
         "name": "deepseek-v2",
         "description": "A strong, economical, and efficient Mixture-of-Experts language model.",
-        "modified": "2024-07-07",
-        "downloads": 157000,
+        "modified": "2024-07-08",
+        "downloads": 157200,
         "variants": [
             {
                 "id": "deepseek-v2:16b",
@@ -507,7 +507,7 @@
     {
         "name": "deepseek-v2.5",
         "description": "An upgraded version of DeekSeek-V2  that integrates the general and coding abilities of both DeepSeek-V2-Chat and DeepSeek-Coder-V2-Instruct.",
-        "modified": "2024-10-05",
+        "modified": "2024-10-06",
         "downloads": 54700,
         "variants": [
             {
@@ -520,7 +520,7 @@
     {
         "name": "deepseek-v3",
         "description": "A strong Mixture-of-Experts (MoE) language model with 671B total parameters with 37B activated for each token.",
-        "modified": "2025-02-02",
+        "modified": "2025-02-03",
         "downloads": 1400000,
         "variants": [
             {
@@ -533,8 +533,8 @@
     {
         "name": "devstral",
         "description": "Devstral: the best open source model for coding agents",
-        "modified": "2025-05-26",
-        "downloads": 92000,
+        "modified": "2025-05-27",
+        "downloads": 94700,
         "variants": [
             {
                 "id": "devstral:24b",
@@ -546,8 +546,8 @@
     {
         "name": "dolphin-llama3",
         "description": "Dolphin 2.9 is a new model with 8B and 70B sizes by Eric Hartford based on Llama 3 that has a variety of instruction, conversational, and coding skills.",
-        "modified": "2025-06-02",
-        "downloads": 325900,
+        "modified": "2025-06-03",
+        "downloads": 326200,
         "variants": [
             {
                 "id": "dolphin-llama3:8b",
@@ -564,8 +564,8 @@
     {
         "name": "dolphin-mistral",
         "description": "The uncensored Dolphin model based on Mistral that excels at coding tasks. Updated to version 2.8.",
-        "modified": "2025-06-02",
-        "downloads": 349600,
+        "modified": "2025-06-03",
+        "downloads": 349900,
         "variants": [
             {
                 "id": "dolphin-mistral:7b",
@@ -577,8 +577,8 @@
     {
         "name": "dolphin-mixtral",
         "description": "Uncensored, 8x7b and 8x22b fine-tuned models based on the Mixtral mixture of experts models that excels at coding tasks. Created by Eric Hartford.",
-        "modified": "2025-01-03",
-        "downloads": 577600,
+        "modified": "2025-01-04",
+        "downloads": 578000,
         "variants": [
             {
                 "id": "dolphin-mixtral:8x7b",
@@ -595,8 +595,8 @@
     {
         "name": "dolphin-phi",
         "description": "2.7B uncensored Dolphin model by Eric Hartford, based on the Phi language model by Microsoft Research.",
-        "modified": "2025-06-02",
-        "downloads": 75100,
+        "modified": "2025-06-03",
+        "downloads": 75200,
         "variants": [
             {
                 "id": "dolphin-phi:2.7b",
@@ -608,7 +608,7 @@
     {
         "name": "dolphin3",
         "description": "Dolphin 3.0 Llama 3.1 8B \ud83d\udc2c is the next generation of the Dolphin series of instruct-tuned models designed to be the ultimate general purpose local model, enabling coding, math, agentic, function calling, and general use cases.",
-        "modified": "2025-02-02",
+        "modified": "2025-02-03",
         "downloads": 1300000,
         "variants": [
             {
@@ -621,8 +621,8 @@
     {
         "name": "dolphincoder",
         "description": "A 7B and 15B uncensored variant of the Dolphin model family that excels at coding, based on StarCoder2.",
-        "modified": "2025-06-02",
-        "downloads": 89700,
+        "modified": "2025-06-03",
+        "downloads": 89800,
         "variants": [
             {
                 "id": "dolphincoder:7b",
@@ -639,7 +639,7 @@
     {
         "name": "duckdb-nsql",
         "description": "7B parameter text-to-SQL model made by MotherDuck and Numbers Station.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 35100,
         "variants": [
             {
@@ -652,7 +652,7 @@
     {
         "name": "everythinglm",
         "description": "Uncensored Llama2 based model with support for a 16K context window.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 41200,
         "variants": [
             {
@@ -665,8 +665,8 @@
     {
         "name": "exaone-deep",
         "description": "EXAONE Deep exhibits superior capabilities in various reasoning tasks including math and coding benchmarks, ranging from 2.4B to 32B parameters developed and released by LG AI Research.",
-        "modified": "2025-04-03",
-        "downloads": 45900,
+        "modified": "2025-04-04",
+        "downloads": 46400,
         "variants": [
             {
                 "id": "exaone-deep:2.4b",
@@ -688,8 +688,8 @@
     {
         "name": "exaone3.5",
         "description": "EXAONE 3.5 is a collection of instruction-tuned bilingual (English and Korean) generative models ranging from 2.4B to 32B parameters, developed and released by LG AI Research.",
-        "modified": "2025-01-03",
-        "downloads": 75900,
+        "modified": "2025-01-04",
+        "downloads": 76800,
         "variants": [
             {
                 "id": "exaone3.5:2.4b",
@@ -711,7 +711,7 @@
     {
         "name": "falcon",
         "description": "A large language model built by the Technology Innovation Institute (TII) for use in summarization, text generation, and chat bots.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 74900,
         "variants": [
             {
@@ -734,8 +734,8 @@
     {
         "name": "falcon2",
         "description": "Falcon2 is an 11B parameters causal decoder-only model built by TII and trained over 5T tokens.",
-        "modified": "2025-06-02",
-        "downloads": 35000,
+        "modified": "2025-06-03",
+        "downloads": 35100,
         "variants": [
             {
                 "id": "falcon2:11b",
@@ -747,8 +747,8 @@
     {
         "name": "falcon3",
         "description": "A family of efficient AI models under 10B parameters performant in science, math, and coding through innovative training techniques.",
-        "modified": "2025-01-03",
-        "downloads": 55100,
+        "modified": "2025-01-04",
+        "downloads": 55300,
         "variants": [
             {
                 "id": "falcon3:1b",
@@ -775,8 +775,8 @@
     {
         "name": "firefunction-v2",
         "description": "An open weights function calling model based on Llama 3, competitive with GPT-4o function calling capabilities.",
-        "modified": "2024-08-06",
-        "downloads": 21500,
+        "modified": "2024-08-07",
+        "downloads": 21700,
         "variants": [
             {
                 "id": "firefunction-v2:70b",
@@ -788,7 +788,7 @@
     {
         "name": "gemma",
         "description": "Gemma is a family of lightweight, state-of-the-art open models built by Google DeepMind. Updated to version 1.1",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 4600000,
         "variants": [
             {
@@ -806,8 +806,8 @@
     {
         "name": "gemma2",
         "description": "Google Gemma 2 is a high-performing and efficient model available in three sizes: 2B, 9B, and 27B.",
-        "modified": "2024-08-06",
-        "downloads": 4900000,
+        "modified": "2024-08-07",
+        "downloads": 5000000,
         "variants": [
             {
                 "id": "gemma2:2b",
@@ -829,8 +829,8 @@
     {
         "name": "gemma3",
         "description": "The current, most capable model that runs on a single GPU.",
-        "modified": "2025-05-03",
-        "downloads": 5400000,
+        "modified": "2025-05-04",
+        "downloads": 5500000,
         "variants": [
             {
                 "id": "gemma3:1b",
@@ -857,8 +857,8 @@
     {
         "name": "glm4",
         "description": "A strong multi-lingual general language model with competitive performance to Llama 3.",
-        "modified": "2024-08-06",
-        "downloads": 133100,
+        "modified": "2024-08-07",
+        "downloads": 133200,
         "variants": [
             {
                 "id": "glm4:9b",
@@ -870,8 +870,8 @@
     {
         "name": "granite-code",
         "description": "A family of open foundation models by IBM for Code Intelligence",
-        "modified": "2024-09-05",
-        "downloads": 211400,
+        "modified": "2024-09-06",
+        "downloads": 211600,
         "variants": [
             {
                 "id": "granite-code:3b",
@@ -898,8 +898,8 @@
     {
         "name": "granite-embedding",
         "description": "The IBM Granite Embedding 30M and 278M models models are text-only dense biencoder embedding models, with 30M available in English only and 278M serving multilingual use cases.",
-        "modified": "2025-01-03",
-        "downloads": 51800,
+        "modified": "2025-01-04",
+        "downloads": 52200,
         "variants": [
             {
                 "id": "granite-embedding:30m",
@@ -916,8 +916,8 @@
     {
         "name": "granite3-dense",
         "description": "The IBM Granite 2B and 8B models are designed to support tool-based use cases and support for retrieval augmented generation (RAG), streamlining code generation, translation and bug fixing.",
-        "modified": "2024-12-04",
-        "downloads": 99000,
+        "modified": "2024-12-05",
+        "downloads": 99100,
         "variants": [
             {
                 "id": "granite3-dense:2b",
@@ -934,7 +934,7 @@
     {
         "name": "granite3-guardian",
         "description": "The IBM Granite Guardian 3.0 2B and 8B models are designed to detect risks in prompts and/or responses.",
-        "modified": "2024-12-04",
+        "modified": "2024-12-05",
         "downloads": 19200,
         "variants": [
             {
@@ -952,7 +952,7 @@
     {
         "name": "granite3-moe",
         "description": "The IBM Granite 1B and 3B models are the first mixture of experts (MoE) Granite models from IBM designed for low latency usage.",
-        "modified": "2024-12-04",
+        "modified": "2024-12-05",
         "downloads": 50200,
         "variants": [
             {
@@ -970,8 +970,8 @@
     {
         "name": "granite3.1-dense",
         "description": "The IBM Granite 2B and 8B models are text-only dense LLMs trained on over 12 trillion tokens of data, demonstrated significant improvements over their predecessors in performance and speed in IBM\u2019s initial testing.",
-        "modified": "2025-02-02",
-        "downloads": 96500,
+        "modified": "2025-02-03",
+        "downloads": 96600,
         "variants": [
             {
                 "id": "granite3.1-dense:2b",
@@ -988,8 +988,8 @@
     {
         "name": "granite3.1-moe",
         "description": "The IBM Granite 1B and 3B models are long-context mixture of experts (MoE) Granite models from IBM designed for low latency usage.",
-        "modified": "2025-02-02",
-        "downloads": 44900,
+        "modified": "2025-02-03",
+        "downloads": 45000,
         "variants": [
             {
                 "id": "granite3.1-moe:1b",
@@ -1006,8 +1006,8 @@
     {
         "name": "granite3.2",
         "description": "Granite-3.2 is a family of long-context AI models from IBM Granite fine-tuned for thinking capabilities.",
-        "modified": "2025-03-04",
-        "downloads": 104500,
+        "modified": "2025-03-05",
+        "downloads": 105000,
         "variants": [
             {
                 "id": "granite3.2:2b",
@@ -1024,8 +1024,8 @@
     {
         "name": "granite3.2-vision",
         "description": "A compact and efficient vision-language model, specifically designed for visual document understanding, enabling automated content extraction from tables, charts, infographics, plots, diagrams, and more.",
-        "modified": "2025-03-04",
-        "downloads": 87700,
+        "modified": "2025-03-05",
+        "downloads": 88800,
         "variants": [
             {
                 "id": "granite3.2-vision:2b",
@@ -1037,8 +1037,8 @@
     {
         "name": "granite3.3",
         "description": "IBM Granite 2B and 8B models are 128K context length language models that have been fine-tuned for improved reasoning and instruction-following capabilities.",
-        "modified": "2025-05-03",
-        "downloads": 83400,
+        "modified": "2025-05-04",
+        "downloads": 86100,
         "variants": [
             {
                 "id": "granite3.3:2b",
@@ -1055,8 +1055,8 @@
     {
         "name": "hermes3",
         "description": "Hermes 3 is the latest version of the flagship Hermes series of LLMs by Nous Research",
-        "modified": "2025-01-03",
-        "downloads": 285400,
+        "modified": "2025-01-04",
+        "downloads": 285800,
         "variants": [
             {
                 "id": "hermes3:3b",
@@ -1083,8 +1083,8 @@
     {
         "name": "internlm2",
         "description": "InternLM2.5 is a 7B parameter model tailored for practical scenarios with outstanding reasoning capability.",
-        "modified": "2024-09-05",
-        "downloads": 80500,
+        "modified": "2024-09-06",
+        "downloads": 80600,
         "variants": [
             {
                 "id": "internlm2:1m",
@@ -1111,8 +1111,8 @@
     {
         "name": "llama-guard3",
         "description": "Llama Guard 3 is a series of models fine-tuned for content safety classification of LLM inputs and responses.",
-        "modified": "2024-11-04",
-        "downloads": 40700,
+        "modified": "2024-11-05",
+        "downloads": 40800,
         "variants": [
             {
                 "id": "llama-guard3:1b",
@@ -1129,7 +1129,7 @@
     {
         "name": "llama2",
         "description": "Llama 2 is a collection of foundation language models ranging from 7B to 70B parameters.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 3500000,
         "variants": [
             {
@@ -1152,7 +1152,7 @@
     {
         "name": "llama2-chinese",
         "description": "Llama 2 based model fine tuned to improve Chinese dialogue ability.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 153800,
         "variants": [
             {
@@ -1170,7 +1170,7 @@
     {
         "name": "llama2-uncensored",
         "description": "Uncensored Llama 2 model by George Sung and Jarrad Hope.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 1200000,
         "variants": [
             {
@@ -1188,7 +1188,7 @@
     {
         "name": "llama3",
         "description": "Meta Llama 3: The most capable openly available LLM to date",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 8300000,
         "variants": [
             {
@@ -1206,7 +1206,7 @@
     {
         "name": "llama3-chatqa",
         "description": "A model from NVIDIA based on Llama 3 that excels at conversational question answering (QA) and retrieval-augmented generation (RAG).",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 105900,
         "variants": [
             {
@@ -1224,7 +1224,7 @@
     {
         "name": "llama3-gradient",
         "description": "This model extends LLama-3 8B's context length from 8k to over 1m tokens.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 102100,
         "variants": [
             {
@@ -1242,8 +1242,8 @@
     {
         "name": "llama3-groq-tool-use",
         "description": "A series of models from Groq that represent a significant advancement in open-source AI capabilities for tool use/function calling.",
-        "modified": "2024-08-06",
-        "downloads": 67700,
+        "modified": "2024-08-07",
+        "downloads": 67800,
         "variants": [
             {
                 "id": "llama3-groq-tool-use:8b",
@@ -1260,8 +1260,8 @@
     {
         "name": "llama3.1",
         "description": "Llama 3.1 is a new state-of-the-art model from Meta available in 8B, 70B and 405B parameter sizes.",
-        "modified": "2024-12-04",
-        "downloads": 94200000,
+        "modified": "2024-12-05",
+        "downloads": 94300000,
         "variants": [
             {
                 "id": "llama3.1:8b",
@@ -1283,8 +1283,8 @@
     {
         "name": "llama3.2",
         "description": "Meta's Llama 3.2 goes small with 1B and 3B models.",
-        "modified": "2024-10-05",
-        "downloads": 18200000,
+        "modified": "2024-10-06",
+        "downloads": 18300000,
         "variants": [
             {
                 "id": "llama3.2:1b",
@@ -1301,7 +1301,7 @@
     {
         "name": "llama3.2-vision",
         "description": "Llama 3.2 Vision is a collection of instruction-tuned image reasoning generative models in 11B and 90B sizes.",
-        "modified": "2025-05-26",
+        "modified": "2025-05-27",
         "downloads": 2200000,
         "variants": [
             {
@@ -1319,7 +1319,7 @@
     {
         "name": "llama3.3",
         "description": "New state of the art 70B model. Llama 3.3 70B offers similar performance compared to the Llama 3.1 405B model.",
-        "modified": "2025-01-03",
+        "modified": "2025-01-04",
         "downloads": 1900000,
         "variants": [
             {
@@ -1333,7 +1333,7 @@
         "name": "llama4",
         "description": "Meta's latest collection of multimodal models.",
         "modified": "2025-05-28",
-        "downloads": 374300,
+        "downloads": 377400,
         "variants": [
             {
                 "id": "llama4:16x17b",
@@ -1350,7 +1350,7 @@
     {
         "name": "llava",
         "description": "\ud83c\udf0b LLaVA is a novel end-to-end trained large multimodal model that combines a vision encoder and Vicuna for general-purpose visual and language understanding. Updated to version 1.6.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 6100000,
         "variants": [
             {
@@ -1373,8 +1373,8 @@
     {
         "name": "llava-llama3",
         "description": "A LLaVA model fine-tuned from Llama 3 Instruct with better scores in several benchmarks.",
-        "modified": "2025-06-02",
-        "downloads": 921400,
+        "modified": "2025-06-03",
+        "downloads": 929000,
         "variants": [
             {
                 "id": "llava-llama3:8b",
@@ -1386,8 +1386,8 @@
     {
         "name": "llava-phi3",
         "description": "A new small LLaVA model fine-tuned from Phi 3 Mini.",
-        "modified": "2025-06-02",
-        "downloads": 93100,
+        "modified": "2025-06-03",
+        "downloads": 93500,
         "variants": [
             {
                 "id": "llava-phi3:3.8b",
@@ -1399,7 +1399,7 @@
     {
         "name": "magicoder",
         "description": "\ud83c\udfa9 Magicoder is a family of 7B parameter models trained on 75K synthetic instruction data using OSS-Instruct, a novel approach to enlightening LLMs with open-source code snippets.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 33900,
         "variants": [
             {
@@ -1412,7 +1412,7 @@
     {
         "name": "marco-o1",
         "description": "An open large reasoning model for real-world solutions by the Alibaba International Digital Commerce Group (AIDC-AI).",
-        "modified": "2024-12-04",
+        "modified": "2024-12-05",
         "downloads": 36500,
         "variants": [
             {
@@ -1425,7 +1425,7 @@
     {
         "name": "mathstral",
         "description": "Math\u03a3tral: a 7B model designed for math reasoning and scientific discovery by Mistral AI.",
-        "modified": "2024-08-06",
+        "modified": "2024-08-07",
         "downloads": 37300,
         "variants": [
             {
@@ -1438,8 +1438,8 @@
     {
         "name": "meditron",
         "description": "Open-source medical large language model adapted from Llama 2 to the medical domain.",
-        "modified": "2025-06-02",
-        "downloads": 54700,
+        "modified": "2025-06-03",
+        "downloads": 54800,
         "variants": [
             {
                 "id": "meditron:7b",
@@ -1456,8 +1456,8 @@
     {
         "name": "medllama2",
         "description": "Fine-tuned Llama 2 model to answer medical questions based on an open source medical dataset.",
-        "modified": "2025-06-02",
-        "downloads": 52700,
+        "modified": "2025-06-03",
+        "downloads": 53300,
         "variants": [
             {
                 "id": "medllama2:7b",
@@ -1469,7 +1469,7 @@
     {
         "name": "megadolphin",
         "description": "MegaDolphin-2.2-120b is a transformation of Dolphin-2.2-70b created by interleaving the model with itself.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 26300,
         "variants": [
             {
@@ -1482,7 +1482,7 @@
     {
         "name": "minicpm-v",
         "description": "A series of multimodal LLMs (MLLMs) designed for vision-language understanding.",
-        "modified": "2024-12-04",
+        "modified": "2024-12-05",
         "downloads": 1700000,
         "variants": [
             {
@@ -1495,8 +1495,8 @@
     {
         "name": "mistral",
         "description": "The 7B model released by Mistral AI, updated to version 0.3.",
-        "modified": "2024-08-06",
-        "downloads": 14500000,
+        "modified": "2024-08-07",
+        "downloads": 14600000,
         "variants": [
             {
                 "id": "mistral:7b",
@@ -1508,8 +1508,8 @@
     {
         "name": "mistral-large",
         "description": "Mistral Large 2 is Mistral's new flagship model that is significantly more capable in code generation, mathematics, and reasoning with 128k context window and support for dozens of languages.",
-        "modified": "2024-12-04",
-        "downloads": 137200,
+        "modified": "2024-12-05",
+        "downloads": 137400,
         "variants": [
             {
                 "id": "mistral-large:123b",
@@ -1521,7 +1521,7 @@
     {
         "name": "mistral-nemo",
         "description": "A state-of-the-art 12B model with 128k context length, built by Mistral AI in collaboration with NVIDIA.",
-        "modified": "2024-08-06",
+        "modified": "2024-08-07",
         "downloads": 1900000,
         "variants": [
             {
@@ -1534,8 +1534,8 @@
     {
         "name": "mistral-openorca",
         "description": "Mistral OpenOrca is a 7 billion parameter model, fine-tuned on top of the Mistral 7B model using the OpenOrca dataset.",
-        "modified": "2025-06-02",
-        "downloads": 171100,
+        "modified": "2025-06-03",
+        "downloads": 171200,
         "variants": [
             {
                 "id": "mistral-openorca:7b",
@@ -1547,8 +1547,8 @@
     {
         "name": "mistral-small",
         "description": "Mistral Small 3 sets a new benchmark in the \u201csmall\u201d Large Language Models category below 70B.",
-        "modified": "2025-02-02",
-        "downloads": 878200,
+        "modified": "2025-02-03",
+        "downloads": 887000,
         "variants": [
             {
                 "id": "mistral-small:22b",
@@ -1565,8 +1565,8 @@
     {
         "name": "mistral-small3.1",
         "description": "Building upon Mistral Small 3, Mistral Small 3.1 (2503) adds state-of-the-art vision understanding and enhances long context capabilities up to 128k tokens without compromising text performance.",
-        "modified": "2025-05-03",
-        "downloads": 119500,
+        "modified": "2025-05-04",
+        "downloads": 120900,
         "variants": [
             {
                 "id": "mistral-small3.1:24b",
@@ -1578,7 +1578,7 @@
     {
         "name": "mistrallite",
         "description": "MistralLite is a fine-tuned model based on Mistral with enhanced capabilities of processing long contexts.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 33400,
         "variants": [
             {
@@ -1591,7 +1591,7 @@
     {
         "name": "mixtral",
         "description": "A set of Mixture of Experts (MoE) model with open weights by Mistral AI in 8x7b and 8x22b parameter sizes.",
-        "modified": "2025-01-03",
+        "modified": "2025-01-04",
         "downloads": 1000000,
         "variants": [
             {
@@ -1609,8 +1609,8 @@
     {
         "name": "moondream",
         "description": "moondream2 is a small vision language model designed to run efficiently on edge devices.",
-        "modified": "2025-06-02",
-        "downloads": 196900,
+        "modified": "2025-06-03",
+        "downloads": 197400,
         "variants": [
             {
                 "id": "moondream:1.8b",
@@ -1622,8 +1622,8 @@
     {
         "name": "mxbai-embed-large",
         "description": "State-of-the-art large embedding model from mixedbread.ai",
-        "modified": "2025-06-02",
-        "downloads": 3400000,
+        "modified": "2025-06-03",
+        "downloads": 3500000,
         "variants": [
             {
                 "id": "mxbai-embed-large:335m",
@@ -1635,7 +1635,7 @@
     {
         "name": "nemotron",
         "description": "Llama-3.1-Nemotron-70B-Instruct is a large language model customized by NVIDIA to improve the helpfulness of LLM generated responses to user queries.",
-        "modified": "2024-11-04",
+        "modified": "2024-11-05",
         "downloads": 73400,
         "variants": [
             {
@@ -1648,8 +1648,8 @@
     {
         "name": "nemotron-mini",
         "description": "A commercial-friendly small language model by NVIDIA optimized for roleplay, RAG QA, and function calling.",
-        "modified": "2024-10-05",
-        "downloads": 82700,
+        "modified": "2024-10-06",
+        "downloads": 82800,
         "variants": [
             {
                 "id": "nemotron-mini:4b",
@@ -1661,8 +1661,8 @@
     {
         "name": "neural-chat",
         "description": "A fine-tuned model based on Mistral with good coverage of domain and language.",
-        "modified": "2025-06-02",
-        "downloads": 113600,
+        "modified": "2025-06-03",
+        "downloads": 113800,
         "variants": [
             {
                 "id": "neural-chat:7b",
@@ -1674,7 +1674,7 @@
     {
         "name": "nexusraven",
         "description": "Nexus Raven is a 13B instruction tuned model for function calling tasks.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 43400,
         "variants": [
             {
@@ -1687,7 +1687,7 @@
     {
         "name": "notus",
         "description": "A 7B chat model fine-tuned with high-quality data and based on Zephyr.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 24700,
         "variants": [
             {
@@ -1700,7 +1700,7 @@
     {
         "name": "notux",
         "description": "A top-performing mixture of experts model, fine-tuned with high-quality data.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 25600,
         "variants": [
             {
@@ -1713,7 +1713,7 @@
     {
         "name": "nous-hermes",
         "description": "General use models based on Llama and Llama 2 from Nous Research.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 87600,
         "variants": [
             {
@@ -1731,8 +1731,8 @@
     {
         "name": "nous-hermes2",
         "description": "The powerful family of models by Nous Research that excels at scientific discussion and coding tasks.",
-        "modified": "2025-06-02",
-        "downloads": 128800,
+        "modified": "2025-06-03",
+        "downloads": 128900,
         "variants": [
             {
                 "id": "nous-hermes2:10.7b",
@@ -1749,8 +1749,8 @@
     {
         "name": "nous-hermes2-mixtral",
         "description": "The Nous Hermes 2 model from Nous Research, now trained over Mixtral.",
-        "modified": "2025-01-03",
-        "downloads": 59700,
+        "modified": "2025-01-04",
+        "downloads": 59800,
         "variants": [
             {
                 "id": "nous-hermes2-mixtral:8x7b",
@@ -1762,7 +1762,7 @@
     {
         "name": "nuextract",
         "description": "A 3.8B model fine-tuned on a private high-quality synthetic dataset for information extraction, based on Phi-3.",
-        "modified": "2024-08-06",
+        "modified": "2024-08-07",
         "downloads": 29300,
         "variants": [
             {
@@ -1775,8 +1775,8 @@
     {
         "name": "olmo2",
         "description": "OLMo 2 is a new family of 7B and 13B models trained on up to 5T tokens. These models are on par with or better than equivalently sized fully open models, and competitive with open-weight models such as Llama 3.1 on English academic benchmarks.",
-        "modified": "2025-02-02",
-        "downloads": 1200000,
+        "modified": "2025-02-03",
+        "downloads": 1300000,
         "variants": [
             {
                 "id": "olmo2:7b",
@@ -1793,8 +1793,8 @@
     {
         "name": "open-orca-platypus2",
         "description": "Merge of the Open Orca OpenChat model and the Garage-bAInd Platypus 2 model. Designed for chat and code generation.",
-        "modified": "2025-06-02",
-        "downloads": 25000,
+        "modified": "2025-06-03",
+        "downloads": 25100,
         "variants": [
             {
                 "id": "open-orca-platypus2:13b",
@@ -1806,8 +1806,8 @@
     {
         "name": "openchat",
         "description": "A family of open-source models trained on a wide variety of data, surpassing ChatGPT on various benchmarks. Updated to version 3.5-0106.",
-        "modified": "2025-06-02",
-        "downloads": 164900,
+        "modified": "2025-06-03",
+        "downloads": 165200,
         "variants": [
             {
                 "id": "openchat:7b",
@@ -1819,8 +1819,8 @@
     {
         "name": "opencoder",
         "description": "OpenCoder is an open and reproducible code LLM family which includes 1.5B and 8B models, supporting chat in English and Chinese languages.",
-        "modified": "2024-12-04",
-        "downloads": 47800,
+        "modified": "2024-12-05",
+        "downloads": 48300,
         "variants": [
             {
                 "id": "opencoder:1.5b",
@@ -1837,8 +1837,8 @@
     {
         "name": "openthinker",
         "description": "A fully open-source family of reasoning models built using a dataset derived by distilling DeepSeek-R1.",
-        "modified": "2025-05-03",
-        "downloads": 528200,
+        "modified": "2025-05-04",
+        "downloads": 528400,
         "variants": [
             {
                 "id": "openthinker:7b",
@@ -1855,8 +1855,8 @@
     {
         "name": "orca-mini",
         "description": "A general-purpose model ranging from 3 billion parameters to 70 billion, suitable for entry-level hardware.",
-        "modified": "2025-06-02",
-        "downloads": 341900,
+        "modified": "2025-06-03",
+        "downloads": 342100,
         "variants": [
             {
                 "id": "orca-mini:3b",
@@ -1883,7 +1883,7 @@
     {
         "name": "orca2",
         "description": "Orca 2 is built by Microsoft research, and are a fine-tuned version of Meta's Llama 2 models.  The model is designed to excel particularly in reasoning.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 66700,
         "variants": [
             {
@@ -1901,8 +1901,8 @@
     {
         "name": "paraphrase-multilingual",
         "description": "Sentence-transformers model that can be used for tasks like clustering or semantic search.",
-        "modified": "2024-09-05",
-        "downloads": 61800,
+        "modified": "2024-08-07",
+        "downloads": 61900,
         "variants": [
             {
                 "id": "paraphrase-multilingual:278m",
@@ -1914,8 +1914,8 @@
     {
         "name": "phi",
         "description": "Phi-2: a 2.7B language model by Microsoft Research that demonstrates outstanding reasoning and language understanding capabilities.",
-        "modified": "2025-06-02",
-        "downloads": 545200,
+        "modified": "2025-06-03",
+        "downloads": 545800,
         "variants": [
             {
                 "id": "phi:2.7b",
@@ -1927,7 +1927,7 @@
     {
         "name": "phi3",
         "description": "Phi-3 is a family of lightweight 3B (Mini) and 14B (Medium) state-of-the-art open models by Microsoft.",
-        "modified": "2024-08-06",
+        "modified": "2024-08-07",
         "downloads": 3300000,
         "variants": [
             {
@@ -1945,8 +1945,8 @@
     {
         "name": "phi3.5",
         "description": "A lightweight AI model with 3.8 billion parameters with performance overtaking similarly and larger sized models.",
-        "modified": "2024-10-05",
-        "downloads": 280600,
+        "modified": "2024-09-06",
+        "downloads": 281000,
         "variants": [
             {
                 "id": "phi3.5:3.8b",
@@ -1958,8 +1958,8 @@
     {
         "name": "phi4",
         "description": "Phi-4 is a 14B parameter, state-of-the-art open model from Microsoft.",
-        "modified": "2025-02-02",
-        "downloads": 2400000,
+        "modified": "2025-02-03",
+        "downloads": 2500000,
         "variants": [
             {
                 "id": "phi4:14b",
@@ -1971,8 +1971,8 @@
     {
         "name": "phi4-mini",
         "description": "Phi-4-mini brings significant enhancements in multilingual support, reasoning, and mathematics, and now, the long-awaited function calling feature is finally supported.",
-        "modified": "2025-03-04",
-        "downloads": 163800,
+        "modified": "2025-03-05",
+        "downloads": 165000,
         "variants": [
             {
                 "id": "phi4-mini:3.8b",
@@ -1984,8 +1984,8 @@
     {
         "name": "phi4-mini-reasoning",
         "description": "Phi 4 mini reasoning is a lightweight open model that balances efficiency with advanced reasoning ability.",
-        "modified": "2025-05-03",
-        "downloads": 19500,
+        "modified": "2025-05-04",
+        "downloads": 19800,
         "variants": [
             {
                 "id": "phi4-mini-reasoning:3.8b",
@@ -1997,8 +1997,8 @@
     {
         "name": "phi4-reasoning",
         "description": "Phi 4 reasoning and reasoning plus are 14-billion parameter open-weight reasoning models that rival much larger models on complex reasoning tasks.",
-        "modified": "2025-05-03",
-        "downloads": 64800,
+        "modified": "2025-05-04",
+        "downloads": 66800,
         "variants": [
             {
                 "id": "phi4-reasoning:14b",
@@ -2010,8 +2010,8 @@
     {
         "name": "phind-codellama",
         "description": "Code generation model based on Code Llama.",
-        "modified": "2025-06-02",
-        "downloads": 85100,
+        "modified": "2025-06-03",
+        "downloads": 85200,
         "variants": [
             {
                 "id": "phind-codellama:34b",
@@ -2023,7 +2023,7 @@
     {
         "name": "qwen",
         "description": "Qwen 1.5 is a series of large language models by Alibaba Cloud spanning from 0.5B to 110B parameters",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 4700000,
         "variants": [
             {
@@ -2071,7 +2071,7 @@
     {
         "name": "qwen2",
         "description": "Qwen2 is a new series of large language models from Alibaba group",
-        "modified": "2024-10-05",
+        "modified": "2024-10-06",
         "downloads": 4200000,
         "variants": [
             {
@@ -2099,8 +2099,8 @@
     {
         "name": "qwen2-math",
         "description": "Qwen2 Math is a series of specialized math language models built upon the Qwen2 LLMs, which significantly outperforms the mathematical capabilities of open-source models and even closed-source models (e.g., GPT4o).",
-        "modified": "2024-09-05",
-        "downloads": 128699,
+        "modified": "2024-09-06",
+        "downloads": 128800,
         "variants": [
             {
                 "id": "qwen2-math:1.5b",
@@ -2122,8 +2122,8 @@
     {
         "name": "qwen2.5",
         "description": "Qwen2.5 models are pretrained on Alibaba's latest large-scale dataset, encompassing up to 18 trillion tokens. The model supports up to 128K tokens and has multilingual support.",
-        "modified": "2024-10-05",
-        "downloads": 9200000,
+        "modified": "2024-10-06",
+        "downloads": 9300000,
         "variants": [
             {
                 "id": "qwen2.5:0.5b",
@@ -2203,8 +2203,8 @@
     {
         "name": "qwen2.5vl",
         "description": "Flagship vision-language model of Qwen and also a significant leap from the previous Qwen2-VL.",
-        "modified": "2025-05-26",
-        "downloads": 240100,
+        "modified": "2025-05-27",
+        "downloads": 247600,
         "variants": [
             {
                 "id": "qwen2.5vl:3b",
@@ -2232,7 +2232,7 @@
         "name": "qwen3",
         "description": "Qwen3 is the latest generation of large language models in Qwen series, offering a comprehensive suite of dense and mixture-of-experts (MoE) models.",
         "modified": "2025-05-29",
-        "downloads": 1800000,
+        "downloads": 1900000,
         "variants": [
             {
                 "id": "qwen3:0.6b",
@@ -2279,7 +2279,7 @@
     {
         "name": "qwq",
         "description": "QwQ is the reasoning model of the Qwen series.",
-        "modified": "2025-04-03",
+        "modified": "2025-04-04",
         "downloads": 1500000,
         "variants": [
             {
@@ -2292,8 +2292,8 @@
     {
         "name": "r1-1776",
         "description": "A version of the DeepSeek-R1 model that has been post trained to provide unbiased, accurate, and factual information by Perplexity.",
-        "modified": "2025-03-04",
-        "downloads": 37500,
+        "modified": "2025-03-05",
+        "downloads": 37900,
         "variants": [
             {
                 "id": "r1-1776:70b",
@@ -2310,8 +2310,8 @@
     {
         "name": "reader-lm",
         "description": "A series of models that convert HTML content to Markdown content, which is useful for content conversion tasks.",
-        "modified": "2024-10-05",
-        "downloads": 40000,
+        "modified": "2024-10-06",
+        "downloads": 40100,
         "variants": [
             {
                 "id": "reader-lm:0.5b",
@@ -2328,8 +2328,8 @@
     {
         "name": "reflection",
         "description": "A high-performing model trained with a new technique called Reflection-tuning that teaches a LLM to detect mistakes in its reasoning and correct course.",
-        "modified": "2024-10-05",
-        "downloads": 105700,
+        "modified": "2024-10-06",
+        "downloads": 105800,
         "variants": [
             {
                 "id": "reflection:70b",
@@ -2341,8 +2341,8 @@
     {
         "name": "sailor2",
         "description": "Sailor2 are multilingual language models made for South-East Asia. Available in 1B, 8B, and 20B parameter sizes.",
-        "modified": "2024-12-04",
-        "downloads": 12100,
+        "modified": "2024-12-05",
+        "downloads": 12200,
         "variants": [
             {
                 "id": "sailor2:1b",
@@ -2364,8 +2364,8 @@
     {
         "name": "samantha-mistral",
         "description": "A companion assistant trained in philosophy, psychology, and personal relationships. Based on Mistral.",
-        "modified": "2025-06-02",
-        "downloads": 94200,
+        "modified": "2025-06-03",
+        "downloads": 94300,
         "variants": [
             {
                 "id": "samantha-mistral:7b",
@@ -2377,8 +2377,8 @@
     {
         "name": "shieldgemma",
         "description": "ShieldGemma is set of instruction tuned models for evaluating the safety of text prompt input and text output responses against a set of defined safety policies.",
-        "modified": "2024-11-04",
-        "downloads": 41600,
+        "modified": "2024-11-05",
+        "downloads": 41700,
         "variants": [
             {
                 "id": "shieldgemma:2b",
@@ -2400,8 +2400,8 @@
     {
         "name": "smallthinker",
         "description": "A new small reasoning model fine-tuned from the Qwen 2.5 3B Instruct model.",
-        "modified": "2025-01-03",
-        "downloads": 58900,
+        "modified": "2025-01-04",
+        "downloads": 59000,
         "variants": [
             {
                 "id": "smallthinker:3b",
@@ -2413,8 +2413,8 @@
     {
         "name": "smollm",
         "description": "\ud83e\ude90 A family of small models with 135M, 360M, and 1.7B parameters, trained on a new high-quality dataset.",
-        "modified": "2024-09-05",
-        "downloads": 271300,
+        "modified": "2024-09-06",
+        "downloads": 272200,
         "variants": [
             {
                 "id": "smollm:135m",
@@ -2436,8 +2436,8 @@
     {
         "name": "smollm2",
         "description": "SmolLM2 is a family of compact language models available in three size: 135M, 360M, and 1.7B parameters.",
-        "modified": "2024-11-04",
-        "downloads": 862400,
+        "modified": "2024-11-05",
+        "downloads": 869900,
         "variants": [
             {
                 "id": "smollm2:135m",
@@ -2459,8 +2459,8 @@
     {
         "name": "snowflake-arctic-embed",
         "description": "A suite of text embedding models by Snowflake, optimized for performance.",
-        "modified": "2025-06-02",
-        "downloads": 738600,
+        "modified": "2025-06-03",
+        "downloads": 738800,
         "variants": [
             {
                 "id": "snowflake-arctic-embed:22m",
@@ -2492,8 +2492,8 @@
     {
         "name": "snowflake-arctic-embed2",
         "description": "Snowflake's frontier embedding model. Arctic Embed 2.0 adds multilingual support without sacrificing English performance or scalability.",
-        "modified": "2025-01-03",
-        "downloads": 85300,
+        "modified": "2024-12-05",
+        "downloads": 86100,
         "variants": [
             {
                 "id": "snowflake-arctic-embed2:568m",
@@ -2505,8 +2505,8 @@
     {
         "name": "solar",
         "description": "A compact, yet powerful 10.7B large language model designed for single-turn conversation.",
-        "modified": "2025-06-02",
-        "downloads": 82300,
+        "modified": "2025-06-03",
+        "downloads": 82400,
         "variants": [
             {
                 "id": "solar:10.7b",
@@ -2518,7 +2518,7 @@
     {
         "name": "solar-pro",
         "description": "Solar Pro Preview: an advanced large language model (LLM) with 22 billion parameters designed to fit into a single GPU",
-        "modified": "2024-10-05",
+        "modified": "2024-10-06",
         "downloads": 36800,
         "variants": [
             {
@@ -2531,8 +2531,8 @@
     {
         "name": "sqlcoder",
         "description": "SQLCoder is a code completion model fined-tuned on StarCoder for SQL generation tasks",
-        "modified": "2025-06-02",
-        "downloads": 106200,
+        "modified": "2025-06-03",
+        "downloads": 106300,
         "variants": [
             {
                 "id": "sqlcoder:7b",
@@ -2549,7 +2549,7 @@
     {
         "name": "stable-beluga",
         "description": "Llama 2 based model fine tuned on an Orca-style dataset. Originally called Free Willy.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 60700,
         "variants": [
             {
@@ -2572,8 +2572,8 @@
     {
         "name": "stable-code",
         "description": "Stable Code 3B is a coding model with instruct and code completion variants on par with models such as Code Llama 7B that are 2.5x larger.",
-        "modified": "2025-06-02",
-        "downloads": 132400,
+        "modified": "2025-06-03",
+        "downloads": 132600,
         "variants": [
             {
                 "id": "stable-code:3b",
@@ -2585,7 +2585,7 @@
     {
         "name": "stablelm-zephyr",
         "description": "A lightweight chat model allowing accurate, and responsive output without requiring high-end hardware.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 39200,
         "variants": [
             {
@@ -2598,8 +2598,8 @@
     {
         "name": "stablelm2",
         "description": "Stable LM 2 is a state-of-the-art 1.6B and 12B parameter language model trained on multilingual data in English, Spanish, German, Italian, French, Portuguese, and Dutch.",
-        "modified": "2025-06-02",
-        "downloads": 113900,
+        "modified": "2025-06-03",
+        "downloads": 114000,
         "variants": [
             {
                 "id": "stablelm2:1.6b",
@@ -2616,8 +2616,8 @@
     {
         "name": "starcoder",
         "description": "StarCoder is a code generation model trained on 80+ programming languages.",
-        "modified": "2025-06-02",
-        "downloads": 199100,
+        "modified": "2025-06-03",
+        "downloads": 199300,
         "variants": [
             {
                 "id": "starcoder:1b",
@@ -2644,8 +2644,8 @@
     {
         "name": "starcoder2",
         "description": "StarCoder2 is the next generation of transparently trained open code LLMs that comes in three sizes: 3B, 7B and 15B parameters.",
-        "modified": "2024-10-05",
-        "downloads": 962600,
+        "modified": "2024-10-06",
+        "downloads": 964100,
         "variants": [
             {
                 "id": "starcoder2:3b",
@@ -2667,8 +2667,8 @@
     {
         "name": "starling-lm",
         "description": "Starling is a large language model trained by reinforcement learning from AI feedback focused on improving chatbot helpfulness.",
-        "modified": "2025-06-02",
-        "downloads": 85800,
+        "modified": "2025-06-03",
+        "downloads": 85900,
         "variants": [
             {
                 "id": "starling-lm:7b",
@@ -2680,8 +2680,8 @@
     {
         "name": "tinydolphin",
         "description": "An experimental 1.1B parameter model trained on the new Dolphin 2.8 dataset by Eric Hartford and based on TinyLlama.",
-        "modified": "2025-06-02",
-        "downloads": 129600,
+        "modified": "2025-06-03",
+        "downloads": 129800,
         "variants": [
             {
                 "id": "tinydolphin:1.1b",
@@ -2693,7 +2693,7 @@
     {
         "name": "tinyllama",
         "description": "The TinyLlama project is an open endeavor to train a compact 1.1B Llama model on 3 trillion tokens.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 1900000,
         "variants": [
             {
@@ -2706,8 +2706,8 @@
     {
         "name": "tulu3",
         "description": "T\u00fclu 3 is a leading instruction following model family, offering fully open-source data, code, and recipes by the The Allen Institute for AI.",
-        "modified": "2025-01-03",
-        "downloads": 26400,
+        "modified": "2025-01-04",
+        "downloads": 26500,
         "variants": [
             {
                 "id": "tulu3:8b",
@@ -2724,7 +2724,7 @@
     {
         "name": "vicuna",
         "description": "General use chat model based on Llama and Llama 2 with 2K to 16K context sizes.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 182800,
         "variants": [
             {
@@ -2747,8 +2747,8 @@
     {
         "name": "wizard-math",
         "description": "Model focused on math and logic problems",
-        "modified": "2025-06-02",
-        "downloads": 104800,
+        "modified": "2025-06-03",
+        "downloads": 104900,
         "variants": [
             {
                 "id": "wizard-math:7b",
@@ -2770,8 +2770,8 @@
     {
         "name": "wizard-vicuna",
         "description": "Wizard Vicuna is a 13B parameter model based on Llama 2 trained by MelodysDreamj.",
-        "modified": "2025-06-02",
-        "downloads": 30900,
+        "modified": "2025-06-03",
+        "downloads": 31000,
         "variants": [
             {
                 "id": "wizard-vicuna:13b",
@@ -2783,8 +2783,8 @@
     {
         "name": "wizard-vicuna-uncensored",
         "description": "Wizard Vicuna Uncensored is a 7B, 13B, and 30B parameter model based on Llama 2 uncensored by Eric Hartford.",
-        "modified": "2025-06-02",
-        "downloads": 204600,
+        "modified": "2025-06-03",
+        "downloads": 204800,
         "variants": [
             {
                 "id": "wizard-vicuna-uncensored:7b",
@@ -2806,8 +2806,8 @@
     {
         "name": "wizardcoder",
         "description": "State-of-the-art code generation model",
-        "modified": "2025-06-02",
-        "downloads": 125400,
+        "modified": "2025-06-03",
+        "downloads": 125500,
         "variants": [
             {
                 "id": "wizardcoder:33b",
@@ -2819,8 +2819,8 @@
     {
         "name": "wizardlm-uncensored",
         "description": "Uncensored version of Wizard LM model",
-        "modified": "2025-06-02",
-        "downloads": 66500,
+        "modified": "2025-06-03",
+        "downloads": 66600,
         "variants": [
             {
                 "id": "wizardlm-uncensored:13b",
@@ -2832,8 +2832,8 @@
     {
         "name": "wizardlm2",
         "description": "State of the art large language model from Microsoft AI with improved performance on complex chat, multilingual, reasoning and agent use cases.",
-        "modified": "2025-06-02",
-        "downloads": 369100,
+        "modified": "2025-06-03",
+        "downloads": 369300,
         "variants": [
             {
                 "id": "wizardlm2:7b",
@@ -2850,7 +2850,7 @@
     {
         "name": "xwinlm",
         "description": "Conversational model based on Llama 2 that performs competitively on various benchmarks.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 86600,
         "variants": [
             {
@@ -2868,8 +2868,8 @@
     {
         "name": "yarn-llama2",
         "description": "An extension of Llama 2 that supports a context of up to 128k tokens.",
-        "modified": "2025-06-02",
-        "downloads": 81000,
+        "modified": "2025-06-03",
+        "downloads": 81100,
         "variants": [
             {
                 "id": "yarn-llama2:7b",
@@ -2886,7 +2886,7 @@
     {
         "name": "yarn-mistral",
         "description": "An extension of Mistral to support context windows of 64K or 128K.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 46700,
         "variants": [
             {
@@ -2899,7 +2899,7 @@
     {
         "name": "yi",
         "description": "Yi 1.5 is a high-performing, bilingual language model.",
-        "modified": "2025-06-02",
+        "modified": "2025-06-03",
         "downloads": 279900,
         "variants": [
             {
@@ -2922,8 +2922,8 @@
     {
         "name": "yi-coder",
         "description": "Yi-Coder is a series of open-source code language models that delivers state-of-the-art coding performance with fewer than 10 billion parameters.",
-        "modified": "2024-10-05",
-        "downloads": 83600,
+        "modified": "2024-10-06",
+        "downloads": 83700,
         "variants": [
             {
                 "id": "yi-coder:1.5b",
@@ -2940,8 +2940,8 @@
     {
         "name": "zephyr",
         "description": "Zephyr is a series of fine-tuned versions of the Mistral and Mixtral models that are trained to act as helpful assistants.",
-        "modified": "2025-06-02",
-        "downloads": 268100,
+        "modified": "2025-06-03",
+        "downloads": 268200,
         "variants": [
             {
                 "id": "zephyr:7b",
