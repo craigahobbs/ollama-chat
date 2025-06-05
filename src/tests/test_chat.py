@@ -26,13 +26,18 @@ class TestChatManager(unittest.TestCase):
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('ollama.chat') as mock_chat:
+             unittest.mock.patch('ollama.chat') as mock_chat, \
+             unittest.mock.patch('ollama.show') as mock_show:
             # Configure the ollama.chat mock
-            mock_chunks = [['Hi ', 'there!'], ['<think>Hmm</think>', 'Bye ', 'bye!'], ['Hoo-ey!']]
+            mock_chunks = [['Hi ', 'there!'], ['Bye ', 'bye!']]
             mock_chat.side_effect = [iter({'message': {'content': chunk}} for chunk in chunks) for chunks in mock_chunks]
 
+            # Configure the ollama.show mock
+            mock_show.return_value = unittest.mock.Mock()
+            mock_show.return_value.capabilities=[]
+
             # Create the ChatManager instance
-            chat_prompts = ['Hello', 'Goodbye', 'Yee-haw!']
+            chat_prompts = ['Hello', 'Goodbye']
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
@@ -46,11 +51,14 @@ class TestChatManager(unittest.TestCase):
             self.assertDictEqual(app.chats, {})
 
             # Verify the ollama.chat calls
-            self.assertEqual(mock_chat.call_count, 3)
+            self.assertEqual(mock_show.call_count, 1)
+            self.assertEqual(mock_chat.call_count, 2)
             self.assertListEqual(
                 mock_chat.call_args_list,
                 [
-                    unittest.mock.call(model='llm', messages=[{'role': 'user', 'content': 'Hello', 'images': None}], stream=True),
+                    unittest.mock.call(
+                        model='llm', messages=[{'role': 'user', 'content': 'Hello', 'images': None}], think=False, stream=True
+                    ),
                     unittest.mock.call(
                         model='llm',
                         messages=[
@@ -58,17 +66,7 @@ class TestChatManager(unittest.TestCase):
                             {'role': 'assistant', 'content': 'Hi there!'},
                             {'role': 'user', 'content': 'Goodbye', 'images': None}
                         ],
-                        stream=True
-                    ),
-                    unittest.mock.call(
-                        model='llm',
-                        messages=[
-                            {'role': 'user', 'content': 'Hello', 'images': None},
-                            {'role': 'assistant', 'content': 'Hi there!'},
-                            {'role': 'user', 'content': 'Goodbye', 'images': None},
-                            {'role': 'assistant', 'content': 'Bye bye!'},
-                            {'role': 'user', 'content': 'Yee-haw!', 'images': None}
-                        ],
+                        think=False,
                         stream=True
                     )
                 ]
@@ -88,11 +86,93 @@ class TestChatManager(unittest.TestCase):
                             },
                             {
                                 'user': 'Goodbye',
-                                'model': '<think>Hmm</think>Bye bye!'
+                                'model': 'Bye bye!'
+                            }
+                        ]
+                    }
+                ]
+            }
+            with app.config() as config:
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
+
+    def test_chat_fn_thinking(self):
+        test_files = [
+            ('ollama-chat.json', json.dumps({
+                'conversations': [
+                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+                ]
+            }))
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('ollama.chat') as mock_chat, \
+             unittest.mock.patch('ollama.show') as mock_show:
+            # Configure the ollama.chat mock
+            mock_chunks = [[{'thinking': 'Hmmm '}, {'thinking': 'Haw'}, 'Hi ', 'there!'], ['Bye ', 'bye!']]
+            mock_chat.side_effect = [
+                iter({'message': {'content': chunk} if isinstance(chunk, str) else chunk} for chunk in chunks) for chunks in mock_chunks
+            ]
+
+            # Configure the ollama.show mock
+            mock_show.return_value = unittest.mock.Mock()
+            mock_show.return_value.capabilities=['thinking']
+
+            # Create the ChatManager instance
+            chat_prompts = ['Hello', 'Goodbye']
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+            chat_manager = ChatManager(app, 'conv1', chat_prompts)
+            app.chats['conv1'] = chat_manager
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
+            mock_thread.return_value.start.assert_called_once_with()
+            self.assertTrue(mock_thread.return_value.daemon)
+
+            # Run the thread function
+            ChatManager.chat_thread_fn(chat_manager)
+            self.assertDictEqual(app.chats, {})
+
+            # Verify the ollama.chat calls
+            self.assertEqual(mock_show.call_count, 1)
+            self.assertEqual(mock_chat.call_count, 2)
+            self.assertListEqual(
+                mock_chat.call_args_list,
+                [
+                    unittest.mock.call(
+                        model='llm', messages=[{'role': 'user', 'content': 'Hello', 'images': None}], think=True, stream=True
+                    ),
+                    unittest.mock.call(
+                        model='llm',
+                        messages=[
+                            {'role': 'user', 'content': 'Hello', 'images': None},
+                            {'role': 'assistant', 'content': 'Hi there!'},
+                            {'role': 'user', 'content': 'Goodbye', 'images': None}
+                        ],
+                        think=True,
+                        stream=True
+                    )
+                ]
+            )
+
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [
+                            {
+                                'user': 'Hello',
+                                'model': 'Hi there!',
+                                'thinking': 'Hmmm Haw'
                             },
                             {
-                                'user': 'Yee-haw!',
-                                'model': 'Hoo-ey!'
+                                'user': 'Goodbye',
+                                'model': 'Bye bye!'
                             }
                         ]
                     }
@@ -116,10 +196,15 @@ class TestChatManager(unittest.TestCase):
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('ollama.chat') as mock_chat:
+             unittest.mock.patch('ollama.chat') as mock_chat, \
+             unittest.mock.patch('ollama.show') as mock_show:
             # Configure the ollama.chat mock
             mock_chunks = [['Hi ', 'there!'], ['Bye ', 'bye!']]
             mock_chat.side_effect = [iter({'message': {'content': chunk}} for chunk in chunks) for chunks in mock_chunks]
+
+            # Configure the ollama.show mock
+            mock_show.return_value = unittest.mock.Mock()
+            mock_show.return_value.capabilities=[]
 
             # Create the ChatManager instance
             chat_prompts = ['Hello', 'Goodbye']
@@ -272,10 +357,15 @@ file content
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('ollama.chat') as mock_chat:
+             unittest.mock.patch('ollama.chat') as mock_chat, \
+             unittest.mock.patch('ollama.show') as mock_show:
             # Configure the ollama.chat mock
             mock_chunks = [['Bye ', 'bye!']]
             mock_chat.side_effect = [iter({'message': {'content': chunk}} for chunk in chunks) for chunks in mock_chunks]
+
+            # Configure the ollama.show mock
+            mock_show.return_value = unittest.mock.Mock()
+            mock_show.return_value.capabilities=[]
 
             # Create the ChatManager instance
             chat_prompts = ['/do bye']
@@ -335,10 +425,15 @@ file content
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('ollama.chat') as mock_chat:
+             unittest.mock.patch('ollama.chat') as mock_chat, \
+             unittest.mock.patch('ollama.show') as mock_show:
             # Configure the ollama.chat mock
             mock_chunks = [['Bye ', 'bye!']]
             mock_chat.side_effect = [iter({'message': {'content': chunk}} for chunk in chunks) for chunks in mock_chunks]
+
+            # Configure the ollama.show mock
+            mock_show.return_value = unittest.mock.Mock()
+            mock_show.return_value.capabilities=[]
 
             # Create the ChatManager instance
             chat_prompts = ['/do bye -v name Joe']

@@ -48,6 +48,9 @@ struct ConversationExchange
     # The model response
     string model
 
+    # The model's thinking
+    optional string thinking
+
 
 # An conversation template info struct
 struct ConversationTemplateInfo

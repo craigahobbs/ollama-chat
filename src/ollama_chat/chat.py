@@ -8,7 +8,6 @@ The ollama-chat chat manager
 import argparse
 import base64
 import functools
-import importlib
 import itertools
 import os
 import pathlib
@@ -17,7 +16,6 @@ import shlex
 import threading
 import urllib
 
-import bare_script
 import ollama
 
 
@@ -41,6 +39,7 @@ class ChatManager():
     @staticmethod
     def chat_thread_fn(chat):
         try:
+            is_thinking = None
             while chat.prompts:
                 # Create the Ollama messages from the conversation
                 messages = []
@@ -60,7 +59,7 @@ class ChatManager():
                         if 'do' not in flags:
                             messages.append({'role': 'user', 'content': user_content, 'images': flags.get('images')})
                             if exchange['model'] != '':
-                                messages.append({'role': 'assistant', 'content': _get_message_response(exchange['model'])})
+                                messages.append({'role': 'assistant', 'content': exchange['model']})
 
                     # Help command?
                     if 'help' in flags:
@@ -100,8 +99,13 @@ class ChatManager():
                         exchange['model'] = '\n\n'.join(reversed(messages))
                         continue
 
+                # Is this a thinking model?
+                if is_thinking is None:
+                    model_show = ollama.show(model)
+                    is_thinking = model_show.capabilities is not None and 'thinking' in model_show.capabilities
+
                 # Stream the chat response
-                for chunk in ollama.chat(model=model, messages=messages, stream=True):
+                for chunk in ollama.chat(model=model, messages=messages, think=is_thinking, stream=True):
                     if chat.stop:
                         break
 
@@ -109,7 +113,12 @@ class ChatManager():
                     with chat.app.config() as config:
                         conversation = config_conversation(config, chat.conversation_id)
                         exchange = conversation['exchanges'][-1]
-                        exchange['model'] += chunk['message']['content']
+                        if 'thinking' in chunk['message']:
+                            if 'thinking' not in exchange:
+                                exchange['thinking'] = ''
+                            exchange['thinking'] += chunk['message']['thinking']
+                        else:
+                            exchange['model'] += chunk['message']['content']
                 if chat.stop:
                     break
 
@@ -130,25 +139,6 @@ class ChatManager():
 # Helper to find a conversation by ID
 def config_conversation(config, id_):
     return next((conv for conv in config['conversations'] if conv['id'] == id_), None)
-
-
-# Compile the BareScript script, ollamaChatConversation.bare
-_OLLAMA_CHAT_CONVERSATION_GLOBALS = {}
-with importlib.resources.files('ollama_chat.static').joinpath('ollamaChatConversation.bare').open('r') as _OLLAMA_CHAT_CONVERSATION_FILE:
-    bare_script.execute_script(
-        bare_script.parse_script(_OLLAMA_CHAT_CONVERSATION_FILE.read()),
-        {'globals': _OLLAMA_CHAT_CONVERSATION_GLOBALS}
-    )
-
-
-# Wrapper for the BareScript function, ollamaChatConversationResponseThinking
-def _get_message_response(response):
-    thinking = _OLLAMA_CHAT_CONVERSATION_GLOBALS['ollamaChatConversationResponseThinking'](
-        [{'user': '', 'model': response}], {'globals': _OLLAMA_CHAT_CONVERSATION_GLOBALS}
-    )
-    if thinking is not None and 'answer' in thinking:
-        return thinking['answer']
-    return response
 
 
 # Helper to get the template prompts

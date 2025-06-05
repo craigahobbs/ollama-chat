@@ -91,7 +91,7 @@ async function ollamaChatConversationPageBottom(args, conversation, generating):
         # Thinking?
         ixLastExchange = arrayLength(exchanges) - 1
         lastExchange = arrayGet(exchanges, ixLastExchange)
-        isThinking = ollamaChatConversationResponseThinking(lastExchange) != null
+        isThinking = objectHas(lastExchange, 'thinking')
 
         # Render the model reply
         ollamaChatConversationResponseRenderBottom(args, lastExchange, ixLastExchange)
@@ -139,7 +139,7 @@ function ollamaChatConversationResponseRenderTop(args, exchange, ixExchange):
     endif
 
     # Show/hide thinking link?
-    isThinking = ollamaChatConversationResponseThinking(exchange) != null
+    isThinking = objectHas(exchange, 'thinking')
     if isThinking:
         if ixExchange == objectGet(args, 'think'):
             markdownPrint('', argsLink(ollamaChatArguments, 'Hide Thinking', objectNew('think', null)))
@@ -159,55 +159,14 @@ function ollamaChatConversationResponseRenderBottom(args, exchange, ixExchange):
     endif
 
     # Thinking response?
-    thinking = ollamaChatConversationResponseThinking(exchange)
-    if thinking:
-        showThinking = ixExchange == objectGet(args, 'think')
-        if showThinking:
-            markdownPrint('', '**<think>**', '', objectGet(thinking, 'think'), '', '**</think>**')
-        endif
-        if objectHas(thinking, 'answer'):
-            if showThinking:
-                markdownPrint('', '-----')
-            endif
-            markdownPrint('', objectGet(thinking, 'answer'))
-        endif
-        return
+    thinking = objectGet(exchange, 'thinking')
+    if thinking && ixExchange == objectGet(args, 'think'):
+        markdownPrint('', '**<think>**', '', thinking, '', '**</think>**', '', '-----')
     endif
 
     # Render the response
     markdownPrint('', objectGet(exchange, 'model'))
 endfunction
-
-
-# Helper to determine if the model response is thinking
-function ollamaChatConversationResponseThinking(exchange):
-    modelText = objectGet(exchange, 'model')
-
-    # Completed thinking?
-    mThink = regexMatch(ollamaChatConversationThinkRegex, modelText)
-    if mThink:
-        fullThink = objectGet(objectGet(mThink, 'groups'), '0')
-        return objectNew( \
-            'think', stringTrim(objectGet(objectGet(mThink, 'groups'), 'thinkText')), \
-            'answer', stringTrim(stringSlice(modelText, stringLength(fullThink))) \
-        )
-    endif
-
-    # Partial thinking?
-    mThinkPartial = regexMatch(ollamaChatConversationThinkPartialRegex, modelText)
-    if mThinkPartial:
-        fullThink = objectGet(objectGet(mThinkPartial, 'groups'), '0')
-        return objectNew( \
-            'think', stringTrim(stringSlice(modelText, stringLength(fullThink))) \
-        )
-    endif
-
-    return null
-endfunction
-
-
-ollamaChatConversationThinkRegex = regexNew('^\\s*<(think|thought)>(?<thinkText>.*?)</\\1>', 's')
-ollamaChatConversationThinkPartialRegex = regexNew('^\\s*<(?:think|thought)>')
 
 
 # Conversation update timeout handler
@@ -235,7 +194,7 @@ async function ollamaChatConversationOnTimeout(args, originalExchangeCount, orig
     exchanges = objectGet(conversation, 'exchanges')
     exchangeCount = arrayLength(exchanges)
     lastExchange = arrayGet(exchanges, exchangeCount - 1)
-    isThinking = ollamaChatConversationResponseThinking(lastExchange) != null
+    isThinking = objectHas(lastExchange, 'thinking')
     if exchangeCount != originalExchangeCount || isThinking != originalThinking:
         ollamaChatConversationPage(args)
         return
