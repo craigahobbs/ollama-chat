@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.65 (2025-06-05)
+
+- [7275a85](https://github.com/craigahobbs/ollama-chat/commit/7275a85) - use ollama 0.5 thinking support - pre-existing thinking conversations will lose show/hide thinking
+
 ## 0.9.64 (2025-05-30)
 
 - [7fc8c22](https://github.com/craigahobbs/ollama-chat/commit/7fc8c22) - ollama-chat 0.5.x
