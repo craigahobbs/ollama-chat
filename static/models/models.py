@@ -75,7 +75,7 @@ def _parse_modified(modified):
     if modified == 'yesterday':
         return (today - datetime.timedelta(days=1))
 
-    # X minutes/hours/days/weeks/months ago?
+    # X minutes/hours/days/weeks/months/years ago?
     m_ago = _regex_modified_ago.match(modified)
     if m_ago:
         count = int(m_ago.group('count'))
@@ -86,6 +86,8 @@ def _parse_modified(modified):
             return today - datetime.timedelta(weeks=count)
         elif unit == 'month':
             return today - datetime.timedelta(days=count * 30)
+        elif unit == 'year':
+            return today - datetime.timedelta(days=count * 365)
         else:
             return today
 
