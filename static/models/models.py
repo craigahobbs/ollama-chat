@@ -104,9 +104,15 @@ _regex_about = re.compile(r'^about\s+an?\s+(hour|minute)\s+ago$')
 def _parse_count(count):
     # Hack for llama4
     if count == 'maverick':
-        return 254 * 1e9
+        return int(254e9)
     elif count == 'scout':
-        return 67 * 1e9
+        return int(67e9)
+
+    # Hack for gemma3n
+    if count == 'e2b':
+        return int(5.6e9)
+    elif count == 'e4b':
+        return int(7.5e9)
 
     # Mixture of experts?
     multiplier = 1
