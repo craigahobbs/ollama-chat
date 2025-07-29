@@ -8,7 +8,7 @@ import re
 import unittest
 import unittest.mock
 
-import requests
+import urllib3
 from schema_markdown import encode_query_string
 from ollama_chat.app import DownloadManager, OllamaChat
 
@@ -109,30 +109,33 @@ class TestDownloadManager(unittest.TestCase):
     def test_download_fn(self):
         with create_test_files([]) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
-            # Create a mock Response object for the POST request
-            mock_post_response = unittest.mock.Mock(spec=requests.Response)
-            mock_post_response.status_code = 200
-            mock_post_response.iter_lines.return_value = [
+            # Create a mock Response object for the pull request
+            mock_pull_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_pull_response.status = 200
+            mock_pull_response.read_chunked.return_value = [
                 json.dumps({'status': 'success', 'completed': 1000, 'total': 2000}).encode('utf-8'),
             ]
 
-            # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.post.return_value = mock_post_response
+            # Configure the mock PoolManager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_pull_response
 
             # Create the ChatManager instance
             download_manager = DownloadManager(app, 'llm:7b')
             app.downloads['llm:7b'] = download_manager
-            mock_thread.assert_called_once_with(target=DownloadManager.download_thread_fn, args=(download_manager, mock_session_instance))
+            mock_thread.assert_called_once_with(
+                target=DownloadManager.download_thread_fn,
+                args=(download_manager, mock_pool_manager_instance)
+            )
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            DownloadManager.download_thread_fn(download_manager, mock_session_instance)
+            DownloadManager.download_thread_fn(download_manager, mock_pool_manager_instance)
             self.assertDictEqual(app.downloads, {})
             self.assertEqual(download_manager.status, 'success')
             self.assertEqual(download_manager.completed, 1000)
@@ -149,30 +152,33 @@ class TestDownloadManager(unittest.TestCase):
     def test_download_fn_stop(self):
         with create_test_files([]) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
-            # Create a mock Response object for the POST request
-            mock_post_response = unittest.mock.Mock(spec=requests.Response)
-            mock_post_response.status_code = 200
-            mock_post_response.iter_lines.return_value = [
+            # Create a mock Response object for the pull request
+            mock_pull_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_pull_response.status = 200
+            mock_pull_response.read_chunked.return_value = [
                 json.dumps({'status': 'success', 'completed': 1000, 'total': 2000}).encode('utf-8'),
             ]
 
-            # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.post.return_value = mock_post_response
+            # Configure the mock PoolManager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_pull_response
 
             # Create the ChatManager instance
             download_manager = DownloadManager(app, 'llm:7b')
             download_manager.stop = True
-            mock_thread.assert_called_once_with(target=DownloadManager.download_thread_fn, args=(download_manager, mock_session_instance))
+            mock_thread.assert_called_once_with(
+                target=DownloadManager.download_thread_fn,
+                args=(download_manager, mock_pool_manager_instance)
+            )
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            DownloadManager.download_thread_fn(download_manager, mock_session_instance)
+            DownloadManager.download_thread_fn(download_manager, mock_pool_manager_instance)
             self.assertDictEqual(app.downloads, {})
             self.assertEqual(download_manager.status, '')
             self.assertEqual(download_manager.completed, 0)
@@ -189,27 +195,30 @@ class TestDownloadManager(unittest.TestCase):
     def test_download_fn_ollama_failure(self):
         with create_test_files([]) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
-            # Create a mock Response object for the POST request
-            mock_post_response = unittest.mock.Mock(spec=requests.Response)
-            mock_post_response.status_code = 500
+            # Create a mock Response object for the pull request
+            mock_pull_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_pull_response.status = 500
 
-            # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.post.return_value = mock_post_response
+            # Configure the mock PoolManager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_pull_response
 
             # Create the ChatManager instance
             download_manager = DownloadManager(app, 'llm:7b')
             app.downloads['llm:7b'] = download_manager
-            mock_thread.assert_called_once_with(target=DownloadManager.download_thread_fn, args=(download_manager, mock_session_instance))
+            mock_thread.assert_called_once_with(
+                target=DownloadManager.download_thread_fn,
+                args=(download_manager, mock_pool_manager_instance)
+            )
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            DownloadManager.download_thread_fn(download_manager, mock_session_instance)
+            DownloadManager.download_thread_fn(download_manager, mock_pool_manager_instance)
             self.assertDictEqual(app.downloads, {})
             self.assertEqual(download_manager.status, '')
             self.assertEqual(download_manager.completed, 0)
@@ -2242,14 +2251,14 @@ class TestAPI(unittest.TestCase):
                 ('ollama-chat.json', json.dumps(original_config))
              ]
         with create_test_files(test_files) as temp_dir, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
-            # Create a mock Response object for the POST request
-            mock_get_response = unittest.mock.Mock(spec=requests.Response)
-            mock_get_response.status_code = 200
-            mock_get_response.json.return_value = {
+            # Create a mock Response object for the list request
+            mock_list_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_list_response.status = 200
+            mock_list_response.json.return_value = {
                 'models': [
                     {
                         'model': 'llm:7b',
@@ -2272,9 +2281,9 @@ class TestAPI(unittest.TestCase):
                 ]
             }
 
-            # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.get.return_value = mock_get_response
+            # Configure the mock PoolManager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_list_response
 
             status, headers, content_bytes = app.request('GET', '/getModels')
             response = json.loads(content_bytes.decode('utf-8'))
@@ -2305,14 +2314,14 @@ class TestAPI(unittest.TestCase):
                 ('ollama-chat.json', json.dumps(original_config))
              ]
         with create_test_files(test_files) as temp_dir, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
-            # Create a mock Response object for the POST request
-            mock_get_response = unittest.mock.Mock(spec=requests.Response)
-            mock_get_response.status_code = 200
-            mock_get_response.json.return_value = {
+            # Create a mock Response object for the list request
+            mock_list_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_list_response.status = 200
+            mock_list_response.json.return_value = {
                 'models': [
                     {
                         'model': 'llm:7b',
@@ -2323,9 +2332,9 @@ class TestAPI(unittest.TestCase):
                 ]
             }
 
-            # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.get.return_value = mock_get_response
+            # Configure the mock PoolManager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_list_response
 
             environ = {'wsgi.errors': StringIO()}
             status, headers, content_bytes = app.request('GET', '/getModels', environ=environ)
@@ -2358,20 +2367,20 @@ class TestAPI(unittest.TestCase):
             ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
-            # Create a mock Response object for the POST request
-            mock_get_response = unittest.mock.Mock(spec=requests.Response)
-            mock_get_response.status_code = 200
-            mock_get_response.json.return_value = {
+            # Create a mock Response object for the list request
+            mock_list_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_list_response.status = 200
+            mock_list_response.json.return_value = {
                 'models': []
             }
 
-            # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.get.return_value = mock_get_response
+            # Configure the mock PoolManager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_list_response
 
             status, headers, content_bytes = app.request('GET', '/getModels')
             response = json.loads(content_bytes.decode('utf-8'))
@@ -2394,18 +2403,18 @@ class TestAPI(unittest.TestCase):
             ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
-            # Create a mock Response object for the POST request
-            mock_post_response = unittest.mock.Mock(spec=requests.Response)
-            mock_post_response.status_code = 200
-            mock_post_response.json.return_value = {'models': []}
+            # Create a mock Response object for the list request
+            mock_list_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_list_response.status = 200
+            mock_list_response.json.return_value = {'models': []}
 
-            # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.post.return_value = mock_post_response
+            # Configure the mock PoolManager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_list_response
 
             # Add downloading models
             mock_download = unittest.mock.Mock()
@@ -2447,17 +2456,17 @@ class TestAPI(unittest.TestCase):
             ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
-            # Create a mock Response object for the POST request
-            mock_get_response = unittest.mock.Mock(spec=requests.Response)
-            mock_get_response.status_code = 500
+            # Create a mock Response object for the list request
+            mock_list_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_list_response.status = 500
 
-            # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.get.return_value = mock_get_response
+            # Configure the mock PoolManager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_list_response
 
             status, headers, content_bytes = app.request('GET', '/getModels')
             response = json.loads(content_bytes.decode('utf-8'))
@@ -2476,14 +2485,14 @@ class TestAPI(unittest.TestCase):
 
     def test_get_models_no_config_model(self):
         with create_test_files([]) as temp_dir, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
-            # Create a mock Response object for the POST request
-            mock_get_response = unittest.mock.Mock(spec=requests.Response)
-            mock_get_response.status_code = 200
-            mock_get_response.json.return_value = {
+            # Create a mock Response object for the list request
+            mock_list_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_list_response.status = 200
+            mock_list_response.json.return_value = {
                 'models': [
                     {
                         'model': 'llm:7b',
@@ -2494,9 +2503,9 @@ class TestAPI(unittest.TestCase):
                 ]
             }
 
-            # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.get.return_value = mock_get_response
+            # Configure the mock PoolManager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_list_response
 
             status, headers, content_bytes = app.request('GET', '/getModels')
             response = json.loads(content_bytes.decode('utf-8'))
@@ -2613,17 +2622,17 @@ class TestAPI(unittest.TestCase):
             ('ollama-chat.json', json.dumps(original_config))
         ]
         with create_test_files(test_files) as temp_dir, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
-            # Create a mock Response object for the POST request
-            mock_delete_response = unittest.mock.Mock(spec=requests.Response)
-            mock_delete_response.status_code = 200
+            # Create a mock Response object for the delete request
+            mock_delete_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_delete_response.status = 200
 
-            # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.delete.return_value = mock_delete_response
+            # Configure the mock PoolManager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_delete_response
 
             # Delete model 'llm:7b'
             request = {'model': 'llm:7b'}
@@ -2631,7 +2640,46 @@ class TestAPI(unittest.TestCase):
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
-            mock_session_instance.delete.assert_called_once_with('http://127.0.0.1:11434/api/delete', json={'model': 'llm:7b'})
+            mock_pool_manager_instance.request.assert_called_once_with(
+                'DELETE', 'http://127.0.0.1:11434/api/delete', json={'model': 'llm:7b'}
+            )
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
+
+    def test_delete_model_error(self):
+        original_config = {'conversations': []}
+        test_files = [
+            ('ollama-chat.json', json.dumps(original_config))
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Create a mock Response object for the delete request
+            mock_delete_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_delete_response.status = 500
+
+            # Configure the mock PoolManager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_delete_response
+
+            # Delete model 'llm:7b'
+            request = {'model': 'llm:7b'}
+            status, headers, content_bytes = app.request('POST', '/deleteModel', wsgi_input=json.dumps(request).encode('utf-8'))
+            self.assertEqual(status, '500 Internal Server Error')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {'error': 'UnexpectedError'})
+            mock_pool_manager_instance.request.assert_called_once_with(
+                'DELETE', 'http://127.0.0.1:11434/api/delete', json={'model': 'llm:7b'}
+            )
 
             # Verify the app config
             with app.config() as config:

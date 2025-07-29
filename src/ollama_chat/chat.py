@@ -31,13 +31,13 @@ class ChatManager():
         self.stop = False
 
         # Start the chat thread
-        chat_thread = threading.Thread(target=self.chat_thread_fn, args=(self, app.session))
+        chat_thread = threading.Thread(target=self.chat_thread_fn, args=(self, app.pool_manager))
         chat_thread.daemon = True
         chat_thread.start()
 
 
     @staticmethod
-    def chat_thread_fn(chat, session):
+    def chat_thread_fn(chat, pool_manager):
         try:
             while chat.prompts:
                 # Create the Ollama messages from the conversation
@@ -99,7 +99,7 @@ class ChatManager():
                         continue
 
                 # Stream the chat response
-                for chunk in ollama_chat(session, model, messages):
+                for chunk in ollama_chat(pool_manager, model, messages):
                     if chat.stop:
                         break
 

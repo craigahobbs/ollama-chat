@@ -8,7 +8,7 @@ import pathlib
 import unittest
 import unittest.mock
 
-import requests
+import urllib3
 
 from ollama_chat.app import OllamaChat
 from ollama_chat.chat import _escape_markdown_text, _process_commands, config_template_prompts, ChatManager
@@ -28,37 +28,39 @@ class TestChatManager(unittest.TestCase):
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
 
             # Create a mock show response
-            mock_show_response = unittest.mock.Mock(spec=requests.Response)
-            mock_show_response.status_code = 200
+            mock_show_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_show_response.status = 200
             mock_show_response.json.return_value = {'capabilities': []}
 
             # Create a mock chat response
-            mock_chat_response = unittest.mock.Mock(spec=requests.Response)
-            mock_chat_response.status_code = 200
-            mock_chat_response.iter_lines.return_value = [
+            mock_chat_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_chat_response.status = 200
+            mock_chat_response.read_chunked.return_value = [
                 json.dumps({'message': {'content': 'Hi '}}).encode('utf-8'),
                 json.dumps({'message': {'content': 'there!'}}).encode('utf-8')
             ]
 
             # Create a mock show response
-            mock_show_response2 = unittest.mock.Mock(spec=requests.Response)
-            mock_show_response2.status_code = 200
+            mock_show_response2 = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_show_response2.status = 200
             mock_show_response2.json.return_value = {'capabilities': []}
 
             # Create a second mock chat response
-            mock_chat_response2 = unittest.mock.Mock(spec=requests.Response)
-            mock_chat_response2.status_code = 200
-            mock_chat_response2.iter_lines.return_value = [
+            mock_chat_response2 = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_chat_response2.status = 200
+            mock_chat_response2.read_chunked.return_value = [
                 json.dumps({'message': {'content': 'Bye '}}).encode('utf-8'),
                 json.dumps({'message': {'content': 'bye!'}}).encode('utf-8')
             ]
 
-            # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.post.side_effect = [mock_show_response, mock_chat_response, mock_show_response2, mock_chat_response2]
+            # Configure the mock pool manager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.side_effect = [
+                mock_show_response, mock_chat_response, mock_show_response2, mock_chat_response2
+            ]
 
             # Create the ChatManager instance
             chat_prompts = ['Hello', 'Goodbye']
@@ -66,21 +68,22 @@ class TestChatManager(unittest.TestCase):
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_session_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_session_instance)
+            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
             self.assertDictEqual(app.chats, {})
 
             # Verify the ollama.chat calls
-            self.assertEqual(mock_session_instance.post.call_count, 4)
+            self.assertEqual(mock_pool_manager_instance.request.call_count, 4)
             self.assertListEqual(
-                mock_session_instance.post.call_args_list,
+                mock_pool_manager_instance.request.call_args_list,
                 [
-                    unittest.mock.call('http://127.0.0.1:11434/api/show', json={'model': 'llm'}),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}),
                     unittest.mock.call(
+                        'POST',
                         'http://127.0.0.1:11434/api/chat',
                         json={
                             'model': 'llm',
@@ -90,10 +93,11 @@ class TestChatManager(unittest.TestCase):
                             'stream': True,
                             'think': False
                         },
-                        stream=True
+                        preload_content=False
                     ),
-                    unittest.mock.call('http://127.0.0.1:11434/api/show', json={'model': 'llm'}),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}),
                     unittest.mock.call(
+                        'POST',
                         'http://127.0.0.1:11434/api/chat',
                         json={
                             'model': 'llm',
@@ -105,7 +109,7 @@ class TestChatManager(unittest.TestCase):
                             'stream': True,
                             'think': False
                         },
-                        stream=True
+                        preload_content=False
                     )
                 ]
             )
@@ -147,17 +151,17 @@ class TestChatManager(unittest.TestCase):
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
 
             # Create a mock show response
-            mock_show_response = unittest.mock.Mock(spec=requests.Response)
-            mock_show_response.status_code = 200
+            mock_show_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_show_response.status = 200
             mock_show_response.json.return_value = {'capabilities': ['thinking']}
 
             # Create a mock chat response
-            mock_chat_response = unittest.mock.Mock(spec=requests.Response)
-            mock_chat_response.status_code = 200
-            mock_chat_response.iter_lines.return_value = [
+            mock_chat_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_chat_response.status = 200
+            mock_chat_response.read_chunked.return_value = [
                 json.dumps({'message': {'thinking': 'Hmmm '}}).encode('utf-8'),
                 json.dumps({'message': {'thinking': 'Haw'}}).encode('utf-8'),
                 json.dumps({'message': {'content': 'Hi '}}).encode('utf-8'),
@@ -165,21 +169,23 @@ class TestChatManager(unittest.TestCase):
             ]
 
             # Create a second mock show response
-            mock_show_response2 = unittest.mock.Mock(spec=requests.Response)
-            mock_show_response2.status_code = 200
+            mock_show_response2 = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_show_response2.status = 200
             mock_show_response2.json.return_value = {'capabilities': ['thinking']}
 
             # Create a second mock chat response
-            mock_chat_response2 = unittest.mock.Mock(spec=requests.Response)
-            mock_chat_response2.status_code = 200
-            mock_chat_response2.iter_lines.return_value = [
+            mock_chat_response2 = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_chat_response2.status = 200
+            mock_chat_response2.read_chunked.return_value = [
                 json.dumps({'message': {'content': 'Bye '}}).encode('utf-8'),
                 json.dumps({'message': {'content': 'bye!'}}).encode('utf-8')
             ]
 
             # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.post.side_effect = [mock_show_response, mock_chat_response, mock_show_response2, mock_chat_response2]
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.side_effect = [
+                mock_show_response, mock_chat_response, mock_show_response2, mock_chat_response2
+            ]
 
             # Create the ChatManager instance
             chat_prompts = ['Hello', 'Goodbye']
@@ -187,20 +193,21 @@ class TestChatManager(unittest.TestCase):
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_session_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_session_instance)
+            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
             self.assertDictEqual(app.chats, {})
 
             # Verify the ollama.chat calls
             self.assertListEqual(
-                mock_session_instance.post.call_args_list,
+                mock_pool_manager_instance.request.call_args_list,
                 [
-                    unittest.mock.call('http://127.0.0.1:11434/api/show', json={'model': 'llm'}),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}),
                     unittest.mock.call(
+                        'POST',
                         'http://127.0.0.1:11434/api/chat',
                         json={
                             'model': 'llm',
@@ -210,10 +217,11 @@ class TestChatManager(unittest.TestCase):
                             'stream': True,
                             'think': True
                         },
-                        stream=True
+                        preload_content=False
                     ),
-                    unittest.mock.call('http://127.0.0.1:11434/api/show', json={'model': 'llm'}),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}),
                     unittest.mock.call(
+                        'POST',
                         'http://127.0.0.1:11434/api/chat',
                         json={
                             'model': 'llm',
@@ -225,7 +233,7 @@ class TestChatManager(unittest.TestCase):
                             'stream': True,
                             'think': True
                         },
-                        stream=True
+                        preload_content=False
                     )
                 ]
             )
@@ -259,6 +267,156 @@ class TestChatManager(unittest.TestCase):
                 self.assertEqual(json.load(config_fh), expected_config)
 
 
+    def test_chat_fn_error_show(self):
+        test_files = [
+            ('ollama-chat.json', json.dumps({
+                'conversations': [
+                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+                ]
+            }))
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
+
+            # Create a mock show response
+            mock_show_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_show_response.status = 500
+
+            # Configure the mock pool manager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_show_response
+
+            # Create the ChatManager instance
+            chat_prompts = ['Hello', 'Goodbye']
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+            chat_manager = ChatManager(app, 'conv1', chat_prompts)
+            app.chats['conv1'] = chat_manager
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
+            mock_thread.return_value.start.assert_called_once_with()
+            self.assertTrue(mock_thread.return_value.daemon)
+
+            # Run the thread function
+            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            self.assertDictEqual(app.chats, {})
+
+            # Verify the ollama.chat calls
+            self.assertEqual(mock_pool_manager_instance.request.call_count, 1)
+            self.assertListEqual(
+                mock_pool_manager_instance.request.call_args_list,
+                [
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'})
+                ]
+            )
+
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [
+                            {
+                                'user': 'Hello',
+                                'model': '\n**ERROR:** Unknown model "llm"'
+                            }
+                        ]
+                    }
+                ]
+            }
+            with app.config() as config:
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
+
+
+    def test_chat_fn_error_chat(self):
+        test_files = [
+            ('ollama-chat.json', json.dumps({
+                'conversations': [
+                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+                ]
+            }))
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
+
+            # Create a mock show response
+            mock_show_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_show_response.status = 200
+            mock_show_response.json.return_value = {'capabilities': ['thinking']}
+
+            # Create a mock chat response
+            mock_chat_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_chat_response.status = 500
+
+            # Configure the mock pool manager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.side_effect = [mock_show_response, mock_chat_response]
+
+            # Create the ChatManager instance
+            chat_prompts = ['Hello', 'Goodbye']
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+            chat_manager = ChatManager(app, 'conv1', chat_prompts)
+            app.chats['conv1'] = chat_manager
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
+            mock_thread.return_value.start.assert_called_once_with()
+            self.assertTrue(mock_thread.return_value.daemon)
+
+            # Run the thread function
+            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            self.assertDictEqual(app.chats, {})
+
+            # Verify the ollama.chat calls
+            self.assertEqual(mock_pool_manager_instance.request.call_count, 2)
+            self.assertListEqual(
+                mock_pool_manager_instance.request.call_args_list,
+                [
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}),
+                    unittest.mock.call(
+                        'POST',
+                        'http://127.0.0.1:11434/api/chat',
+                        json={
+                            'model': 'llm',
+                            'messages': [{'role': 'user', 'content': 'Hello', 'images': None}],
+                            'stream': True,
+                            'think': True
+                        },
+                        preload_content=False
+                    )
+                ]
+            )
+
+            # Verify the app config
+            expected_config = {
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [
+                            {
+                                'user': 'Hello',
+                                'model': '\n**ERROR:** Unknown model "llm"'
+                            }
+                        ]
+                    }
+                ]
+            }
+            with app.config() as config:
+                self.assertDictEqual(config, expected_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), expected_config)
+
+
     def test_chat_fn_stop(self):
         test_files = [
             ('ollama-chat.json', json.dumps({
@@ -269,37 +427,39 @@ class TestChatManager(unittest.TestCase):
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
 
             # Create a mock show response
-            mock_show_response = unittest.mock.Mock(spec=requests.Response)
-            mock_show_response.status_code = 200
+            mock_show_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_show_response.status = 200
             mock_show_response.json.return_value = {'capabilities': []}
 
             # Create a mock chat response
-            mock_chat_response = unittest.mock.Mock(spec=requests.Response)
-            mock_chat_response.status_code = 200
-            mock_chat_response.iter_lines.return_value = [
+            mock_chat_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_chat_response.status = 200
+            mock_chat_response.read_chunked.return_value = [
                 json.dumps({'message': {'content': 'Hi '}}).encode('utf-8'),
                 json.dumps({'message': {'content': 'there!'}}).encode('utf-8')
             ]
 
             # Create a second mock show response
-            mock_show_response2 = unittest.mock.Mock(spec=requests.Response)
-            mock_show_response2.status_code = 200
+            mock_show_response2 = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_show_response2.status = 200
             mock_show_response2.json.return_value = {'capabilities': []}
 
             # Create a seconde mock chat response
-            mock_chat_response2 = unittest.mock.Mock(spec=requests.Response)
-            mock_chat_response2.status_code = 200
-            mock_chat_response2.iter_lines.return_value = [
+            mock_chat_response2 = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_chat_response2.status = 200
+            mock_chat_response2.read_chunked.return_value = [
                 json.dumps({'message': {'content': 'Bye '}}).encode('utf-8'),
                 json.dumps({'message': {'content': 'bye!'}}).encode('utf-8')
             ]
 
             # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.post.side_effect = [mock_show_response, mock_chat_response, mock_show_response2, mock_chat_response2]
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.side_effect = [
+                mock_show_response, mock_chat_response, mock_show_response2, mock_chat_response2
+            ]
 
             # Create the ChatManager instance
             chat_prompts = ['Hello', 'Goodbye']
@@ -308,12 +468,12 @@ class TestChatManager(unittest.TestCase):
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             chat_manager.stop = True
             # app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_session_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_session_instance)
+            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
             self.assertDictEqual(app.chats, {})
 
             # Verify the app config
@@ -340,10 +500,10 @@ class TestChatManager(unittest.TestCase):
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
 
             # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
+            mock_pool_manager_instance = mock_pool_manager.return_value
 
             # Create the ChatManager instance
             chat_prompts = ['/?']
@@ -351,13 +511,13 @@ class TestChatManager(unittest.TestCase):
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_session_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_session_instance)
-            mock_session_instance.post.assert_not_called()
+            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            mock_pool_manager_instance.request.assert_not_called()
             self.assertDictEqual(app.chats, {})
 
             # Verify the app config
@@ -392,10 +552,10 @@ class TestChatManager(unittest.TestCase):
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
 
             # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
+            mock_pool_manager_instance = mock_pool_manager.return_value
 
             # Create the ChatManager instance
             temp_posix = str(pathlib.Path(temp_dir).as_posix())
@@ -404,13 +564,13 @@ class TestChatManager(unittest.TestCase):
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_session_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_session_instance)
-            mock_session_instance.post.assert_not_called()
+            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            mock_pool_manager_instance.request.assert_not_called()
             self.assertDictEqual(app.chats, {})
 
             # Verify the app config
@@ -460,24 +620,24 @@ file content
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
 
             # Create a mock show response
-            mock_show_response = unittest.mock.Mock(spec=requests.Response)
-            mock_show_response.status_code = 200
+            mock_show_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_show_response.status = 200
             mock_show_response.json.return_value = {'capabilities': []}
 
             # Create a mock chat response
-            mock_chat_response = unittest.mock.Mock(spec=requests.Response)
-            mock_chat_response.status_code = 200
-            mock_chat_response.iter_lines.return_value = [
+            mock_chat_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_chat_response.status = 200
+            mock_chat_response.read_chunked.return_value = [
                 json.dumps({'message': {'content': 'Bye '}}).encode('utf-8'),
                 json.dumps({'message': {'content': 'bye!'}}).encode('utf-8')
             ]
 
             # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.post.side_effect = [mock_show_response, mock_chat_response]
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.side_effect = [mock_show_response, mock_chat_response]
 
             # Create the ChatManager instance
             chat_prompts = ['/do bye']
@@ -485,12 +645,12 @@ file content
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_session_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_session_instance)
+            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
             self.assertDictEqual(app.chats, {})
 
             # Verify the app config
@@ -537,24 +697,24 @@ file content
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
 
             # Create a mock show response
-            mock_show_response = unittest.mock.Mock(spec=requests.Response)
-            mock_show_response.status_code = 200
+            mock_show_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_show_response.status = 200
             mock_show_response.json.return_value = {'capabilities': []}
 
             # Create a mock chat response
-            mock_chat_response = unittest.mock.Mock(spec=requests.Response)
-            mock_chat_response.status_code = 200
-            mock_chat_response.iter_lines.return_value = [
+            mock_chat_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_chat_response.status = 200
+            mock_chat_response.read_chunked.return_value = [
                 json.dumps({'message': {'content': 'Bye '}}).encode('utf-8'),
                 json.dumps({'message': {'content': 'bye!'}}).encode('utf-8')
             ]
 
             # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
-            mock_session_instance.post.side_effect = [mock_show_response, mock_chat_response]
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.side_effect = [mock_show_response, mock_chat_response]
 
             # Create the ChatManager instance
             chat_prompts = ['/do bye -v name Joe']
@@ -562,12 +722,12 @@ file content
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_session_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_session_instance)
+            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
             self.assertDictEqual(app.chats, {})
 
             # Verify the app config
@@ -611,10 +771,10 @@ file content
         ]
         with create_test_files(test_files) as temp_dir, \
              unittest.mock.patch('threading.Thread') as mock_thread, \
-             unittest.mock.patch('requests.Session') as mock_session:
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
 
             # Configure the mock session instance
-            mock_session_instance = mock_session.return_value
+            mock_pool_manager_instance = mock_pool_manager.return_value
 
             # Create the ChatManager instance
             chat_prompts = ['/do unknown']
@@ -622,13 +782,13 @@ file content
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_session_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_session_instance)
-            mock_session_instance.post.assert_not_called()
+            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            mock_pool_manager_instance.request.assert_not_called()
             self.assertDictEqual(app.chats, {})
 
             # Verify the app config

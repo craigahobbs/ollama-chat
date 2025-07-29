@@ -18,7 +18,7 @@ import threading
 import uuid
 
 import chisel
-import requests
+import urllib3
 import schema_markdown
 
 from .chat import ChatManager, config_conversation, config_template_prompts
@@ -27,7 +27,7 @@ from .ollama import ollama_delete, ollama_list, ollama_pull
 
 # The ollama-chat back-end API WSGI application class
 class OllamaChat(chisel.Application):
-    __slots__ = ('config', 'xorigin', 'chats', 'downloads', 'session')
+    __slots__ = ('config', 'xorigin', 'chats', 'downloads', 'pool_manager')
 
 
     def __init__(self, config_path, xorigin=False):
@@ -36,7 +36,7 @@ class OllamaChat(chisel.Application):
         self.xorigin = xorigin
         self.chats = {}
         self.downloads = {}
-        self.session = requests.Session()
+        self.pool_manager = urllib3.PoolManager(num_pools=10, maxsize=10)
 
         # Back-end documentation
         self.add_requests(chisel.create_doc_requests())
@@ -147,15 +147,15 @@ class DownloadManager():
         self.stop = False
 
         # Start the download thread
-        download_thread = threading.Thread(target=self.download_thread_fn, args=(self, app.session))
+        download_thread = threading.Thread(target=self.download_thread_fn, args=(self, app.pool_manager))
         download_thread.daemon = True
         download_thread.start()
 
 
     @staticmethod
-    def download_thread_fn(manager, session):
+    def download_thread_fn(manager, pool_manager):
         try:
-            for progress in ollama_pull(session, manager.model):
+            for progress in ollama_pull(pool_manager, manager.model):
                 # Stopped?
                 if manager.stop:
                     break
@@ -507,7 +507,7 @@ def regenerate_conversation_exchange(ctx, req):
 def get_models(ctx, unused_req):
     # Get the Ollama models
     try:
-        models = ollama_list(ctx.app.session)
+        models = ollama_list(ctx.app.pool_manager)
     except: # pylint: disable=bare-except
         models = ()
 
@@ -574,7 +574,7 @@ def stop_model_download(ctx, req):
 
 @chisel.action(name='deleteModel', types=OLLAMA_CHAT_TYPES)
 def delete_model(ctx, req):
-    ollama_delete(ctx.app.session, req['model'])
+    ollama_delete(ctx.app.pool_manager, req['model'])
 
 
 @chisel.action(name='getSystemInfo', types=OLLAMA_CHAT_TYPES)
