@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.67 (2025-07-29)
+
+- [9b54e0a](https://github.com/craigahobbs/ollama-chat/commit/9b54e0a) - simplify ollama service calling
+
 ## 0.9.66 (2025-07-29)
 
 - [dbd3e1e](https://github.com/craigahobbs/ollama-chat/commit/dbd3e1e) - call ollama service directly, add Python 3.14 support
