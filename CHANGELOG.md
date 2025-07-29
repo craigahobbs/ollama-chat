@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.66 (2025-07-29)
+
+- [dbd3e1e](https://github.com/craigahobbs/ollama-chat/commit/dbd3e1e) - call ollama service directly, add Python 3.14 support
+
 ## 0.9.65 (2025-06-05)
 
 - [7275a85](https://github.com/craigahobbs/ollama-chat/commit/7275a85) - use ollama 0.5 thinking support - pre-existing thinking conversations will lose show/hide thinking
