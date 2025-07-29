@@ -15,10 +15,6 @@ $(eval $(call WGET, https://craigahobbs.github.io/python-build/Makefile.base))
 $(eval $(call WGET, https://craigahobbs.github.io/python-build/pylintrc))
 
 
-# Exclude python:3.14-rc for now due to ollama/pydantic issue
-PYTHON_IMAGES_EXCLUDE := python:3.14-rc
-
-
 # Set gh-pages source
 GHPAGES_SRC := build/doc/
 

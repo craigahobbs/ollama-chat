@@ -18,15 +18,16 @@ import threading
 import uuid
 
 import chisel
-import ollama
+import requests
 import schema_markdown
 
 from .chat import ChatManager, config_conversation, config_template_prompts
+from .ollama import ollama_delete, ollama_list, ollama_pull
 
 
 # The ollama-chat back-end API WSGI application class
 class OllamaChat(chisel.Application):
-    __slots__ = ('config', 'xorigin', 'chats', 'downloads')
+    __slots__ = ('config', 'xorigin', 'chats', 'downloads', 'session')
 
 
     def __init__(self, config_path, xorigin=False):
@@ -35,6 +36,7 @@ class OllamaChat(chisel.Application):
         self.xorigin = xorigin
         self.chats = {}
         self.downloads = {}
+        self.session = requests.Session()
 
         # Back-end documentation
         self.add_requests(chisel.create_doc_requests())
@@ -145,25 +147,25 @@ class DownloadManager():
         self.stop = False
 
         # Start the download thread
-        download_thread = threading.Thread(target=self.download_thread_fn, args=(self,))
+        download_thread = threading.Thread(target=self.download_thread_fn, args=(self, app.session))
         download_thread.daemon = True
         download_thread.start()
 
 
     @staticmethod
-    def download_thread_fn(manager):
+    def download_thread_fn(manager, session):
         try:
-            for progress in ollama.pull(manager.model, stream=True):
+            for progress in ollama_pull(session, manager.model):
                 # Stopped?
                 if manager.stop:
                     break
 
                 # Update the download status
-                manager.status = progress.status
-                manager.completed = progress.completed or 0
-                manager.total = progress.total
+                manager.status = progress['status']
+                manager.completed = progress.get('completed', 0)
+                manager.total = progress.get('total')
 
-        except Exception: # pylint: disable=broad-exception-caught
+        except: # pylint: disable=bare-except
             pass
 
         # Delete the application's download entry
@@ -505,18 +507,18 @@ def regenerate_conversation_exchange(ctx, req):
 def get_models(ctx, unused_req):
     # Get the Ollama models
     try:
-        models = ollama.list()['models'] or ()
+        models = ollama_list(ctx.app.session)
     except: # pylint: disable=bare-except
         models = ()
 
     # Create the models response
     response_models = [
         {
-            'id': model.model,
-            'name': model.model[:model.model.index(':')],
-            'parameters': _parse_parameter_size(ctx, model.details.parameter_size),
-            'size': model.size,
-            'modified': model.modified_at
+            'id': model['model'],
+            'name': model['model'][:model['model'].index(':')],
+            'parameters': _parse_parameter_size(ctx, model['details']['parameter_size']),
+            'size': model['size'],
+            'modified': model['modified_at']
         }
         for model in models
     ]
@@ -571,8 +573,8 @@ def stop_model_download(ctx, req):
 
 
 @chisel.action(name='deleteModel', types=OLLAMA_CHAT_TYPES)
-def delete_model(unused_ctx, req):
-    ollama.delete(req['model'])
+def delete_model(ctx, req):
+    ollama_delete(ctx.app.session, req['model'])
 
 
 @chisel.action(name='getSystemInfo', types=OLLAMA_CHAT_TYPES)

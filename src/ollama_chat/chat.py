@@ -16,7 +16,7 @@ import shlex
 import threading
 import urllib
 
-import ollama
+from .ollama import ollama_chat
 
 
 # The ollama chat manager class
@@ -31,15 +31,14 @@ class ChatManager():
         self.stop = False
 
         # Start the chat thread
-        chat_thread = threading.Thread(target=self.chat_thread_fn, args=(self,))
+        chat_thread = threading.Thread(target=self.chat_thread_fn, args=(self, app.session))
         chat_thread.daemon = True
         chat_thread.start()
 
 
     @staticmethod
-    def chat_thread_fn(chat):
+    def chat_thread_fn(chat, session):
         try:
-            is_thinking = None
             while chat.prompts:
                 # Create the Ollama messages from the conversation
                 messages = []
@@ -99,13 +98,8 @@ class ChatManager():
                         exchange['model'] = '\n\n'.join(reversed(messages))
                         continue
 
-                # Is this a thinking model?
-                if is_thinking is None:
-                    model_show = ollama.show(model)
-                    is_thinking = model_show.capabilities is not None and 'thinking' in model_show.capabilities
-
                 # Stream the chat response
-                for chunk in ollama.chat(model=model, messages=messages, think=is_thinking, stream=True):
+                for chunk in ollama_chat(session, model, messages):
                     if chat.stop:
                         break
 
