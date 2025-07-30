@@ -320,7 +320,7 @@ class TestChatManager(unittest.TestCase):
                         'exchanges': [
                             {
                                 'user': 'Hello',
-                                'model': '\n**ERROR:** Unknown model "llm"'
+                                'model': '\n**ERROR:** Unknown model "llm" (500)'
                             }
                         ]
                     }
@@ -403,7 +403,7 @@ class TestChatManager(unittest.TestCase):
                         'exchanges': [
                             {
                                 'user': 'Hello',
-                                'model': '\n**ERROR:** Unknown model "llm"'
+                                'model': '\n**ERROR:** Unknown model "llm" (500)'
                             }
                         ]
                     }

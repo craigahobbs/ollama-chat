@@ -18,7 +18,7 @@ def ollama_chat(pool_manager, model, messages):
     data_show = {'model': model}
     response_show = pool_manager.request('POST', url_show, json=data_show)
     if response_show.status >= 400:
-        raise urllib3.exceptions.HTTPError(f'Unknown model "{model}"')
+        raise urllib3.exceptions.HTTPError(f'Unknown model "{model}" ({response_show.status})')
     model_show = response_show.json()
     is_thinking = 'capabilities' in model_show and 'thinking' in model_show['capabilities']
 
@@ -27,7 +27,7 @@ def ollama_chat(pool_manager, model, messages):
     data_chat = {'model': model, 'messages': messages, 'stream': True, 'think': is_thinking}
     response_chat = pool_manager.request('POST', url_chat, json=data_chat, preload_content=False)
     if response_chat.status >= 400:
-        raise urllib3.exceptions.HTTPError(f'Unknown model "{model}"')
+        raise urllib3.exceptions.HTTPError(f'Unknown model "{model}" ({response_chat.status})')
 
     # Respond with each streamed JSON chunk
     yield from (json.loads(line.decode('utf-8')) for line in response_chat.read_chunked())
@@ -37,7 +37,7 @@ def ollama_list(pool_manager):
     url_list = f'{_get_ollama_host()}/api/tags'
     response_list = pool_manager.request('GET', url_list)
     if response_list.status >= 400:
-        raise urllib3.exceptions.HTTPError(f'HTTP Error {response_list.status}')
+        raise urllib3.exceptions.HTTPError(f'Unexpected error ({response_list.status})')
     return [
         {
             'model': model['model'],
@@ -54,7 +54,7 @@ def ollama_delete(pool_manager, model):
     data_delete = {'model': model}
     response_delete = pool_manager.request('DELETE', url_delete, json=data_delete)
     if response_delete.status >= 400:
-        raise urllib3.exceptions.HTTPError(f'Unknown model {model}')
+        raise urllib3.exceptions.HTTPError(f'Unknown model "{model}" ({response_delete.status})')
 
 
 def ollama_pull(pool_manager, model):
@@ -62,7 +62,7 @@ def ollama_pull(pool_manager, model):
     data_pull = {'model': model, 'stream': True}
     response_pull = pool_manager.request('POST', url_pull, json=data_pull, preload_content=False)
     if response_pull.status >= 400:
-        raise urllib3.exceptions.HTTPError(f'Unknown model {model}')
+        raise urllib3.exceptions.HTTPError(f'Unknown model "{model}" ({response_pull.status})')
 
     # Respond with each streamed JSON chunk
     yield from (json.loads(line.decode('utf-8')) for line in response_pull.read_chunked())
