@@ -587,6 +587,7 @@ def get_system_info(unused_ctx, unused_req):
         ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(memory_status))
         total_memory = memory_status.ullTotalPhys
     else: # pragma: no cover
+        # pylint: disable-next=no-member, useless-suppression
         total_memory = os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
 
     return {
