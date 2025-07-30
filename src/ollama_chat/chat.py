@@ -116,7 +116,7 @@ class ChatManager():
                 if chat.stop:
                     break
 
-        except Exception as exc: # pylint: disable=broad-exception-caught
+        except Exception as exc:
             # Communicate the error
             with chat.app.config() as config:
                 conversation = config_conversation(config, chat.conversation_id)

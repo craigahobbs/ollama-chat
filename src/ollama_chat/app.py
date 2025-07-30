@@ -165,7 +165,7 @@ class DownloadManager():
                 manager.completed = progress.get('completed', 0)
                 manager.total = progress.get('total')
 
-        except: # pylint: disable=bare-except
+        except:
             pass
 
         # Delete the application's download entry
@@ -508,7 +508,7 @@ def get_models(ctx, unused_req):
     # Get the Ollama models
     try:
         models = ollama_list(ctx.app.pool_manager)
-    except: # pylint: disable=bare-except
+    except:
         models = ()
 
     # Create the models response
@@ -587,7 +587,6 @@ def get_system_info(unused_ctx, unused_req):
         ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(memory_status))
         total_memory = memory_status.ullTotalPhys
     else: # pragma: no cover
-        # pylint: disable-next=no-member, useless-suppression
         total_memory = os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
 
     return {
