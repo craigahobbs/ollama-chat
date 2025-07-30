@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.68 (2025-07-30)
+
+- [e3c477d](https://github.com/craigahobbs/ollama-chat/commit/e3c477d) - fail getModels when ollama service isn't installed/running
+
+- [287567a](https://github.com/craigahobbs/ollama-chat/commit/287567a) - improve error messages
+
 ## 0.9.67 (2025-07-29)
 
 - [9b54e0a](https://github.com/craigahobbs/ollama-chat/commit/9b54e0a) - simplify ollama service calling
