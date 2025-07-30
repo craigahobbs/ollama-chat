@@ -2470,9 +2470,9 @@ class TestAPI(unittest.TestCase):
 
             status, headers, content_bytes = app.request('GET', '/getModels')
             response = json.loads(content_bytes.decode('utf-8'))
-            self.assertEqual(status, '200 OK')
+            self.assertEqual(status, '500 Internal Server Error')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
-            self.assertDictEqual(response, {'models': [], 'downloading': [], 'model': 'llm'})
+            self.assertDictEqual(response, {'error': 'UnexpectedError'})
 
             # Verify the app config
             with app.config() as config:

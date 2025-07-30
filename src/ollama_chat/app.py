@@ -506,10 +506,7 @@ def regenerate_conversation_exchange(ctx, req):
 @chisel.action(name='getModels', types=OLLAMA_CHAT_TYPES)
 def get_models(ctx, unused_req):
     # Get the Ollama models
-    try:
-        models = ollama_list(ctx.app.pool_manager)
-    except:
-        models = ()
+    models = ollama_list(ctx.app.pool_manager)
 
     # Create the models response
     response_models = [
