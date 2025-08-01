@@ -109,6 +109,7 @@ def main(argv=None):
                     response_bytes = response.read()
             except urllib.request.HTTPError as exc:
                 response_bytes = exc.fp.read()
+                exc.close()
         response = json.loads(response_bytes.decode('utf-8'))
         if 'error' in response:
             parser.error(response.get('message') or response["error"])
