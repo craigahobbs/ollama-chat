@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.69 (2025-08-04)
+
+- [bc5ca07](https://github.com/craigahobbs/ollama-chat/commit/bc5ca07) - improve web service calling
+
+- [6f510d8](https://github.com/craigahobbs/ollama-chat/commit/6f510d8) - close start template error response
+
 ## 0.9.68 (2025-07-30)
 
 - [e3c477d](https://github.com/craigahobbs/ollama-chat/commit/e3c477d) - fail getModels when ollama service isn't installed/running
