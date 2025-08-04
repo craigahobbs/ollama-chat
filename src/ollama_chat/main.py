@@ -9,10 +9,10 @@ import argparse
 import json
 import os
 import threading
-import urllib.request
 import webbrowser
 
 from schema_markdown import encode_query_string
+import urllib3
 import waitress
 
 from .app import OllamaChat
@@ -79,14 +79,17 @@ def main(argv=None):
         request_input = {'user': args.message}
         if args.model:
             request_input['model'] = args.model
-        request_bytes = json.dumps(request_input).encode('utf-8')
         if args.backend:
+            request_bytes = json.dumps(request_input).encode('utf-8')
             _, _, response_bytes = application.request('POST', '/startConversation', wsgi_input=request_bytes)
+            response = json.loads(response_bytes.decode('utf-8'))
         else:
-            request = urllib.request.Request(f'{url}startConversation', data=request_bytes)
-            with urllib.request.urlopen(request) as response:
-                response_bytes = response.read()
-        response = json.loads(response_bytes.decode('utf-8'))
+            try:
+                response = urllib3.request('POST', f'{url}startConversation', json=request_input, retries=urllib3.Retry(0)).json()
+            except:
+                response = {'error': 'UnexpectedError', 'message': 'Failed to start conversation'}
+        if 'error' in response:
+            parser.error(response.get('message') or response["error"])
 
         # Update the browser URL
         message_args = encode_query_string({'var': {'vView': "'chat'", 'vId': f"'{response['id']}'"}})
@@ -99,18 +102,15 @@ def main(argv=None):
         request_input = {'id': args.template, 'variables': dict(args.template_vars)}
         if args.model:
             request_input['model'] = args.model
-        request_bytes = json.dumps(request_input).encode('utf-8')
         if args.backend:
+            request_bytes = json.dumps(request_input).encode('utf-8')
             _, _, response_bytes = application.request('POST', '/startTemplate', wsgi_input=request_bytes)
+            response = json.loads(response_bytes.decode('utf-8'))
         else:
             try:
-                request = urllib.request.Request(f'{url}startTemplate', data=request_bytes)
-                with urllib.request.urlopen(request) as response:
-                    response_bytes = response.read()
-            except urllib.request.HTTPError as exc:
-                response_bytes = exc.fp.read()
-                exc.close()
-        response = json.loads(response_bytes.decode('utf-8'))
+                response = urllib3.request('POST', f'{url}startTemplate', json=request_input, retries=urllib3.Retry(0)).json()
+            except:
+                response = {'error': 'UnexpectedError', 'message': f'Failed to start template "{args.template}"'}
         if 'error' in response:
             parser.error(response.get('message') or response["error"])
 

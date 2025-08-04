@@ -68,12 +68,12 @@ class TestChatManager(unittest.TestCase):
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
 
             # Verify the ollama.chat calls
@@ -81,7 +81,7 @@ class TestChatManager(unittest.TestCase):
             self.assertListEqual(
                 mock_pool_manager_instance.request.call_args_list,
                 [
-                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=unittest.mock.ANY),
                     unittest.mock.call(
                         'POST',
                         'http://127.0.0.1:11434/api/chat',
@@ -93,9 +93,10 @@ class TestChatManager(unittest.TestCase):
                             'stream': True,
                             'think': False
                         },
-                        preload_content=False
+                        preload_content=False,
+                        retries=unittest.mock.ANY
                     ),
-                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=unittest.mock.ANY),
                     unittest.mock.call(
                         'POST',
                         'http://127.0.0.1:11434/api/chat',
@@ -109,7 +110,8 @@ class TestChatManager(unittest.TestCase):
                             'stream': True,
                             'think': False
                         },
-                        preload_content=False
+                        preload_content=False,
+                        retries=unittest.mock.ANY
                     )
                 ]
             )
@@ -193,19 +195,19 @@ class TestChatManager(unittest.TestCase):
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
 
             # Verify the ollama.chat calls
             self.assertListEqual(
                 mock_pool_manager_instance.request.call_args_list,
                 [
-                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=unittest.mock.ANY),
                     unittest.mock.call(
                         'POST',
                         'http://127.0.0.1:11434/api/chat',
@@ -217,9 +219,10 @@ class TestChatManager(unittest.TestCase):
                             'stream': True,
                             'think': True
                         },
-                        preload_content=False
+                        preload_content=False,
+                        retries=unittest.mock.ANY
                     ),
-                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=unittest.mock.ANY),
                     unittest.mock.call(
                         'POST',
                         'http://127.0.0.1:11434/api/chat',
@@ -233,7 +236,8 @@ class TestChatManager(unittest.TestCase):
                             'stream': True,
                             'think': True
                         },
-                        preload_content=False
+                        preload_content=False,
+                        retries=unittest.mock.ANY
                     )
                 ]
             )
@@ -293,12 +297,12 @@ class TestChatManager(unittest.TestCase):
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
 
             # Verify the ollama.chat calls
@@ -306,7 +310,7 @@ class TestChatManager(unittest.TestCase):
             self.assertListEqual(
                 mock_pool_manager_instance.request.call_args_list,
                 [
-                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'})
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=unittest.mock.ANY)
                 ]
             )
 
@@ -365,12 +369,12 @@ class TestChatManager(unittest.TestCase):
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
 
             # Verify the ollama.chat calls
@@ -378,7 +382,7 @@ class TestChatManager(unittest.TestCase):
             self.assertListEqual(
                 mock_pool_manager_instance.request.call_args_list,
                 [
-                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=unittest.mock.ANY),
                     unittest.mock.call(
                         'POST',
                         'http://127.0.0.1:11434/api/chat',
@@ -388,7 +392,8 @@ class TestChatManager(unittest.TestCase):
                             'stream': True,
                             'think': True
                         },
-                        preload_content=False
+                        preload_content=False,
+                        retries=unittest.mock.ANY
                     )
                 ]
             )
@@ -468,12 +473,12 @@ class TestChatManager(unittest.TestCase):
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             chat_manager.stop = True
             # app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
 
             # Verify the app config
@@ -511,12 +516,12 @@ class TestChatManager(unittest.TestCase):
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            ChatManager.chat_thread_fn(chat_manager)
             mock_pool_manager_instance.request.assert_not_called()
             self.assertDictEqual(app.chats, {})
 
@@ -564,12 +569,12 @@ class TestChatManager(unittest.TestCase):
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            ChatManager.chat_thread_fn(chat_manager)
             mock_pool_manager_instance.request.assert_not_called()
             self.assertDictEqual(app.chats, {})
 
@@ -645,12 +650,12 @@ file content
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
 
             # Verify the app config
@@ -722,12 +727,12 @@ file content
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
 
             # Verify the app config
@@ -782,12 +787,12 @@ file content
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             app.chats['conv1'] = chat_manager
-            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager, mock_pool_manager_instance))
+            mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
 
             # Run the thread function
-            ChatManager.chat_thread_fn(chat_manager, mock_pool_manager_instance)
+            ChatManager.chat_thread_fn(chat_manager)
             mock_pool_manager_instance.request.assert_not_called()
             self.assertDictEqual(app.chats, {})
 
@@ -880,19 +885,19 @@ class TestProcessCommands(unittest.TestCase):
 
     def test_no_commands(self):
         flags = {}
-        self.assertEqual(_process_commands('Hello, how are you?', flags), 'Hello, how are you?')
+        self.assertEqual(_process_commands(None, 'Hello, how are you?', flags), 'Hello, how are you?')
         self.assertDictEqual(flags, {})
 
 
     def test_help_top(self):
         flags = {}
-        self.assertEqual(_process_commands('/?', flags), 'Displaying top-level help')
+        self.assertEqual(_process_commands(None, '/?', flags), 'Displaying top-level help')
         self.assertTrue(flags['help'].startswith('usage: /{?,dir,do,file,image,url}'))
 
 
     def test_help(self):
         flags = {}
-        self.assertEqual(_process_commands('/file test.txt -h', flags), 'Displaying help for "file" command')
+        self.assertEqual(_process_commands(None, '/file test.txt -h', flags), 'Displaying help for "file" command')
         self.assertTrue(flags['help'].startswith('usage: /file [-h] [-n] file'))
 
 
@@ -906,7 +911,7 @@ class TestProcessCommands(unittest.TestCase):
             temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
             self.assertEqual(
-                _process_commands(f'/dir {temp_posix} .txt', flags),
+                _process_commands(None, f'/dir {temp_posix} .txt', flags),
                 f'''\
 <{_escape_markdown_text(temp_posix)}/test.txt>
 Test 1
@@ -925,7 +930,7 @@ Test 1
             temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
             self.assertEqual(
-                _process_commands(f'/dir {temp_posix} .txt -d 2', flags),
+                _process_commands(None, f'/dir {temp_posix} .txt -d 2', flags),
                 f'''\
 <{_escape_markdown_text(temp_posix)}/subdir/test2.txt>
 Test 2
@@ -948,7 +953,7 @@ Test 1
             temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
             self.assertEqual(
-                _process_commands(f'/dir {temp_posix} .txt -d 2 -x test.txt -x subdir2/', flags),
+                _process_commands(None, f'/dir {temp_posix} .txt -d 2 -x test.txt -x subdir2/', flags),
                 f'''\
 <{_escape_markdown_text(temp_posix)}/subdir/test2.txt>
 Test 2
@@ -961,13 +966,13 @@ Test 2
         with create_test_files([]) as temp_dir, \
              self.assertRaises(ValueError) as cm_exc:
             temp_posix = pathlib.Path(temp_dir).as_posix()
-            _process_commands(f'/dir {temp_posix} .txt', {})
+            _process_commands(None, f'/dir {temp_posix} .txt', {})
         self.assertEqual(str(cm_exc.exception), f'no files found in directory "{temp_posix}"')
 
 
     def test_do(self):
         flags = {}
-        self.assertEqual(_process_commands('/do template_name -v var1 val1', flags), 'Executing template "template_name"')
+        self.assertEqual(_process_commands(None, '/do template_name -v var1 val1', flags), 'Executing template "template_name"')
         self.assertDictEqual(flags, {'do': [('template_name', {'var1': 'val1'})]})
 
 
@@ -975,6 +980,7 @@ Test 2
         flags = {}
         self.assertEqual(
             _process_commands(
+                None,
                 '''\
 /do template_name -v var1 val1
 
@@ -1004,7 +1010,7 @@ Executing template "template_name"
             temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
             self.assertEqual(
-                _process_commands(f'/file {temp_posix}/test.txt', flags),
+                _process_commands(None, f'/file {temp_posix}/test.txt', flags),
                 f'''\
 <{_escape_markdown_text(temp_posix)}/test.txt>
 file content
@@ -1021,7 +1027,7 @@ file content
             temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
             self.assertEqual(
-                _process_commands(f'/file {temp_posix}/test.txt -n', flags),
+                _process_commands(None, f'/file {temp_posix}/test.txt -n', flags),
                 f'''\
 <{_escape_markdown_text(temp_posix)}/test.txt>
 ```
@@ -1042,6 +1048,7 @@ file content
             flags = {}
             self.assertEqual(
                 _process_commands(
+                    None,
                     f'''\
 /file {temp_posix}/test.txt
 
@@ -1073,7 +1080,7 @@ file content 2
         with create_test_files(test_files) as temp_dir:
             temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
-            self.assertEqual(_process_commands(f'/image {temp_posix}/test.jpg', flags), '')
+            self.assertEqual(_process_commands(None, f'/image {temp_posix}/test.jpg', flags), '')
             self.assertDictEqual(flags, {'images': [base64.b64encode(b'image data').decode('utf-8')]})
 
 
@@ -1087,6 +1094,7 @@ file content 2
             flags = {}
             self.assertEqual(
                 _process_commands(
+                    None,
                     f'''\
 /image {temp_posix}/test.jpg
 
@@ -1105,20 +1113,37 @@ file content 2
 
 
     def test_url(self):
-        with unittest.mock.patch('urllib.request.urlopen') as mock_urlopen:
-            mock_response = unittest.mock.Mock()
-            mock_response.read.return_value = b'url content'
-            mock_urlopen.return_value.__enter__.return_value = mock_response
+        mock_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+        mock_response.status = 200
+        mock_response.data = b'url content'
 
-            flags = {}
-            self.assertEqual(
-                _process_commands('/url http://example.com', flags),
-                '''\
+        mock_chat = unittest.mock.Mock()
+        mock_chat.app.pool_manager.request.return_value = mock_response
+
+        flags = {}
+        self.assertEqual(
+            _process_commands(mock_chat, '/url http://example.com', flags),
+            '''\
 <http://example.com>
 url content
 </ http://example.com>'''
-            )
-            self.assertDictEqual(flags, {})
+        )
+        self.assertDictEqual(flags, {})
+
+
+    def test_url_error(self):
+        mock_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+        mock_response.status = 500
+        mock_response.data = b'error content'
+
+        mock_chat = unittest.mock.Mock()
+        mock_chat.app.pool_manager.request.return_value = mock_response
+
+        flags = {}
+        with self.assertRaises(urllib3.exceptions.HTTPError) as cm_exc:
+            _process_commands(mock_chat, '/url http://example.com', flags)
+        self.assertEqual(str(cm_exc.exception), 'Failed to load URL "http://example.com"')
+        self.assertDictEqual(flags, {})
 
 
     def test_multiple_commands(self):
@@ -1129,7 +1154,7 @@ url content
             temp_posix = str(pathlib.Path(temp_dir).as_posix())
             flags = {}
             self.assertEqual(
-                _process_commands(f'Hello\n\n/?\n\n/file {temp_posix}/test.txt', flags),
+                _process_commands(None, f'Hello\n\n/?\n\n/file {temp_posix}/test.txt', flags),
                 f'''\
 Hello
 
@@ -1146,4 +1171,4 @@ file content
         with create_test_files([]) as temp_dir:
             flags = {}
             with self.assertRaises(FileNotFoundError):
-                _process_commands(f'/file {temp_dir}/nonexistent.txt', flags)
+                _process_commands(None, f'/file {temp_dir}/nonexistent.txt', flags)

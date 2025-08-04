@@ -14,7 +14,8 @@ import pathlib
 import re
 import shlex
 import threading
-import urllib
+
+import urllib3
 
 from .ollama import ollama_chat
 
@@ -31,13 +32,13 @@ class ChatManager():
         self.stop = False
 
         # Start the chat thread
-        chat_thread = threading.Thread(target=self.chat_thread_fn, args=(self, app.pool_manager))
+        chat_thread = threading.Thread(target=self.chat_thread_fn, args=(self,))
         chat_thread.daemon = True
         chat_thread.start()
 
 
     @staticmethod
-    def chat_thread_fn(chat, pool_manager):
+    def chat_thread_fn(chat):
         try:
             while chat.prompts:
                 # Create the Ollama messages from the conversation
@@ -54,7 +55,7 @@ class ChatManager():
                     # Process user prompt commands append to messages (unless there's a "do" command)
                     for exchange in conversation['exchanges']:
                         flags = {}
-                        user_content = _process_commands(exchange['user'], flags)
+                        user_content = _process_commands(chat, exchange['user'], flags)
                         if 'do' not in flags:
                             messages.append({'role': 'user', 'content': user_content, 'images': flags.get('images')})
                             if exchange['model'] != '':
@@ -99,7 +100,7 @@ class ChatManager():
                         continue
 
                 # Stream the chat response
-                for chunk in ollama_chat(pool_manager, model, messages):
+                for chunk in ollama_chat(chat.app.pool_manager, model, messages):
                     if chat.stop:
                         break
 
@@ -161,19 +162,19 @@ def config_template_prompts(template, variable_values):
 
 
 # Process prompt commands
-def _process_commands(prompt, flags):
-    actual_prompt = _R_COMMAND.sub(functools.partial(_process_commands_sub, flags), prompt)
+def _process_commands(chat, prompt, flags):
+    actual_prompt = _R_COMMAND.sub(functools.partial(_process_commands_sub, chat, flags), prompt)
     if 'show' in flags:
         flags.clear()
         flags['show'] = True
-        actual_prompt = _R_COMMAND.sub(functools.partial(_process_commands_sub, flags), prompt)
+        actual_prompt = _R_COMMAND.sub(functools.partial(_process_commands_sub, chat, flags), prompt)
     return actual_prompt
 
 _R_COMMAND = re.compile(r'^/(?P<cmd>\?|dir|do|file|image|url)(?P<args> .*)?$', re.MULTILINE)
 
 
 # Command prompt regex substitution function
-def _process_commands_sub(flags, match):
+def _process_commands_sub(chat, flags, match):
     # Parse command arguments
     command = match.group('cmd')
     argv = [command, *shlex.split(match.group('args') or '')]
@@ -259,8 +260,11 @@ def _process_commands_sub(flags, match):
     # Include a URL?
     elif command == 'url':
         # Add URL content
-        with urllib.request.urlopen(args.url) as response:
-            return _command_file_content(args.url, response.read().decode(), 'show' in flags)
+        url_response = chat.app.pool_manager.request('GET', args.url, retries=urllib3.Retry(0))
+        if url_response.status != 200:
+            raise urllib3.exceptions.HTTPError(f'Failed to load URL "{args.url}"')
+        url_text = url_response.data.decode('utf-8')
+        return _command_file_content(args.url, url_text, 'show' in flags)
 
     # Top-level help...
     # elif command == '?':

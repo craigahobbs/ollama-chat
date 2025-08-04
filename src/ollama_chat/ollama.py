@@ -8,24 +8,25 @@ import os
 import urllib3
 
 
-def _get_ollama_host():
-    return os.getenv('OLLAMA_HOST', 'http://127.0.0.1:11434')
+def _get_ollama_url(path):
+    ollama_host = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+    return f'{ollama_host}{path}'
 
 
 def ollama_chat(pool_manager, model, messages):
     # Is this a thinking model?
-    url_show = f'{_get_ollama_host()}/api/show'
+    url_show = _get_ollama_url('/api/show')
     data_show = {'model': model}
-    response_show = pool_manager.request('POST', url_show, json=data_show)
+    response_show = pool_manager.request('POST', url_show, json=data_show, retries=urllib3.Retry(0))
     if response_show.status >= 400:
         raise urllib3.exceptions.HTTPError(f'Unknown model "{model}" ({response_show.status})')
     model_show = response_show.json()
     is_thinking = 'capabilities' in model_show and 'thinking' in model_show['capabilities']
 
     # Start a streaming chat request
-    url_chat = f'{_get_ollama_host()}/api/chat'
+    url_chat = _get_ollama_url('/api/chat')
     data_chat = {'model': model, 'messages': messages, 'stream': True, 'think': is_thinking}
-    response_chat = pool_manager.request('POST', url_chat, json=data_chat, preload_content=False)
+    response_chat = pool_manager.request('POST', url_chat, json=data_chat, preload_content=False, retries=urllib3.Retry(0))
     if response_chat.status >= 400:
         raise urllib3.exceptions.HTTPError(f'Unknown model "{model}" ({response_chat.status})')
 
@@ -34,8 +35,8 @@ def ollama_chat(pool_manager, model, messages):
 
 
 def ollama_list(pool_manager):
-    url_list = f'{_get_ollama_host()}/api/tags'
-    response_list = pool_manager.request('GET', url_list)
+    url_list = _get_ollama_url('/api/tags')
+    response_list = pool_manager.request('GET', url_list, retries=urllib3.Retry(0))
     if response_list.status >= 400:
         raise urllib3.exceptions.HTTPError(f'Unexpected error ({response_list.status})')
     return [
@@ -50,17 +51,17 @@ def ollama_list(pool_manager):
 
 
 def ollama_delete(pool_manager, model):
-    url_delete = f'{_get_ollama_host()}/api/delete'
+    url_delete = _get_ollama_url('/api/delete')
     data_delete = {'model': model}
-    response_delete = pool_manager.request('DELETE', url_delete, json=data_delete)
+    response_delete = pool_manager.request('DELETE', url_delete, json=data_delete, retries=urllib3.Retry(0))
     if response_delete.status >= 400:
         raise urllib3.exceptions.HTTPError(f'Unknown model "{model}" ({response_delete.status})')
 
 
 def ollama_pull(pool_manager, model):
-    url_pull = f'{_get_ollama_host()}/api/pull'
+    url_pull = _get_ollama_url('/api/pull')
     data_pull = {'model': model, 'stream': True}
-    response_pull = pool_manager.request('POST', url_pull, json=data_pull, preload_content=False)
+    response_pull = pool_manager.request('POST', url_pull, json=data_pull, preload_content=False, retries=urllib3.Retry(0))
     if response_pull.status >= 400:
         raise urllib3.exceptions.HTTPError(f'Unknown model "{model}" ({response_pull.status})')
 

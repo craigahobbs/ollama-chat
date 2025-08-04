@@ -2641,7 +2641,7 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {})
             mock_pool_manager_instance.request.assert_called_once_with(
-                'DELETE', 'http://127.0.0.1:11434/api/delete', json={'model': 'llm:7b'}
+                'DELETE', 'http://127.0.0.1:11434/api/delete', json={'model': 'llm:7b'}, retries=unittest.mock.ANY
             )
 
             # Verify the app config
@@ -2678,7 +2678,7 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(json.loads(content_bytes.decode('utf-8')), {'error': 'UnexpectedError'})
             mock_pool_manager_instance.request.assert_called_once_with(
-                'DELETE', 'http://127.0.0.1:11434/api/delete', json={'model': 'llm:7b'}
+                'DELETE', 'http://127.0.0.1:11434/api/delete', json={'model': 'llm:7b'}, retries=unittest.mock.ANY
             )
 
             # Verify the app config
