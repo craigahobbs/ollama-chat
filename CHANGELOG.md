@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.70 (2025-08-05)
+
+- [a3be685](https://github.com/craigahobbs/ollama-chat/commit/a3be685) - handle chat chunk errors
+
 ## 0.9.69 (2025-08-04)
 
 - [bc5ca07](https://github.com/craigahobbs/ollama-chat/commit/bc5ca07) - improve web service calling
