@@ -104,6 +104,10 @@ class ChatManager():
                     if chat.stop:
                         break
 
+                    # Did a chat error occur?
+                    if 'error' in chunk:
+                        raise Exception(chunk['error'])
+
                     # Update the conversation
                     with chat.app.config() as config:
                         conversation = config_conversation(config, chat.conversation_id)
