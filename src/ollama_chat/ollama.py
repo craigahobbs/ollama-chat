@@ -31,7 +31,10 @@ def ollama_chat(pool_manager, model, messages):
         raise urllib3.exceptions.HTTPError(f'Unknown model "{model}" ({response_chat.status})')
 
     # Respond with each streamed JSON chunk
-    yield from (json.loads(line.decode('utf-8')) for line in response_chat.read_chunked())
+    for chunk in (json.loads(line.decode('utf-8')) for line in response_chat.read_chunked()):
+        if 'error' in chunk:
+            raise urllib3.exceptions.HTTPError(chunk['error'])
+        yield chunk
 
 
 def ollama_list(pool_manager):
