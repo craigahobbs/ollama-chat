@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.71 (2025-08-21)
+
+- [52630fe](https://github.com/craigahobbs/ollama-chat/commit/52630fe) - improve urllib3 request handling
+
+- [3fc0d07](https://github.com/craigahobbs/ollama-chat/commit/3fc0d07) - do ollama chat error check within ollama_chat function
+
 ## 0.9.70 (2025-08-05)
 
 - [a3be685](https://github.com/craigahobbs/ollama-chat/commit/a3be685) - handle chat chunk errors
