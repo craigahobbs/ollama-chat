@@ -473,7 +473,7 @@ ollama-chat: 200 GET /getConversations\x20
             mock_open.assert_not_called()
             mock_serve.assert_not_called()
             self.assertEqual(stdout.getvalue(), '')
-            self.assertTrue(stderr.getvalue().endswith('ollama-chat: error: UnexpectedError\n'))
+            self.assertTrue(stderr.getvalue().endswith('ollama-chat: error: Failed to start conversation\n'))
 
 
     def test_main_start_conversation_error_unexpected(self):
@@ -660,7 +660,7 @@ ollama-chat: 200 GET /getConversations\x20
 
             mock_serve.assert_not_called()
             self.assertEqual(stdout.getvalue(), '')
-            self.assertTrue(stderr.getvalue().endswith('ollama-chat: error: Invalid template\n'))
+            self.assertTrue(stderr.getvalue().endswith('ollama-chat: error: Failed to start template "bad_template"\n'))
 
 
     def test_main_start_template_error_unexpected(self):

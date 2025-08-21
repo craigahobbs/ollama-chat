@@ -85,7 +85,13 @@ def main(argv=None):
             response = json.loads(response_bytes.decode('utf-8'))
         else:
             try:
-                response = urllib3.request('POST', f'{url}startConversation', json=request_input, retries=urllib3.Retry(0)).json()
+                response_obj = urllib3.request('POST', f'{url}startConversation', json=request_input, retries=0)
+                try:
+                    if response_obj.status != 200:
+                        raise urllib3.exceptions.HTTPError(f'startConversation failed ({response.status})')
+                    response = response_obj.json()
+                finally:
+                    response_obj.close()
             except:
                 response = {'error': 'UnexpectedError', 'message': 'Failed to start conversation'}
         if 'error' in response:
@@ -108,7 +114,13 @@ def main(argv=None):
             response = json.loads(response_bytes.decode('utf-8'))
         else:
             try:
-                response = urllib3.request('POST', f'{url}startTemplate', json=request_input, retries=urllib3.Retry(0)).json()
+                response_obj = urllib3.request('POST', f'{url}startTemplate', json=request_input, retries=0)
+                try:
+                    if response_obj.status != 200:
+                        raise urllib3.exceptions.HTTPError(f'startTemplate failed ({response.status})')
+                    response = response_obj.json()
+                finally:
+                    response_obj.close()
             except:
                 response = {'error': 'UnexpectedError', 'message': f'Failed to start template "{args.template}"'}
         if 'error' in response:

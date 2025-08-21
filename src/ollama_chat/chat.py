@@ -260,10 +260,13 @@ def _process_commands_sub(chat, flags, match):
     # Include a URL?
     elif command == 'url':
         # Add URL content
-        url_response = chat.app.pool_manager.request('GET', args.url, retries=urllib3.Retry(0))
-        if url_response.status != 200:
-            raise urllib3.exceptions.HTTPError(f'Failed to load URL "{args.url}"')
-        url_text = url_response.data.decode('utf-8')
+        url_response = chat.app.pool_manager.request('GET', args.url, retries=0)
+        try:
+            if url_response.status != 200:
+                raise urllib3.exceptions.HTTPError(f'Failed to load URL "{args.url}"')
+            url_text = url_response.data.decode('utf-8')
+        finally:
+            url_response.close()
         return _command_file_content(args.url, url_text, 'show' in flags)
 
     # Top-level help...
