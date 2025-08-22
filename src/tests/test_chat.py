@@ -115,6 +115,10 @@ class TestChatManager(unittest.TestCase):
                     )
                 ]
             )
+            mock_show_response.close.assert_called_once_with()
+            mock_chat_response.close.assert_called_once_with()
+            mock_show_response2.close.assert_called_once_with()
+            mock_chat_response2.close.assert_called_once_with()
 
             # Verify the app config
             expected_config = {
@@ -142,6 +146,7 @@ class TestChatManager(unittest.TestCase):
             # Verify the config file
             with open(config_path, 'r', encoding='utf-8') as config_fh:
                 self.assertEqual(json.load(config_fh), expected_config)
+
 
     def test_chat_fn_thinking(self):
         test_files = [
@@ -241,6 +246,10 @@ class TestChatManager(unittest.TestCase):
                     )
                 ]
             )
+            mock_show_response.close.assert_called_once_with()
+            mock_chat_response.close.assert_called_once_with()
+            mock_show_response2.close.assert_called_once_with()
+            mock_chat_response2.close.assert_called_once_with()
 
             # Verify the app config
             expected_config = {
@@ -313,6 +322,7 @@ class TestChatManager(unittest.TestCase):
                     unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=unittest.mock.ANY)
                 ]
             )
+            mock_show_response.close.assert_called_once_with()
 
             # Verify the app config
             expected_config = {
@@ -397,6 +407,8 @@ class TestChatManager(unittest.TestCase):
                     )
                 ]
             )
+            mock_show_response.close.assert_called_once_with()
+            mock_chat_response.close.assert_called_once_with()
 
             # Verify the app config
             expected_config = {
@@ -484,6 +496,8 @@ class TestChatManager(unittest.TestCase):
                     )
                 ]
             )
+            mock_show_response.close.assert_called_once_with()
+            mock_chat_response.close.assert_called_once_with()
 
             # Verify the app config
             expected_config = {
@@ -559,7 +573,6 @@ class TestChatManager(unittest.TestCase):
             app = OllamaChat(config_path)
             chat_manager = ChatManager(app, 'conv1', chat_prompts)
             chat_manager.stop = True
-            # app.chats['conv1'] = chat_manager
             mock_thread.assert_called_once_with(target=ChatManager.chat_thread_fn, args=(chat_manager,))
             mock_thread.return_value.start.assert_called_once_with()
             self.assertTrue(mock_thread.return_value.daemon)
@@ -567,6 +580,10 @@ class TestChatManager(unittest.TestCase):
             # Run the thread function
             ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
+            mock_show_response.close.assert_called_once_with()
+            mock_chat_response.close.assert_called_once_with()
+            mock_show_response2.close.assert_not_called()
+            mock_chat_response2.close.assert_not_called()
 
             # Verify the app config
             expected_config = {
@@ -744,6 +761,8 @@ file content
             # Run the thread function
             ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
+            mock_show_response.close.assert_called_once_with()
+            mock_chat_response.close.assert_called_once_with()
 
             # Verify the app config
             expected_config = {
@@ -821,6 +840,8 @@ file content
             # Run the thread function
             ChatManager.chat_thread_fn(chat_manager)
             self.assertDictEqual(app.chats, {})
+            mock_show_response.close.assert_called_once_with()
+            mock_chat_response.close.assert_called_once_with()
 
             # Verify the app config
             expected_config = {

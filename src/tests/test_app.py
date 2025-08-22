@@ -140,6 +140,7 @@ class TestDownloadManager(unittest.TestCase):
             self.assertEqual(download_manager.status, 'success')
             self.assertEqual(download_manager.completed, 1000)
             self.assertEqual(download_manager.total, 2000)
+            mock_pull_response.close.assert_called_once_with()
 
             # Verify the app config
             with app.config() as config:
@@ -183,6 +184,7 @@ class TestDownloadManager(unittest.TestCase):
             self.assertEqual(download_manager.status, '')
             self.assertEqual(download_manager.completed, 0)
             self.assertEqual(download_manager.total, 0)
+            mock_pull_response.close.assert_called_once_with()
 
             # Verify the app config
             with app.config() as config:
@@ -223,6 +225,7 @@ class TestDownloadManager(unittest.TestCase):
             self.assertEqual(download_manager.status, '')
             self.assertEqual(download_manager.completed, 0)
             self.assertEqual(download_manager.total, 0)
+            mock_pull_response.close.assert_called_once_with()
 
             # Verify the app config
             with app.config() as config:
@@ -2298,6 +2301,7 @@ class TestAPI(unittest.TestCase):
                 'downloading': [],
                 'model': 'llm'
             })
+            mock_list_response.close.assert_called_once_with()
 
             # Verify the app config
             with app.config() as config:
@@ -2348,6 +2352,7 @@ class TestAPI(unittest.TestCase):
                 'downloading': [],
                 'model': 'llm'
             })
+            mock_list_response.close.assert_called_once_with()
             logs = environ['wsgi.errors'].getvalue()
             logs = re.sub(r'\[.*?\]', '[X / Y]', logs)
             self.assertEqual(logs, 'WARNING [X / Y] Invalid parameter size "1000"\n')
@@ -2387,6 +2392,7 @@ class TestAPI(unittest.TestCase):
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {'models': [], 'downloading': [], 'model': 'llm'})
+            mock_list_response.close.assert_called_once_with()
 
             # Verify the app config
             with app.config() as config:
@@ -2440,6 +2446,7 @@ class TestAPI(unittest.TestCase):
                 ],
                 'model': 'llm'
             })
+            mock_list_response.close.assert_called_once_with()
 
             # Verify the app config
             with app.config() as config:
@@ -2473,6 +2480,7 @@ class TestAPI(unittest.TestCase):
             self.assertEqual(status, '500 Internal Server Error')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {'error': 'UnexpectedError'})
+            mock_list_response.close.assert_called_once_with()
 
             # Verify the app config
             with app.config() as config:
@@ -2517,6 +2525,7 @@ class TestAPI(unittest.TestCase):
                 ],
                 'downloading': []
             })
+            mock_list_response.close.assert_called_once_with()
 
             # Verify the app config
             with app.config() as config:
@@ -2643,6 +2652,7 @@ class TestAPI(unittest.TestCase):
             mock_pool_manager_instance.request.assert_called_once_with(
                 'DELETE', 'http://127.0.0.1:11434/api/delete', json={'model': 'llm:7b'}, retries=unittest.mock.ANY
             )
+            mock_delete_response.close.assert_called_once_with()
 
             # Verify the app config
             with app.config() as config:
@@ -2680,6 +2690,7 @@ class TestAPI(unittest.TestCase):
             mock_pool_manager_instance.request.assert_called_once_with(
                 'DELETE', 'http://127.0.0.1:11434/api/delete', json={'model': 'llm:7b'}, retries=unittest.mock.ANY
             )
+            mock_delete_response.close.assert_called_once_with()
 
             # Verify the app config
             with app.config() as config:
