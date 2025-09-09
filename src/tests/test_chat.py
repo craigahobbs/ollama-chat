@@ -81,7 +81,7 @@ class TestChatManager(unittest.TestCase):
             self.assertListEqual(
                 mock_pool_manager_instance.request.call_args_list,
                 [
-                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=unittest.mock.ANY),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=0),
                     unittest.mock.call(
                         'POST',
                         'http://127.0.0.1:11434/api/chat',
@@ -94,9 +94,9 @@ class TestChatManager(unittest.TestCase):
                             'think': False
                         },
                         preload_content=False,
-                        retries=unittest.mock.ANY
+                        retries=0
                     ),
-                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=unittest.mock.ANY),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=0),
                     unittest.mock.call(
                         'POST',
                         'http://127.0.0.1:11434/api/chat',
@@ -111,7 +111,7 @@ class TestChatManager(unittest.TestCase):
                             'think': False
                         },
                         preload_content=False,
-                        retries=unittest.mock.ANY
+                        retries=0
                     )
                 ]
             )
@@ -212,7 +212,7 @@ class TestChatManager(unittest.TestCase):
             self.assertListEqual(
                 mock_pool_manager_instance.request.call_args_list,
                 [
-                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=unittest.mock.ANY),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=0),
                     unittest.mock.call(
                         'POST',
                         'http://127.0.0.1:11434/api/chat',
@@ -225,9 +225,9 @@ class TestChatManager(unittest.TestCase):
                             'think': True
                         },
                         preload_content=False,
-                        retries=unittest.mock.ANY
+                        retries=0
                     ),
-                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=unittest.mock.ANY),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=0),
                     unittest.mock.call(
                         'POST',
                         'http://127.0.0.1:11434/api/chat',
@@ -242,7 +242,7 @@ class TestChatManager(unittest.TestCase):
                             'think': True
                         },
                         preload_content=False,
-                        retries=unittest.mock.ANY
+                        retries=0
                     )
                 ]
             )
@@ -319,7 +319,7 @@ class TestChatManager(unittest.TestCase):
             self.assertListEqual(
                 mock_pool_manager_instance.request.call_args_list,
                 [
-                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=unittest.mock.ANY)
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=0)
                 ]
             )
             mock_show_response.close.assert_called_once_with()
@@ -392,7 +392,7 @@ class TestChatManager(unittest.TestCase):
             self.assertListEqual(
                 mock_pool_manager_instance.request.call_args_list,
                 [
-                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=unittest.mock.ANY),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=0),
                     unittest.mock.call(
                         'POST',
                         'http://127.0.0.1:11434/api/chat',
@@ -403,7 +403,7 @@ class TestChatManager(unittest.TestCase):
                             'think': True
                         },
                         preload_content=False,
-                        retries=unittest.mock.ANY
+                        retries=0
                     )
                 ]
             )
@@ -481,7 +481,7 @@ class TestChatManager(unittest.TestCase):
             self.assertListEqual(
                 mock_pool_manager_instance.request.call_args_list,
                 [
-                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=unittest.mock.ANY),
+                    unittest.mock.call('POST', 'http://127.0.0.1:11434/api/show', json={'model': 'llm'}, retries=0),
                     unittest.mock.call(
                         'POST',
                         'http://127.0.0.1:11434/api/chat',
@@ -492,7 +492,7 @@ class TestChatManager(unittest.TestCase):
                             'think': True
                         },
                         preload_content=False,
-                        retries=unittest.mock.ANY
+                        retries=0
                     )
                 ]
             )

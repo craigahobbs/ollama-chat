@@ -429,7 +429,7 @@ ollama-chat: 200 GET /getConversations\x20
             main(['-c', temp_dir, '-b', '-m', 'Hello'])
 
             mock_request.assert_called_once_with(
-                'POST', 'http://127.0.0.1:8080/startConversation', json={'user': 'Hello'}, retries=unittest.mock.ANY
+                'POST', 'http://127.0.0.1:8080/startConversation', json={'user': 'Hello'}, retries=0
             )
             mock_response.close.assert_called_once_with()
 
@@ -467,7 +467,7 @@ ollama-chat: 200 GET /getConversations\x20
 
             self.assertEqual(cm_exc.exception.code, 2)
             mock_request.assert_called_once_with(
-                'POST', 'http://127.0.0.1:8080/startConversation', json={'user': 'Hello'}, retries=unittest.mock.ANY
+                'POST', 'http://127.0.0.1:8080/startConversation', json={'user': 'Hello'}, retries=0
             )
             mock_response.close.assert_called_once_with()
 
@@ -496,7 +496,7 @@ ollama-chat: 200 GET /getConversations\x20
 
             self.assertEqual(cm_exc.exception.code, 2)
             mock_request.assert_called_once_with(
-                'POST', 'http://127.0.0.1:8080/startConversation', json={'user': 'Hello'}, retries=unittest.mock.ANY
+                'POST', 'http://127.0.0.1:8080/startConversation', json={'user': 'Hello'}, retries=0
             )
 
             mock_thread.assert_not_called()
@@ -621,7 +621,7 @@ ollama-chat: 200 GET /getConversations\x20
             main(['-c', temp_dir, '-b', '-t', 'template1'])
 
             mock_request.assert_called_once_with(
-                'POST', 'http://127.0.0.1:8080/startTemplate', json={'id': 'template1', 'variables': {}}, retries=unittest.mock.ANY
+                'POST', 'http://127.0.0.1:8080/startTemplate', json={'id': 'template1', 'variables': {}}, retries=0
             )
             mock_response.close.assert_called_once_with()
 
@@ -657,7 +657,7 @@ ollama-chat: 200 GET /getConversations\x20
 
             self.assertEqual(cm_exc.exception.code, 2)
             mock_request.assert_called_once_with(
-                'POST', 'http://127.0.0.1:8080/startTemplate', json={'id': 'bad_template', 'variables': {}}, retries=unittest.mock.ANY
+                'POST', 'http://127.0.0.1:8080/startTemplate', json={'id': 'bad_template', 'variables': {}}, retries=0
             )
             mock_response.close.assert_called_once_with()
             mock_thread.assert_not_called()
@@ -684,7 +684,7 @@ ollama-chat: 200 GET /getConversations\x20
 
             self.assertEqual(cm_exc.exception.code, 2)
             mock_request.assert_called_once_with(
-                'POST', 'http://127.0.0.1:8080/startTemplate', json={'id': 'bad_template', 'variables': {}}, retries=unittest.mock.ANY
+                'POST', 'http://127.0.0.1:8080/startTemplate', json={'id': 'bad_template', 'variables': {}}, retries=0
             )
             mock_thread.assert_not_called()
 
