@@ -122,6 +122,10 @@ def _parse_count(count):
     elif count == 'small-h':
         return int(32e9)
 
+    # Hack for kimi-k2
+    if count == '1t-cloud':
+        return int(32e9)
+
     # Mixture of experts?
     multiplier = 1
     m_moe = _regex_count_moe.match(count)
@@ -162,6 +166,8 @@ def main():
                 raw_model['sizes'] = ['maverick', 'scout']
             elif model_name == 'granite4':
                 raw_model['sizes'] = ['micro-h', 'tiny-h', 'small-h']
+            elif model_name == 'kimi-k2':
+                raw_model['sizes'] = ['1t-cloud']
             else:
                 print(f'Warning: "{model_name}" has no sizes', file=sys.stderr)
                 continue
