@@ -114,6 +114,14 @@ def _parse_count(count):
     elif count == 'e4b':
         return int(7.5e9)
 
+    # Hack for granite4
+    if count == 'micro-h':
+        return int(1.9e9)
+    elif count == 'tiny-h':
+        return int(7e9)
+    elif count == 'small-h':
+        return int(32e9)
+
     # Mixture of experts?
     multiplier = 1
     m_moe = _regex_count_moe.match(count)
@@ -152,6 +160,8 @@ def main():
             # Hack for llama4
             if model_name == 'llama4':
                 raw_model['sizes'] = ['maverick', 'scout']
+            elif model_name == 'granite4':
+                raw_model['sizes'] = ['micro-h', 'tiny-h', 'small-h']
             else:
                 print(f'Warning: "{model_name}" has no sizes', file=sys.stderr)
                 continue
