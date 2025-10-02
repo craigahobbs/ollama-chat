@@ -1120,6 +1120,29 @@
         ]
     },
     {
+        "name": "granite4",
+        "description": "Granite 4 features improved instruction following (IF) and tool-calling capabilities, making them more effective in enterprise applications.",
+        "modified": "2025-10-02",
+        "downloads": 405,
+        "variants": [
+            {
+                "id": "granite4:micro-h",
+                "size": "micro-h",
+                "parameters": 1900000000
+            },
+            {
+                "id": "granite4:tiny-h",
+                "size": "tiny-h",
+                "parameters": 7000000000
+            },
+            {
+                "id": "granite4:small-h",
+                "size": "small-h",
+                "parameters": 32000000000
+            }
+        ]
+    },
+    {
         "name": "hermes3",
         "description": "Hermes 3 is the latest version of the flagship Hermes series of LLMs by Nous Research",
         "modified": "2025-01-05",
@@ -1172,6 +1195,19 @@
                 "id": "internlm2:20b",
                 "size": "20b",
                 "parameters": 20000000000
+            }
+        ]
+    },
+    {
+        "name": "kimi-k2",
+        "description": "A state-of-the-art mixture-of-experts (MoE) language model. Kimi K2-Instruct-0905 demonstrates significant improvements in performance on public benchmarks and real-world coding agent tasks.",
+        "modified": "2025-09-26",
+        "downloads": 2559,
+        "variants": [
+            {
+                "id": "kimi-k2:1t-cloud",
+                "size": "1t-cloud",
+                "parameters": 32000000000
             }
         ]
     },
@@ -1949,7 +1985,7 @@
         "name": "orca-mini",
         "description": "A general-purpose model ranging from 3 billion parameters to 70 billion, suitable for entry-level hardware.",
         "modified": "2024-10-02",
-        "downloads": 779100,
+        "downloads": 779200,
         "variants": [
             {
                 "id": "orca-mini:3b",
@@ -2091,7 +2127,7 @@
         "name": "phi4-reasoning",
         "description": "Phi 4 reasoning and reasoning plus are 14-billion parameter open-weight reasoning models that rival much larger models on complex reasoning tasks.",
         "modified": "2025-05-05",
-        "downloads": 505600,
+        "downloads": 505700,
         "variants": [
             {
                 "id": "phi4-reasoning:14b",
