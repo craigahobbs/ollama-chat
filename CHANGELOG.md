@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.72 (2025-10-15)
+
+- [cff6d84](https://github.com/craigahobbs/ollama-chat/commit/cff6d84) - remove ansi escapes from help text
+
+- [5476ac9](https://github.com/craigahobbs/ollama-chat/commit/5476ac9) - chisel 1.7
+
+- [7c5700e](https://github.com/craigahobbs/ollama-chat/commit/7c5700e) - remove python 3.9
+
 ## 0.9.71 (2025-08-21)
 
 - [52630fe](https://github.com/craigahobbs/ollama-chat/commit/52630fe) - improve urllib3 request handling
