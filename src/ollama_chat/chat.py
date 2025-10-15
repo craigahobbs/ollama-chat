@@ -271,8 +271,15 @@ def _process_commands_sub(chat, flags, match):
 
     # Top-level help...
     # elif command == '?':
-    flags['help'] = _COMMAND_PARSER.format_help().replace('usage: / ', 'usage: /')
+    flags['help'] = _remove_ansi_escapes(_COMMAND_PARSER.format_help()).replace('usage: / ', 'usage: /')
     return 'Displaying top-level help'
+
+
+# Helper to remove ANSI color escapes
+def _remove_ansi_escapes(text):
+    return _R_ANSI_ESCAPE.sub('', text)
+
+_R_ANSI_ESCAPE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
 
 # Prompt command argument parser help action
@@ -281,7 +288,7 @@ class CommandHelpAction(argparse.Action):
         super().__init__(option_strings, dest, nargs=0, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
-        raise CommandHelpError(parser.format_help().replace('usage: / ', 'usage: /'))
+        raise CommandHelpError(_remove_ansi_escapes(parser.format_help()).replace('usage: / ', 'usage: /'))
 
 
 # Prompt command argument parser help action exception
