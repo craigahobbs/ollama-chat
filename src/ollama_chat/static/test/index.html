@@ -39,11 +39,7 @@
     </body>
     <script type="module">
         import {MarkdownUp} from 'https://craigahobbs.github.io/markdown-up/lib/app.js';
-        const app = new MarkdownUp(window, {'markdownText': `\
-~~~ markdown-script
-include 'runTests.bare'
-~~~
-`});
+        const app = new MarkdownUp(window, {'url': 'runTests.md'});
         app.run();
     </script>
 </html>
