@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.73 (2025-10-16)
+
+- [4b70ce4](https://github.com/craigahobbs/ollama-chat/commit/4b70ce4) - fix chat argparser creation for python 3.13
+
+- [7fe137f](https://github.com/craigahobbs/ollama-chat/commit/7fe137f) - add color=False to chat ArgumentParser
+
 ## 0.9.72 (2025-10-15)
 
 - [cff6d84](https://github.com/craigahobbs/ollama-chat/commit/cff6d84) - remove ansi escapes from help text
