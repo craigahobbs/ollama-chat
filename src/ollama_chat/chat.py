@@ -271,15 +271,8 @@ def _process_commands_sub(chat, flags, match):
 
     # Top-level help...
     # elif command == '?':
-    flags['help'] = _remove_ansi_escapes(_COMMAND_PARSER.format_help()).replace('usage: / ', 'usage: /')
+    flags['help'] = _COMMAND_PARSER.format_help().replace('usage: / ', 'usage: /')
     return 'Displaying top-level help'
-
-
-# Helper to remove ANSI color escapes
-def _remove_ansi_escapes(text):
-    return _R_ANSI_ESCAPE.sub('', text)
-
-_R_ANSI_ESCAPE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
 
 # Prompt command argument parser help action
@@ -288,7 +281,7 @@ class CommandHelpAction(argparse.Action):
         super().__init__(option_strings, dest, nargs=0, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
-        raise CommandHelpError(_remove_ansi_escapes(parser.format_help()).replace('usage: / ', 'usage: /'))
+        raise CommandHelpError(parser.format_help().replace('usage: / ', 'usage: /'))
 
 
 # Prompt command argument parser help action exception
@@ -297,7 +290,7 @@ class CommandHelpError(Exception):
 
 
 # Prompt command argument parser
-_COMMAND_PARSER = argparse.ArgumentParser(prog='/', add_help=False, exit_on_error=False)
+_COMMAND_PARSER = argparse.ArgumentParser(prog='/', add_help=False, exit_on_error=False, color=False)
 _COMMAND_SUBPARSERS = _COMMAND_PARSER.add_subparsers(dest='command')
 _COMMAND_PARSER_HELP = _COMMAND_SUBPARSERS.add_parser('?', add_help=False, exit_on_error=False, help='show prompt command help')
 _COMMAND_PARSER_DIR = _COMMAND_SUBPARSERS.add_parser('dir', add_help=False, exit_on_error=False, help='include files from a directory')
