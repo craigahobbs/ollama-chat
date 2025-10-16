@@ -86,4 +86,4 @@ async function testOllamaChatIndex():
         ) \
     )
 endfunction
-unittestRunTestAsync('testOllamaChatIndex')
+unittestRunTest('testOllamaChatIndex')
