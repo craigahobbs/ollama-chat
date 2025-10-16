@@ -291,9 +291,9 @@ class CommandHelpError(Exception):
 
 
 # Prompt command argument parser
-if sys.version_info < (3, 14):
+if sys.version_info < (3, 14): # pragma: no cover
     _COMMAND_PARSER = argparse.ArgumentParser(prog='/', add_help=False, exit_on_error=False)
-else:
+else: # pragma: no cover
     _COMMAND_PARSER = argparse.ArgumentParser(prog='/', add_help=False, exit_on_error=False, color=False)
 _COMMAND_SUBPARSERS = _COMMAND_PARSER.add_subparsers(dest='command')
 _COMMAND_PARSER_HELP = _COMMAND_SUBPARSERS.add_parser('?', add_help=False, exit_on_error=False, help='show prompt command help')
