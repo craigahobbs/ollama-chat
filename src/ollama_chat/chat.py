@@ -13,6 +13,7 @@ import os
 import pathlib
 import re
 import shlex
+import sys
 import threading
 
 import urllib3
@@ -290,7 +291,10 @@ class CommandHelpError(Exception):
 
 
 # Prompt command argument parser
-_COMMAND_PARSER = argparse.ArgumentParser(prog='/', add_help=False, exit_on_error=False, color=False)
+if sys.version_info < (3, 14):
+    _COMMAND_PARSER = argparse.ArgumentParser(prog='/', add_help=False, exit_on_error=False)
+else:
+    _COMMAND_PARSER = argparse.ArgumentParser(prog='/', add_help=False, exit_on_error=False, color=False)
 _COMMAND_SUBPARSERS = _COMMAND_PARSER.add_subparsers(dest='command')
 _COMMAND_PARSER_HELP = _COMMAND_SUBPARSERS.add_parser('?', add_help=False, exit_on_error=False, help='show prompt command help')
 _COMMAND_PARSER_DIR = _COMMAND_SUBPARSERS.add_parser('dir', add_help=False, exit_on_error=False, help='include files from a directory')
