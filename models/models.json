@@ -774,7 +774,7 @@
         "name": "falcon3",
         "description": "A family of efficient AI models under 10B parameters performant in science, math, and coding through innovative training techniques.",
         "modified": "2024-12-20",
-        "downloads": 910500,
+        "downloads": 910600,
         "variants": [
             {
                 "id": "falcon3:1b",
@@ -900,6 +900,19 @@
                 "id": "gemma3n:e4b",
                 "size": "e4b",
                 "parameters": 7500000000
+            }
+        ]
+    },
+    {
+        "name": "glm-4.6",
+        "description": "Advanced agentic, reasoning and coding capabilities.",
+        "modified": "2025-10-15",
+        "downloads": 1573,
+        "variants": [
+            {
+                "id": "glm-4.6:cloud",
+                "size": "cloud",
+                "parameters": 355000000000
             }
         ]
     },
@@ -2333,7 +2346,7 @@
         "name": "qwen2.5vl",
         "description": "Flagship vision-language model of Qwen and also a significant leap from the previous Qwen2-VL.",
         "modified": "2025-06-18",
-        "downloads": 820200,
+        "downloads": 820300,
         "variants": [
             {
                 "id": "qwen2.5vl:3b",
@@ -2443,6 +2456,19 @@
                 "id": "qwen3-embedding:8b",
                 "size": "8b",
                 "parameters": 8000000000
+            }
+        ]
+    },
+    {
+        "name": "qwen3-vl",
+        "description": "The most powerful vision-language model in the Qwen model family to date.",
+        "modified": "2025-10-14",
+        "downloads": 4111,
+        "variants": [
+            {
+                "id": "qwen3-vl:235b-cloud",
+                "size": "235b-cloud",
+                "parameters": 235000000000
             }
         ]
     },
