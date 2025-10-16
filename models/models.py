@@ -126,6 +126,14 @@ def _parse_count(count):
     if count == '1t-cloud':
         return int(32e9)
 
+    # Hack for glm-4.6
+    if count == 'cloud':
+        return int(355e9)
+
+    # Hack for qwen3-vl
+    if count == '235b-cloud':
+        return int(235e9)
+
     # Mixture of experts?
     multiplier = 1
     m_moe = _regex_count_moe.match(count)
@@ -168,6 +176,10 @@ def main():
                 raw_model['sizes'] = ['micro-h', 'tiny-h', 'small-h']
             elif model_name == 'kimi-k2':
                 raw_model['sizes'] = ['1t-cloud']
+            elif model_name == 'glm-4.6':
+                raw_model['sizes'] = ['cloud']
+            elif model_name == 'qwen3-vl':
+                raw_model['sizes'] = ['235b-cloud']
             else:
                 print(f'Warning: "{model_name}" has no sizes', file=sys.stderr)
                 continue
