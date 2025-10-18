@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.74 (2025-10-18)
+
+- [30eb243](https://github.com/craigahobbs/ollama-chat/commit/30eb243) - chisel 1.8
+
+- [3bf9709](https://github.com/craigahobbs/ollama-chat/commit/3bf9709) - add front-end app coverage
+
 ## 0.9.73 (2025-10-16)
 
 - [4b70ce4](https://github.com/craigahobbs/ollama-chat/commit/4b70ce4) - fix chat argparser creation for python 3.13
