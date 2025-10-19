@@ -292,9 +292,10 @@ class CommandHelpError(Exception):
 
 # Prompt command argument parser
 if sys.version_info < (3, 14): # pragma: no cover
+    # pylint: disable-next=invalid-name
     _COMMAND_PARSER = argparse.ArgumentParser(prog='/', add_help=False, exit_on_error=False)
 else: # pragma: no cover
-    # pylint: disable-next=unexpected-keyword-arg
+    # pylint: disable-next=invalid-name, unexpected-keyword-arg, useless-suppression
     _COMMAND_PARSER = argparse.ArgumentParser(prog='/', add_help=False, exit_on_error=False, color=False)
 _COMMAND_SUBPARSERS = _COMMAND_PARSER.add_subparsers(dest='command')
 _COMMAND_PARSER_HELP = _COMMAND_SUBPARSERS.add_parser('?', add_help=False, exit_on_error=False, help='show prompt command help')
