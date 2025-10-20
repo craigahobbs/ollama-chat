@@ -57,7 +57,7 @@ doc:
 commit: test-app
 test-app: $(DEFAULT_VENV_BUILD)
 	$(DEFAULT_VENV_BIN)/bare -s src/ollama_chat/static/*.bare src/ollama_chat/static/test/*.bare
-	$(DEFAULT_VENV_BIN)/bare -d -m -v vUnittestReport true src/ollama_chat/static/test/runTests.bare$(if $(TEST), -v vTest "'$(TEST)'")
+	$(DEFAULT_VENV_BIN)/bare -d -m -v vUnittestReport true src/ollama_chat/static/test/runTests.bare$(if $(TEST), -v vUnittestTest "'$(TEST)'")
 
 
 .PHONY: run
