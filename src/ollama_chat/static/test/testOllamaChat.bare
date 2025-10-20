@@ -5,85 +5,85 @@ include '../ollamaChat.bare'
 
 
 async function testOllamaChatIndex():
-    unittestMockAll(objectNew( \
-        'systemFetch', objectNew( \
-            'getConversations', jsonStringify(objectNew( \
-                'model', 'llm:7b', \
-                'conversations', arrayNew( \
-                    objectNew('id', 'ID', 'model', 'llm:7b', 'title', 'Hello', 'generating', false) \
-                ) \
-            )) \
-        ) \
-    ))
+    unittestMockAll({ \
+        'systemFetch': { \
+            'getConversations': jsonStringify({ \
+                'model': 'llm:7b', \
+                'conversations': [ \
+                    {'id': 'ID', 'model': 'llm:7b', 'title': 'Hello', 'generating': false} \
+                ] \
+            }) \
+        } \
+    })
 
     ollamaChatMain()
 
     unittestDeepEqual( \
         unittestMockEnd(), \
-        arrayNew( \
-            arrayNew('systemFetch', arrayNew('getConversations')), \
-            arrayNew('documentSetTitle', arrayNew('Ollama Chat')), \
-            arrayNew('markdownPrint', arrayNew('# Ollama Chat')), \
-            arrayNew('markdownPrint', arrayNew('**Current Model:** llm:7b')), \
-            arrayNew('elementModelRender', arrayNew(objectNew('html', 'p', 'elem', arrayNew( \
-                objectNew('html', 'a', 'attr', objectNew('href', "#var.vView='models'"), 'elem', objectNew('text', 'Select Model')), \
-                objectNew('text', stringFromCharCode(160, 160) + '|' + stringFromCharCode(160, 160)), \
-                objectNew('html', 'a', 'attr', objectNew('href', "#var.vView='chat'"), 'elem', objectNew('text', 'Start Conversation')), \
-                objectNew('text', stringFromCharCode(160, 160) + '|' + stringFromCharCode(160, 160)), \
-                objectNew( \
-                    'html', 'a', \
-                    'attr', objectNew('style', 'cursor: pointer; user-select: none;'), \
-                    'elem', objectNew('text', 'Add Template'), \
-                    'callback', objectNew('click', '<function>') \
-                ) \
-            )))), \
-            arrayNew('markdownPrint', arrayNew('', '## Conversations')), \
-            arrayNew('elementModelRender', arrayNew( \
-                arrayNew( \
-                    objectNew( \
-                        'html', 'table', \
-                        'elem', arrayNew( \
-                            objectNew( \
-                                'html', 'tbody', \
-                                'elem', arrayNew( \
-                                    objectNew( \
-                                        'html', 'tr', \
-                                        'elem', arrayNew( \
-                                            objectNew( \
-                                                'html', 'td', \
-                                                'attr', objectNew('style', 'min-width: 10em;'), \
-                                                'elem', objectNew( \
-                                                    'html', 'a', \
-                                                    'attr', objectNew('href', "#var.vId='ID'&var.vView='chat'"), \
-                                                    'elem', objectNew('text', 'Hello') \
-                                                ) \
-                                            ), \
-                                            objectNew( \
-                                                'html', 'td', \
-                                                'elem', objectNew('text', 'llm:7b') \
-                                            ), \
-                                            objectNew( \
-                                                'html', 'td', \
-                                                'elem', arrayNew( \
-                                                    objectNew( \
-                                                        'html', 'a', \
-                                                        'attr', objectNew('href', "#var.vAction='conversation'&var.vActionID='ID'"), \
-                                                        'elem', objectNew('text', 'Select') \
-                                                    ), \
+        [ \
+            ['systemFetch', ['getConversations']], \
+            ['documentSetTitle', ['Ollama Chat']], \
+            ['markdownPrint', ['# Ollama Chat']], \
+            ['markdownPrint', ['**Current Model:** llm:7b']], \
+            ['elementModelRender', [{'html': 'p', 'elem': [ \
+                {'html': 'a', 'attr': {'href': "#var.vView='models'"}, 'elem': {'text': 'Select Model'}}, \
+                {'text': stringFromCharCode(160, 160) + '|' + stringFromCharCode(160, 160)}, \
+                {'html': 'a', 'attr': {'href': "#var.vView='chat'"}, 'elem': {'text': 'Start Conversation'}}, \
+                {'text': stringFromCharCode(160, 160) + '|' + stringFromCharCode(160, 160)}, \
+                { \
+                    'html': 'a', \
+                    'attr': {'style': 'cursor: pointer; user-select: none;'}, \
+                    'elem': {'text': 'Add Template'}, \
+                    'callback': {'click': '<function>'} \
+                } \
+            ]}]], \
+            ['markdownPrint', ['', '## Conversations']], \
+            ['elementModelRender', [ \
+                [ \
+                    { \
+                        'html': 'table', \
+                        'elem': [ \
+                            { \
+                                'html': 'tbody', \
+                                'elem': [ \
+                                    { \
+                                        'html': 'tr', \
+                                        'elem': [ \
+                                            { \
+                                                'html': 'td', \
+                                                'attr': {'style': 'min-width: 10em;'}, \
+                                                'elem': { \
+                                                    'html': 'a', \
+                                                    'attr': {'href': "#var.vId='ID'&var.vView='chat'"}, \
+                                                    'elem': {'text': 'Hello'} \
+                                                } \
+                                            }, \
+                                            { \
+                                                'html': 'td', \
+                                                'elem': {'text': 'llm:7b'} \
+                                            }, \
+                                            { \
+                                                'html': 'td', \
+                                                'elem': [ \
+                                                    { \
+                                                        'html': 'a', \
+                                                        'attr': {'href': "#var.vAction='conversation'&var.vActionID='ID'"}, \
+                                                        'elem': {'text': 'Select'} \
+                                                    }, \
                                                     null \
-                                                ) \
-                                            ) \
-                                        ) \
-                                    ) \
-                                ) \
-                            ) \
-                        ) \
-                    ) \
-                ) \
-            )), \
-            arrayNew('markdownPrint', arrayNew('', '## Templates')), \
-            arrayNew('markdownPrint', arrayNew('', stringFromCharCode(160, 160, 160, 160) + '*No templates*')) \
-        ) \
+                                                ] \
+                                            } \
+                                        ] \
+                                    } \
+                                ] \
+                            } \
+                        ] \
+                    } \
+                ] \
+            ]], \
+            ['markdownPrint', ['', '## Templates']], \
+            ['markdownPrint', ['', stringFromCharCode(160, 160, 160, 160) + '*No templates*']] \
+        ] \
     )
 endfunction
 unittestRunTest('testOllamaChatIndex')

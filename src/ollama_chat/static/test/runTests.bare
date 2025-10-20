@@ -15,7 +15,7 @@ include 'testOllamaChat.bare'
 coverageStop()
 
 # Test report
-return unittestReport(objectNew( \
-    'coverageExclude', arrayNew('runTests.bare'), \
-    'coverageMin', 15.9 \
-))
+return unittestReport({ \
+    'coverageExclude': ['runTests.bare'], \
+    'coverageMin': 15.9 \
+})

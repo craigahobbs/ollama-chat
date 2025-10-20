@@ -27,25 +27,25 @@ async function ollamaChatTemplateVariablesPage(args):
         name = objectGet(variable, 'name')
         nameID = 'variable-' + name
         label = objectGet(variable, 'label')
-        elementModelRender(arrayNew( \
-            objectNew('html', 'p', 'elem', objectNew('html', 'b', 'elem', objectNew('text', label))), \
-            objectNew('html', 'p', 'elem', formsTextElements(nameID, '', 50, if(ixVariable == ixVariableLast, submitFn))) \
-        ))
+        elementModelRender([ \
+            {'html': 'p', 'elem': {'html': 'b', 'elem': {'text': label}}}, \
+            {'html': 'p', 'elem': formsTextElements(nameID, '', 50, if(ixVariable == ixVariableLast, submitFn))} \
+        ])
         if ixVariable == 0:
             documentSetFocus(nameID)
         endif
     endfor
 
     # Render the submit button
-    elementModelRender(arrayNew( \
-        objectNew('html', 'p', 'elem', formsLinkButtonElements('Start Conversation', submitFn)) \
-    ))
+    elementModelRender([ \
+        {'html': 'p', 'elem': formsLinkButtonElements('Start Conversation', submitFn)} \
+    ])
 endfunction
 
 
 async function ollamaChatTemplateVariablesOnSubmit(templateID, variables):
     # Get the variable values
-    variableValues = objectNew()
+    variableValues = {}
     for variable in variables:
         name = objectGet(variable, 'name')
         nameID = 'variable-' + name
@@ -53,8 +53,8 @@ async function ollamaChatTemplateVariablesOnSubmit(templateID, variables):
     endfor
 
     # Start the conversation
-    startRequest = objectNew('id', templateID, 'variables', variableValues)
-    startResponse = systemFetch(objectNew('url', 'startTemplate', 'body', jsonStringify(startRequest)))
+    startRequest = {'id': templateID, 'variables': variableValues}
+    startResponse = systemFetch({'url': 'startTemplate', 'body': jsonStringify(startRequest)})
     startResponse = if(startResponse != null, jsonParse(startResponse))
     if startResponse == null:
         return
@@ -62,7 +62,7 @@ async function ollamaChatTemplateVariablesOnSubmit(templateID, variables):
     id = objectGet(startResponse, 'id')
 
     # Navigate to the conversation page
-    windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', 'chat', 'id', id)))
+    windowSetLocation(argsURL(ollamaChatArguments, {'view': 'chat', 'id': id}))
 endfunction
 
 
@@ -91,17 +91,17 @@ async function ollamaChatTemplatePage(args):
     )
     if action == 'title':
         titleClickFn = systemPartial(ollamaChatTemplateOnTitle, template)
-        elementModelRender(arrayNew( \
-            objectNew('html', 'p', 'elem', formsTextElements(ollamaChatTemplateInputID, title, 50, titleClickFn)), \
-            objectNew('html', 'p', 'elem', arrayNew( \
+        elementModelRender([ \
+            {'html': 'p', 'elem': formsTextElements(ollamaChatTemplateInputID, title, 50, titleClickFn)}, \
+            {'html': 'p', 'elem': [ \
                 formsLinkElements('Cancel', argsURL(ollamaChatArguments)), \
-                objectNew('text', spacer + '|' + spacer), \
+                {'text': spacer + '|' + spacer}, \
                 formsLinkButtonElements('Update', titleClickFn) \
-            )) \
-        ))
+            ]} \
+        ])
         documentSetFocus(ollamaChatTemplateInputID)
     else:
-        markdownPrint('', argsLink(ollamaChatArguments, 'Edit', objectNew('action', 'title')))
+        markdownPrint('', argsLink(ollamaChatArguments, 'Edit', {'action': 'title'}))
     endif
 
     # Render the template name
@@ -110,23 +110,23 @@ async function ollamaChatTemplatePage(args):
     if action == 'name':
         nameClickFn = systemPartial(ollamaChatTemplateOnName, template)
         nameRemoveFn = systemPartial(ollamaChatTemplateOnNameRemove, template)
-        elementModelRender(arrayNew( \
-            objectNew('html', 'p', 'elem', formsTextElements(ollamaChatTemplateInputID, name, 50, nameClickFn)), \
-            objectNew('html', 'p', 'elem', arrayNew( \
+        elementModelRender([ \
+            {'html': 'p', 'elem': formsTextElements(ollamaChatTemplateInputID, name, 50, nameClickFn)}, \
+            {'html': 'p', 'elem': [ \
                 formsLinkElements('Cancel', argsURL(ollamaChatArguments)), \
-                objectNew('text', spacer + '|' + spacer), \
+                {'text': spacer + '|' + spacer}, \
                 formsLinkButtonElements('Update', nameClickFn), \
-                objectNew('text', spacer), \
+                {'text': spacer}, \
                 formsLinkButtonElements('Remove', nameRemoveFn) \
-            )) \
-        ))
+            ]} \
+        ])
         documentSetFocus(ollamaChatTemplateInputID)
     else:
         markdownPrint( \
             '', \
             if(name != null, '**Name:** ' + markdownEscape(name), 'The template is unnamed'), \
             '', \
-            argsLink(ollamaChatArguments, 'Edit', objectNew('action', 'name')) \
+            argsLink(ollamaChatArguments, 'Edit', {'action': 'name'}) \
         )
     endif
 
@@ -145,23 +145,23 @@ async function ollamaChatTemplatePage(args):
             varID = stringNew(ixVariable)
             markdownPrint('', '### Variable #' + (ixVariable + 1))
             if action == 'variable' && actionID == varID:
-                elementModelRender(arrayNew( \
-                    objectNew('html', 'p', 'elem', objectNew('html', 'b', 'elem', objectNew('text', 'Name:'))), \
-                    objectNew('html', 'p', 'elem', formsTextElements(ollamaChatTemplateInputID, varName, 50, nameClickFn)), \
-                    objectNew('html', 'p', 'elem', objectNew('html', 'b', 'elem', objectNew('text', 'Label:'))), \
-                    objectNew('html', 'p', 'elem', formsTextElements(ollamaChatTemplateInputID2, varLabel, 50, nameClickFn)), \
-                    objectNew('html', 'p', 'elem', arrayNew( \
+                elementModelRender([ \
+                    {'html': 'p', 'elem': {'html': 'b', 'elem': {'text': 'Name:'}}}, \
+                    {'html': 'p', 'elem': formsTextElements(ollamaChatTemplateInputID, varName, 50, nameClickFn)}, \
+                    {'html': 'p', 'elem': {'html': 'b', 'elem': {'text': 'Label:'}}}, \
+                    {'html': 'p', 'elem': formsTextElements(ollamaChatTemplateInputID2, varLabel, 50, nameClickFn)}, \
+                    {'html': 'p', 'elem': [ \
                         formsLinkElements('Cancel', argsURL(ollamaChatArguments)), \
-                        objectNew('text', spacer + '|' + spacer), \
+                        {'text': spacer + '|' + spacer}, \
                         formsLinkButtonElements('Update', systemPartial(ollamaChatTemplateOnVariableUpdate, template, ixVariable)), \
-                        objectNew('text', spacer), \
+                        {'text': spacer}, \
                         formsLinkButtonElements('Remove', systemPartial(ollamaChatTemplateOnVariableRemove, template, ixVariable)), \
-                        objectNew('text', spacer), \
+                        {'text': spacer}, \
                         formsLinkButtonElements('Up', systemPartial(ollamaChatTemplateOnVariableMove, template, ixVariable)), \
-                        objectNew('text', spacer), \
+                        {'text': spacer}, \
                         formsLinkButtonElements('Down', systemPartial(ollamaChatTemplateOnVariableMove, template, ixVariable, true)) \
-                    )) \
-                ))
+                    ]} \
+                ])
                 documentSetFocus(ollamaChatTemplateInputID)
             else:
                 markdownPrint( \
@@ -170,16 +170,16 @@ async function ollamaChatTemplatePage(args):
                     '', \
                     '**Label:** ' + markdownEscape(varLabel), \
                     '', \
-                    argsLink(ollamaChatArguments, 'Edit', objectNew('action', 'variable', 'actionID', varID)) \
+                    argsLink(ollamaChatArguments, 'Edit', {'action': 'variable', 'actionID': varID}) \
                 )
             endif
         endfor
     else:
         markdownPrint('', 'The template has no variables.')
     endif
-    elementModelRender(arrayNew( \
-        objectNew('html', 'p', 'elem', formsLinkButtonElements('Add', systemPartial(ollamaChatTemplateOnVariableAdd, template))) \
-    ))
+    elementModelRender([ \
+        {'html': 'p', 'elem': formsLinkButtonElements('Add', systemPartial(ollamaChatTemplateOnVariableAdd, template))} \
+    ])
 
     # Template prompts
     markdownPrint('', '## Prompts')
@@ -189,52 +189,52 @@ async function ollamaChatTemplatePage(args):
             promptID = stringNew(ixPrompt)
             markdownPrint('', '### Prompt #' + (ixPrompt + 1))
             if action == 'prompt' && actionID == promptID:
-                elementModelRender(arrayNew( \
-                    objectNew('html', 'p', 'elem', objectNew( \
-                        'html', 'textarea', \
-                        'attr', objectNew( \
-                            'autocomplete', 'off', \
-                            'id', ollamaChatTemplateInputID, \
-                            'rows', 8, \
-                            'style', arrayJoin(arrayNew( \
+                elementModelRender([ \
+                    {'html': 'p', 'elem': { \
+                        'html': 'textarea', \
+                        'attr': { \
+                            'autocomplete': 'off', \
+                            'id': ollamaChatTemplateInputID, \
+                            'rows': 8, \
+                            'style': arrayJoin([ \
                                 'background-color: white', \
                                 'font-size: inherit', \
                                 'font-family: inherit', \
                                 'padding: 0.5em', \
                                 'resize: none', \
                                 'width: calc(100% - 1em)' \
-                            ), '; ') \
-                        ), \
-                        'elem', objectNew('text', prompt) \
-                    )), \
-                    objectNew('html', 'p', 'elem', arrayNew( \
+                            ], '; ') \
+                        }, \
+                        'elem': {'text': prompt} \
+                    }}, \
+                    {'html': 'p', 'elem': [ \
                         formsLinkElements('Cancel', argsURL(ollamaChatArguments)), \
-                        objectNew('text', spacer + '|' + spacer), \
+                        {'text': spacer + '|' + spacer}, \
                         formsLinkButtonElements('Update', systemPartial(ollamaChatTemplateOnPromptUpdate, template, ixPrompt)), \
-                        objectNew('text', spacer), \
+                        {'text': spacer}, \
                         formsLinkButtonElements('Remove', systemPartial(ollamaChatTemplateOnPromptRemove, template, ixPrompt)), \
-                        objectNew('text', spacer), \
+                        {'text': spacer}, \
                         formsLinkButtonElements('Up', systemPartial(ollamaChatTemplateOnPromptMove, template, ixPrompt)), \
-                        objectNew('text', spacer), \
+                        {'text': spacer}, \
                         formsLinkButtonElements('Down', systemPartial(ollamaChatTemplateOnPromptMove, template, ixPrompt, true)) \
-                    )) \
-                ))
+                    ]} \
+                ])
                 documentSetFocus(ollamaChatTemplateInputID)
             else:
-                elementModelRender(arrayNew( \
-                    objectNew('html', 'p', 'attr', objectNew('style', 'white-space: pre-wrap;'), 'elem', objectNew('text', prompt)), \
-                    objectNew('html', 'p', 'elem', arrayNew( \
-                        formsLinkElements('Edit', argsURL(ollamaChatArguments, objectNew('action', 'prompt', 'actionID', promptID))) \
-                    )) \
-                ))
+                elementModelRender([ \
+                    {'html': 'p', 'attr': {'style': 'white-space: pre-wrap;'}, 'elem': {'text': prompt}}, \
+                    {'html': 'p', 'elem': [ \
+                        formsLinkElements('Edit', argsURL(ollamaChatArguments, {'action': 'prompt', 'actionID': promptID})) \
+                    ]} \
+                ])
             endif
         endfor
     else:
         markdownPrint('', 'The template has no prompts.')
     endif
-    elementModelRender(arrayNew( \
-        objectNew('html', 'p', 'elem', formsLinkButtonElements('Add', systemPartial(ollamaChatTemplateOnPromptAdd, template))) \
-    ))
+    elementModelRender([ \
+        {'html': 'p', 'elem': formsLinkButtonElements('Add', systemPartial(ollamaChatTemplateOnPromptAdd, template))} \
+    ])
 endfunction
 
 
@@ -248,7 +248,7 @@ async function ollamaChatTemplateOnTitle(template):
     title = stringTrim(documentInputValue(ollamaChatTemplateInputID))
     if title:
         objectSet(template, 'title', title)
-        systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
+        systemFetch({'url': 'updateTemplate', 'body': jsonStringify(template)})
     endif
 
     # Navigate back to template editor
@@ -261,7 +261,7 @@ async function ollamaChatTemplateOnName(template):
     name = stringTrim(documentInputValue(ollamaChatTemplateInputID))
     if name:
         objectSet(template, 'name', name)
-        systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
+        systemFetch({'url': 'updateTemplate', 'body': jsonStringify(template)})
     endif
 
     # Navigate back to template editor
@@ -272,7 +272,7 @@ endfunction
 async function ollamaChatTemplateOnNameRemove(template):
     # Remove the template name
     objectDelete(template, 'name')
-    systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
+    systemFetch({'url': 'updateTemplate', 'body': jsonStringify(template)})
 
     # Navigate back to template editor
     windowSetLocation(argsURL(ollamaChatArguments))
@@ -282,17 +282,17 @@ endfunction
 async function ollamaChatTemplateOnVariableAdd(template):
     variables = objectGet(template, 'variables')
     if variables == null:
-        variables = arrayNew()
+        variables = []
         objectSet(template, 'variables', variables)
     endif
 
     # Add the new variable
-    arrayPush(variables, objectNew('name', 'NewVariable', 'label', 'New Variable'))
+    arrayPush(variables, {'name': 'NewVariable', 'label': 'New Variable'})
     ixVariable = arrayLength(variables) - 1
-    systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
+    systemFetch({'url': 'updateTemplate', 'body': jsonStringify(template)})
 
     # Navigate back to template editor
-    windowSetLocation(argsURL(ollamaChatArguments, objectNew('action', 'variable', 'actionID', stringNew(ixVariable))))
+    windowSetLocation(argsURL(ollamaChatArguments, {'action': 'variable', 'actionID': stringNew(ixVariable)}))
 endfunction
 
 
@@ -309,7 +309,7 @@ async function ollamaChatTemplateOnVariableUpdate(template, ixVariable):
         objectSet(variable, 'label', varLabel)
     endif
     if varName || varLabel:
-        systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
+        systemFetch({'url': 'updateTemplate', 'body': jsonStringify(template)})
     endif
 
     # Navigate back to template editor
@@ -325,7 +325,7 @@ async function ollamaChatTemplateOnVariableRemove(template, ixVariable):
     if !arrayLength(variables):
         objectDelete(template, 'variables')
     endif
-    systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
+    systemFetch({'url': 'updateTemplate', 'body': jsonStringify(template)})
 
     # Navigate back to template editor
     windowSetLocation(argsURL(ollamaChatArguments))
@@ -343,10 +343,10 @@ async function ollamaChatTemplateOnVariableMove(template, ixVariable, isDown):
     temp = arrayGet(variables, ixVariable)
     arraySet(variables, ixVariable, arrayGet(variables, ixVariableNew))
     arraySet(variables, ixVariableNew, temp)
-    systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
+    systemFetch({'url': 'updateTemplate', 'body': jsonStringify(template)})
 
     # Navigate back to template editor
-    windowSetLocation(argsURL(ollamaChatArguments, objectNew('action', 'variable', 'actionID', stringNew(ixVariableNew))))
+    windowSetLocation(argsURL(ollamaChatArguments, {'action': 'variable', 'actionID': stringNew(ixVariableNew)}))
 endfunction
 
 
@@ -356,10 +356,10 @@ async function ollamaChatTemplateOnPromptAdd(template):
     # Add the new prompt
     arrayPush(prompts, 'New prompt')
     ixPrompt = arrayLength(prompts) - 1
-    systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
+    systemFetch({'url': 'updateTemplate', 'body': jsonStringify(template)})
 
     # Navigate back to template editor
-    windowSetLocation(argsURL(ollamaChatArguments, objectNew('action', 'prompt', 'actionID', stringNew(ixPrompt))))
+    windowSetLocation(argsURL(ollamaChatArguments, {'action': 'prompt', 'actionID': stringNew(ixPrompt)}))
 endfunction
 
 
@@ -370,7 +370,7 @@ async function ollamaChatTemplateOnPromptUpdate(template, ixPrompt):
     prompt = stringTrim(documentInputValue(ollamaChatTemplateInputID))
     if prompt:
         arraySet(prompts, ixPrompt, prompt)
-        systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
+        systemFetch({'url': 'updateTemplate', 'body': jsonStringify(template)})
     endif
 
     # Navigate back to template editor
@@ -383,7 +383,7 @@ async function ollamaChatTemplateOnPromptRemove(template, ixPrompt):
 
     # Remove the prompt
     arrayDelete(prompts, ixPrompt)
-    systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
+    systemFetch({'url': 'updateTemplate', 'body': jsonStringify(template)})
 
     # Navigate back to template editor
     windowSetLocation(argsURL(ollamaChatArguments))
@@ -401,8 +401,8 @@ async function ollamaChatTemplateOnPromptMove(template, ixPrompt, isDown):
     temp = arrayGet(prompts, ixPrompt)
     arraySet(prompts, ixPrompt, arrayGet(prompts, ixPromptNew))
     arraySet(prompts, ixPromptNew, temp)
-    systemFetch(objectNew('url', 'updateTemplate', 'body', jsonStringify(template)))
+    systemFetch({'url': 'updateTemplate', 'body': jsonStringify(template)})
 
     # Navigate back to template editor
-    windowSetLocation(argsURL(ollamaChatArguments, objectNew('action', 'prompt', 'actionID', stringNew(ixPromptNew))))
+    windowSetLocation(argsURL(ollamaChatArguments, {'action': 'prompt', 'actionID': stringNew(ixPromptNew)}))
 endfunction

@@ -37,36 +37,36 @@ async function ollamaChatModelsPage(args):
         '', \
         if(currentModel, '**Current Model:** ' + currentModel, ''), \
         '', \
-        argsLink(ollamaChatArguments, 'Download Models', objectNew('view', 'download')) \
+        argsLink(ollamaChatArguments, 'Download Models', {'view': 'download'}) \
     )
 
     # Render the downloading models
     if downloading:
         # Render the model list
         markdownPrint('', '## Downloading')
-        downloadTableRows = arrayNew(objectNew('html', 'tr', 'elem', arrayNew( \
-            objectNew('html', 'th', 'elem', objectNew('text', 'Model')), \
-            objectNew('html', 'th', 'elem', objectNew('text', 'Progress')), \
-            objectNew('html', 'th', 'elem', objectNew('text', 'Status')), \
-            objectNew('html', 'th', 'elem', objectNew('text', '')) \
-        )))
-        downloadTable = arrayNew( \
-            objectNew('html', 'table', 'elem', arrayNew( \
-                objectNew('html', 'tbody', 'elem', downloadTableRows) \
-            )) \
-        )
+        downloadTableRows = [{'html': 'tr', 'elem': [ \
+            {'html': 'th', 'elem': {'text': 'Model'}}, \
+            {'html': 'th', 'elem': {'text': 'Progress'}}, \
+            {'html': 'th', 'elem': {'text': 'Status'}}, \
+            {'html': 'th', 'elem': {'text': ''}} \
+        ]}]
+        downloadTable = [ \
+            {'html': 'table', 'elem': [ \
+                {'html': 'tbody', 'elem': downloadTableRows} \
+            ]} \
+        ]
         for download in downloading:
             modelID = objectGet(download, 'id')
             status = objectGet(download, 'status')
             completed = objectGet(download, 'completed')
             size = objectGet(download, 'size')
             progress = if(size == null, '0%', mathRound(100 * completed / size) + '% of ' + ollamaChatModelsFormatSize(size))
-            arrayPush(downloadTableRows, objectNew('html', 'tr', 'elem', arrayNew( \
-                objectNew('html', 'td', 'elem', objectNew('text', modelID)), \
-                objectNew('html', 'td', 'elem', objectNew('text', progress)), \
-                objectNew('html', 'td', 'elem', objectNew('text', status)), \
+            arrayPush(downloadTableRows, {'html': 'tr', 'elem': [ \
+                {'html': 'td', 'elem': {'text': modelID}}, \
+                {'html': 'td', 'elem': {'text': progress}}, \
+                {'html': 'td', 'elem': {'text': status}}, \
                 formsLinkButtonElements('Stop', systemPartial(ollamaChatModelsOnDownloadStop, args, modelID)) \
-            )))
+            ]})
         endfor
         elementModelRender(downloadTable)
 
@@ -79,18 +79,18 @@ async function ollamaChatModelsPage(args):
     if !models:
         markdownPrint('', 'There are no downloaded models.')
     else:
-        modelTableRows = arrayNew(objectNew('html', 'tr', 'elem', arrayNew( \
-            objectNew('html', 'th', 'elem', objectNew('text', 'Model')), \
-            objectNew('html', 'th', 'attr', objectNew('style', 'text-align: right;'), 'elem', objectNew('text', 'Parameters')), \
-            objectNew('html', 'th', 'attr', objectNew('style', 'text-align: right;'), 'elem', objectNew('text', 'Size')), \
-            objectNew('html', 'th', 'elem', objectNew('text', 'Modified')), \
-            objectNew('html', 'th', 'elem', objectNew('text', '')) \
-        )))
-        modelTable = arrayNew( \
-            objectNew('html', 'table', 'elem', arrayNew( \
-                objectNew('html', 'tbody', 'elem', modelTableRows) \
-            )) \
-        )
+        modelTableRows = [{'html': 'tr', 'elem': [ \
+            {'html': 'th', 'elem': {'text': 'Model'}}, \
+            {'html': 'th', 'attr': {'style': 'text-align: right;'}, 'elem': {'text': 'Parameters'}}, \
+            {'html': 'th', 'attr': {'style': 'text-align: right;'}, 'elem': {'text': 'Size'}}, \
+            {'html': 'th', 'elem': {'text': 'Modified'}}, \
+            {'html': 'th', 'elem': {'text': ''}} \
+        ]}]
+        modelTable = [ \
+            {'html': 'table', 'elem': [ \
+                {'html': 'tbody', 'elem': modelTableRows} \
+            ]} \
+        ]
         spacer = stringFromCharCode(160, 160)
         for model in models:
             modelID = objectGet(model, 'id')
@@ -102,32 +102,32 @@ async function ollamaChatModelsPage(args):
 
             # Add the model row
             selectText = if(selected, 'Cancel', 'Select')
-            selectURL = argsURL(ollamaChatArguments, objectNew('action', if(!selected, 'model'), 'actionID', if(!selected, modelID)))
-            arrayPush(modelTableRows, objectNew('html', 'tr', 'elem', arrayNew( \
-                objectNew('html', 'td', 'elem', formsLinkButtonElements(modelID, systemPartial(ollamaChatModelsOnModelSelect, modelID))), \
-                objectNew( \
-                    'html', 'td', \
-                    'attr', objectNew('style', 'text-align: right;'), \
-                    'elem', objectNew('text', ollamaChatModelsFormatCount(parameters)) \
-                ), \
-                objectNew( \
-                    'html', 'td', \
-                    'attr', objectNew('style', 'text-align: right;'), \
-                    'elem', objectNew('text', ollamaChatModelsFormatSize(size)) \
-                ), \
-                objectNew('html', 'td', 'elem', objectNew('text', datetimeISOFormat(modified, true))), \
-                arrayNew( \
+            selectURL = argsURL(ollamaChatArguments, {'action': if(!selected, 'model'), 'actionID': if(!selected, modelID)})
+            arrayPush(modelTableRows, {'html': 'tr', 'elem': [ \
+                {'html': 'td', 'elem': formsLinkButtonElements(modelID, systemPartial(ollamaChatModelsOnModelSelect, modelID))}, \
+                { \
+                    'html': 'td', \
+                    'attr': {'style': 'text-align: right;'}, \
+                    'elem': {'text': ollamaChatModelsFormatCount(parameters)} \
+                }, \
+                { \
+                    'html': 'td', \
+                    'attr': {'style': 'text-align: right;'}, \
+                    'elem': {'text': ollamaChatModelsFormatSize(size)} \
+                }, \
+                {'html': 'td', 'elem': {'text': datetimeISOFormat(modified, true)}}, \
+                [ \
                     formsLinkElements(selectText, selectURL), \
-                    if(selected, arrayNew( \
-                        objectNew('text', spacer + '|' + spacer), \
+                    if(selected, [ \
+                        {'text': spacer + '|' + spacer}, \
                         formsLinkButtonElements('Delete', systemPartial(ollamaChatModelsOnDelete, args, modelID)), \
-                        objectNew('text', spacer), \
+                        {'text': spacer}, \
                         formsLinkButtonElements('Update', systemPartial(ollamaChatModelsOnDownload, modelID)), \
-                        objectNew('text', spacer), \
+                        {'text': spacer}, \
                         formsLinkElements('Info', ollamaChatModelsModelURL(modelName)) \
-                    )) \
-                ) \
-            )))
+                    ]) \
+                ] \
+            ]})
         endfor
         elementModelRender(modelTable)
     endif
@@ -164,21 +164,21 @@ endfunction
 
 # Select model on-click event handler
 async function ollamaChatModelsOnModelSelect(model):
-    systemFetch(objectNew('url', 'setModel', 'body', jsonStringify(objectNew('model', model))))
+    systemFetch({'url': 'setModel', 'body': jsonStringify({'model': model})})
     windowSetLocation(argsURL(ollamaChatArguments, null, true))
 endfunction
 
 
 # Stop model download on-click event handler
 async function ollamaChatModelsOnDownloadStop(args, model):
-    systemFetch(objectNew('url', 'stopModelDownload', 'body', jsonStringify(objectNew('model', model))))
+    systemFetch({'url': 'stopModelDownload', 'body': jsonStringify({'model': model})})
     ollamaChatModelsPage(args)
 endfunction
 
 
 # Delete model delete on-click event handler
 async function ollamaChatModelsOnDelete(args, model):
-    systemFetch(objectNew('url', 'deleteModel', 'body', jsonStringify(objectNew('model', model))))
+    systemFetch({'url': 'deleteModel', 'body': jsonStringify({'model': model})})
     ollamaChatModelsPage(args)
 endfunction
 
@@ -208,7 +208,7 @@ async function ollamaChatModelsDownloadPage(args):
     title = 'Ollama Chat - Download'
     documentSetTitle(title)
     markdownPrint( \
-        argsLink(ollamaChatArguments, 'Back', objectNew('view', 'models'), true), \
+        argsLink(ollamaChatArguments, 'Back', {'view': 'models'}, true), \
         '', \
         '# ' + markdownEscape(title) \
     )
@@ -257,7 +257,7 @@ async function ollamaChatModelsDownloadPage(args):
         selected = action == 'model' && actionID == name
 
         # Create the parameter sizes text and compute compatibility
-        parameterSizes = arrayNew()
+        parameterSizes = []
         anyCompatible = false
         for variant in variants:
             variantParameters = objectGet(variant, 'parameters')
@@ -287,19 +287,19 @@ async function ollamaChatModelsDownloadPage(args):
             '', \
             argsLink( \
                 ollamaChatArguments, \
-                if(selected, 'Cancel', 'Download'), objectNew('action', if(!selected, 'model'), 'actionID', if(!selected, name)) \
+                if(selected, 'Cancel', 'Download'), {'action': if(!selected, 'model'), 'actionID': if(!selected, name)} \
             ), \
             if(!selected, filterSpacer + '[Info](' + ollamaChatModelsModelURL(name) + ')') \
         )
         if selected:
-            downloadLinks = arrayNew()
+            downloadLinks = []
             for variant, ixVariant in variants:
                 modelID = objectGet(variant, 'id')
                 if !filterCompatible || objectGet(variant, 'compatible'):
-                    arrayPush(downloadLinks, objectNew('html', 'p', 'elem', arrayNew( \
-                        objectNew('text', variantIndent), \
+                    arrayPush(downloadLinks, {'html': 'p', 'elem': [ \
+                        {'text': variantIndent}, \
                         formsLinkButtonElements(modelID, systemPartial(ollamaChatModelsOnDownload, modelID)) \
-                    )))
+                    ]})
                 endif
             endfor
             elementModelRender(downloadLinks)
@@ -312,7 +312,7 @@ function ollamaChatModelsFilterLink(text, value, argName, argValue):
     if value == argValue:
         return markdownEscape(text)
     endif
-    return argsLink(ollamaChatArguments, text, objectNew(argName, value))
+    return argsLink(ollamaChatArguments, text, {argName: value})
 endfunction
 
 
@@ -335,6 +335,6 @@ endfunction
 
 
 async function ollamaChatModelsOnDownload(modelID):
-    systemFetch(objectNew('url', 'downloadModel', 'body', jsonStringify(objectNew('model', modelID))))
-    windowSetLocation(argsURL(ollamaChatArguments, objectNew('view', 'models')))
+    systemFetch({'url': 'downloadModel', 'body': jsonStringify({'model': modelID})})
+    windowSetLocation(argsURL(ollamaChatArguments, {'view': 'models'}))
 endfunction
