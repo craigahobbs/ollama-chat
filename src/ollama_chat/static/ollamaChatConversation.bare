@@ -382,7 +382,7 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
         for exchange in objectGet(conversation, 'exchanges'):
             arrayPush(markdownParts, '', '## User:', '', objectGet(exchange, 'user'), '', '## Model:', '', objectGet(exchange, 'model'))
         endfor
-        markdownText = arrayJoin(markdownParts, stringFromCharCode(10))
+        markdownText = arrayJoin(markdownParts, '\n')
         markdownDownloadURL = urlObjectCreate(markdownText, 'text/markdown')
         markdownFilename = regexReplace(regexNew('[\'"]'), stringLower(markdownTitle), '')
         markdownFilename = regexReplace(regexNew('[^a-z0-9]+'), markdownFilename, '-')
