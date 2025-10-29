@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.76 (2025-10-29)
+
+- [6fb8cda](https://github.com/craigahobbs/ollama-chat/commit/6fb8cda) - chisel 1.9
+
+- [caf6eb3](https://github.com/craigahobbs/ollama-chat/commit/caf6eb3) - use string escapes
+
 ## 0.9.75 (2025-10-20)
 
 - [eb9ba6c](https://github.com/craigahobbs/ollama-chat/commit/eb9ba6c) - use barescript object syntax
