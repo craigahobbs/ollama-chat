@@ -2,7 +2,6 @@
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
 include <unittest.bare>
-include <unittestMock.bare>
 
 
 # Start coverage
@@ -17,5 +16,5 @@ coverageStop()
 # Test report
 return unittestReport({ \
     'coverageExclude': ['runTests.bare'], \
-    'coverageMin': 15.9 \
+    'coverageMin': 16.3 \
 })

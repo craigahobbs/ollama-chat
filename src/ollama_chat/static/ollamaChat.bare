@@ -7,6 +7,7 @@ include <forms.bare>
 include 'ollamaChatConversation.bare'
 include 'ollamaChatModels.bare'
 include 'ollamaChatTemplate.bare'
+include 'ollamaChatUtil.bare'
 
 
 # The Ollama Chat application main entry point
@@ -26,39 +27,6 @@ async function ollamaChatMain():
     else:
         ollamaChatIndexPage(args)
     endif
-endfunction
-
-
-# The Ollama Chat application URL arguments
-ollamaChatArguments = argsValidate([ \
-    {'name': 'action', 'explicit': true}, \
-    {'name': 'actionID', 'explicit': true}, \
-    {'name': 'filterCompatible', 'type': 'bool', 'default': true}, \
-    {'name': 'filterMonths', 'type': 'int', 'default': 6}, \
-    {'name': 'id'}, \
-    {'name': 'menu', 'type': 'bool', 'default': false}, \
-    {'name': 'multiline', 'type': 'bool', 'default': false}, \
-    {'name': 'sort', 'type': 'string', 'default': 'Modified'}, \
-    {'name': 'text', 'type': 'bool', 'default': false}, \
-    {'name': 'think', 'type': 'int'}, \
-    {'name': 'view'} \
-])
-
-
-# The application title
-ollamaChatTitle = 'Ollama Chat'
-
-
-# The Ollama Chat error page
-function ollamaChatErrorPage(message):
-    documentSetTitle(ollamaChatTitle)
-    markdownPrint( \
-        argsLink(ollamaChatArguments, 'Back', null, true), \
-        '', \
-        '# ' + markdownEscape(ollamaChatTitle), \
-        '', \
-        '**ERROR:** ' + markdownEscape(message) \
-    )
 endfunction
 
 

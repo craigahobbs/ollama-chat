@@ -1,6 +1,11 @@
 # Licensed under the MIT License
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
+include <args.bare>
+include <forms.bare>
+
+include 'ollamaChatUtil.bare'
+
 
 # The Ollama Chat template variables page
 async function ollamaChatTemplateVariablesPage(args):

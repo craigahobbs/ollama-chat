@@ -71,6 +71,7 @@ class OllamaChat(chisel.Application):
         self.add_static('ollamaChatConversation.bare')
         self.add_static('ollamaChatModels.bare')
         self.add_static('ollamaChatTemplate.bare')
+        self.add_static('ollamaChatUtil.bare')
 
 
     def add_static(self, filename, urls=(('GET', None),), doc_group='Ollama Chat Statics'):

@@ -1,6 +1,11 @@
 # Licensed under the MIT License
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
+include <args.bare>
+include <forms.bare>
+
+include 'ollamaChatUtil.bare'
+
 
 # The Ollama Chat conversation page
 async function ollamaChatConversationPage(args):
@@ -22,7 +27,7 @@ async function ollamaChatConversationPage(args):
         conversation = null
         title = ollamaChatTitle
         model = null
-        generating = False
+        generating = false
     endif
 
     # Render the floating controls

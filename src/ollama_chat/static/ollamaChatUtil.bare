@@ -1,0 +1,37 @@
+# Licensed under the MIT License
+# https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
+
+include <args.bare>
+
+
+# The application title
+ollamaChatTitle = 'Ollama Chat'
+
+
+# The Ollama Chat application URL arguments
+ollamaChatArguments = argsValidate([ \
+    {'name': 'action', 'explicit': true}, \
+    {'name': 'actionID', 'explicit': true}, \
+    {'name': 'filterCompatible', 'type': 'bool', 'default': true}, \
+    {'name': 'filterMonths', 'type': 'int', 'default': 6}, \
+    {'name': 'id'}, \
+    {'name': 'menu', 'type': 'bool', 'default': false}, \
+    {'name': 'multiline', 'type': 'bool', 'default': false}, \
+    {'name': 'sort', 'type': 'string', 'default': 'Modified'}, \
+    {'name': 'text', 'type': 'bool', 'default': false}, \
+    {'name': 'think', 'type': 'int'}, \
+    {'name': 'view'} \
+])
+
+
+# The Ollama Chat error page
+function ollamaChatErrorPage(message):
+    documentSetTitle(ollamaChatTitle)
+    markdownPrint( \
+        argsLink(ollamaChatArguments, 'Back', null, true), \
+        '', \
+        '# ' + markdownEscape(ollamaChatTitle), \
+        '', \
+        '**ERROR:** ' + markdownEscape(message) \
+    )
+endfunction
