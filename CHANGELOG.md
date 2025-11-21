@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.77 (2025-11-21)
+
+- [b443c9a](https://github.com/craigahobbs/ollama-chat/commit/b443c9a) - cleanup markdown-up stubs
+
 ## 0.9.76 (2025-10-29)
 
 - [6fb8cda](https://github.com/craigahobbs/ollama-chat/commit/6fb8cda) - chisel 1.9
