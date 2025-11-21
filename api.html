@@ -42,9 +42,9 @@
         const app = new MarkdownUp(window, {
             'markdownText': `\
 ~~~ markdown-script
-include 'https://craigahobbs.github.io/schema-markdown-doc/doc/app.bare'
+include <schemaDoc.bare>
 
-schemaMarkdownDoc('ollamaChat.smd', 'Ollama Chat', true)
+schemaDocMain('ollamaChat.smd', 'Ollama Chat', true)
 ~~~
 `});
         app.run();
