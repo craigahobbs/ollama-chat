@@ -8,6 +8,7 @@ ollama-chat command-line script main module
 import argparse
 import json
 import os
+import sys
 import threading
 import webbrowser
 
@@ -28,7 +29,10 @@ def main(argv=None):
     """
 
     # Command line arguments
-    parser = argparse.ArgumentParser(prog='ollama-chat', color=False)
+    argument_parser_args = {'prog': 'ollama-chat'}
+    if sys.version_info >= (3, 14): # pragma: no cover
+        argument_parser_args['color'] = False
+    parser = argparse.ArgumentParser(**argument_parser_args)
     parser.add_argument('-c', metavar='FILE', dest='config',
                         help='the configuration file (default is "$HOME/ollama-chat.json")')
     parser.add_argument('-m', metavar='MESSAGE', dest='message',
