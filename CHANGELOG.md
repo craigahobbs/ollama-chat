@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.78 (2025-12-01)
+
+- [59772da](https://github.com/craigahobbs/ollama-chat/commit/59772da) - ArgumentParser color=False
+
 ## 0.9.77 (2025-11-21)
 
 - [b443c9a](https://github.com/craigahobbs/ollama-chat/commit/b443c9a) - cleanup markdown-up stubs
