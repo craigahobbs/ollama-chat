@@ -28,7 +28,7 @@ def main(argv=None):
     """
 
     # Command line arguments
-    parser = argparse.ArgumentParser(prog='ollama-chat')
+    parser = argparse.ArgumentParser(prog='ollama-chat', color=False)
     parser.add_argument('-c', metavar='FILE', dest='config',
                         help='the configuration file (default is "$HOME/ollama-chat.json")')
     parser.add_argument('-m', metavar='MESSAGE', dest='message',

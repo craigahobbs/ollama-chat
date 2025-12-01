@@ -293,7 +293,7 @@ class CommandHelpError(Exception):
 # Prompt command argument parser
 if sys.version_info < (3, 14): # pragma: no cover
     # pylint: disable-next=invalid-name
-    _COMMAND_PARSER = argparse.ArgumentParser(prog='/', add_help=False, exit_on_error=False)
+    _COMMAND_PARSER = argparse.ArgumentParser(prog='/', add_help=False, exit_on_error=False, color=False)
 else: # pragma: no cover
     # pylint: disable-next=invalid-name, unexpected-keyword-arg, useless-suppression
     _COMMAND_PARSER = argparse.ArgumentParser(prog='/', add_help=False, exit_on_error=False, color=False)
