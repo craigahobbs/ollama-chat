@@ -101,57 +101,42 @@ _regex_modified_ago = re.compile(r'^(?P<count>\d+)\s+(?P<unit>minute|hour|day|we
 _regex_about = re.compile(r'^about\s+an?\s+(hour|minute)\s+ago$')
 
 
-def _parse_count(count):
-    # Hack for llama4
-    if count == 'maverick':
-        return int(254e9)
-    elif count == 'scout':
-        return int(67e9)
+def _parse_count(count, model_name):
+    # Handle common, invalid cases
+    if count.endswith('cloud'):
+        return 1
 
-    # Hack for gemma3n
-    if count == 'e2b':
-        return int(5.6e9)
-    elif count == 'e4b':
-        return int(7.5e9)
+    try:
+        # Mixture of experts?
+        multiplier = 1
+        m_moe = _regex_count_moe.match(count)
+        if m_moe:
+            multiplier = int(m_moe.group('mult'))
+            count = count[m_moe.end():]
 
-    # Hack for granite4
-    if count == 'micro-h':
-        return int(1.9e9)
-    elif count == 'tiny-h':
-        return int(7e9)
-    elif count == 'small-h':
-        return int(32e9)
-
-    # Hack for kimi-k2
-    if count == '1t-cloud':
-        return int(32e9)
-
-    # Hack for glm-4.6
-    if count == 'cloud':
-        return int(355e9)
-
-    # Hack for qwen3-vl
-    if count == '235b-cloud':
-        return int(235e9)
-
-    # Mixture of experts?
-    multiplier = 1
-    m_moe = _regex_count_moe.match(count)
-    if m_moe:
-        multiplier = int(m_moe.group('mult'))
-        count = count[m_moe.end():]
-
-    # Parse the count
-    unit = count[-1].lower()
-    if unit == 'b':
-        return int(multiplier * float(count[:-1]) * 1e9)
-    elif unit == 'm':
-        return int(multiplier * float(count[:-1]) * 1e6)
-    elif unit == 'k':
-        return int(multiplier * float(count[:-1]) * 1e3)
-    return multiplier * int(count.replace(',', ''))
+        # Parse the count
+        unit = count[-1].lower()
+        if unit == 'b':
+            return int(multiplier * float(count[:-1]) * 1e9)
+        elif unit == 'm':
+            return int(multiplier * float(count[:-1]) * 1e6)
+        elif unit == 'k':
+            return int(multiplier * float(count[:-1]) * 1e3)
+        return multiplier * int(count.replace(',', ''))
+    except:
+        print(f'Info: "{model_name}" has invalid size "{count}"', file=sys.stderr)
+        return 1
 
 _regex_count_moe = re.compile(r'^(?P<mult>[1-9]\d*)x')
+
+
+# Table of non-numeric model sizes
+_MODEL_SIZES = {
+    'gemma3n': ['e2b', 'e4b'],
+    'kimi-k2': ['cloud'],
+    'kimi-k2-thinking': ['cloud'],
+    'minimax-m2': ['cloud']
+}
 
 
 def main():
@@ -168,18 +153,10 @@ def main():
     # Parse scraped model info values
     models = []
     for model_name, raw_model in raw_models.items():
+        # No model sizes?
         if not raw_model['sizes']:
-            # Hack for llama4
-            if model_name == 'llama4':
-                raw_model['sizes'] = ['maverick', 'scout']
-            elif model_name == 'granite4':
-                raw_model['sizes'] = ['micro-h', 'tiny-h', 'small-h']
-            elif model_name == 'kimi-k2':
-                raw_model['sizes'] = ['1t-cloud']
-            elif model_name == 'glm-4.6':
-                raw_model['sizes'] = ['cloud']
-            elif model_name == 'qwen3-vl':
-                raw_model['sizes'] = ['235b-cloud']
+            if model_name in _MODEL_SIZES:
+                raw_model['sizes'].extend(_MODEL_SIZES[model_name])
             else:
                 print(f'Warning: "{model_name}" has no sizes', file=sys.stderr)
                 continue
@@ -188,12 +165,12 @@ def main():
             'name': model_name,
             'description': raw_model['description'],
             'modified': _parse_modified(raw_model['modified']).isoformat(),
-            'downloads': _parse_count(raw_model['downloads']),
+            'downloads': _parse_count(raw_model['downloads'], model_name),
             'variants': [
                 {
                     'id': f'{model_name}:{size}',
                     'size': size,
-                    'parameters': _parse_count(size)
+                    'parameters': _parse_count(size, model_name)
                 }
                 for size in raw_model['sizes']
             ]
