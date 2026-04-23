@@ -54,8 +54,8 @@ async function ollamaChatConversationPage(args):
     endif
 
     # No conversation yet or empty conversation?
-    exchanges = objectGet(conversation, 'exchanges')
-    if conversation == null || !exchanges:
+    exchanges = if(conversation, objectGet(conversation, 'exchanges'))
+    if !conversation || !exchanges:
         return
     endif
 
