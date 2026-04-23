@@ -5,13 +5,13 @@ include <unittest.bare>
 
 
 # Start coverage
-coverageStart()
+unittestCoverageStart()
 
 # Test includes
 include 'testOllamaChat.bare'
 
 # Stop coverage
-coverageStop()
+unittestCoverageStop()
 
 # Test report
 return unittestReport({ \
