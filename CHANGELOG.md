@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.79 (2026-04-23)
+
+- [b05c1d9](https://github.com/craigahobbs/ollama-chat/commit/b05c1d9) - restrict chisel version
+
 ## 0.9.78 (2025-12-01)
 
 - [59772da](https://github.com/craigahobbs/ollama-chat/commit/59772da) - ArgumentParser color=False
