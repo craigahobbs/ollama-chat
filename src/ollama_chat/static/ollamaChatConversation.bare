@@ -86,7 +86,7 @@ endfunction
 
 
 # Helper to render the bottom of Ollama Chat conversation page
-async function ollamaChatConversationPageBottom(args, conversation, generating):
+function ollamaChatConversationPageBottom(args, conversation, generating):
     multiline = objectGet(args, 'multiline')
 
     # Any exchanges?
