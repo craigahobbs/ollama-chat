@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.81 (2026-04-23)
+
+- [5c674ec](https://github.com/craigahobbs/ollama-chat/commit/5c674ec) - update markdown-up html stubs
+
 ## 0.9.80 (2026-04-23)
 
 - [9c3261d](https://github.com/craigahobbs/ollama-chat/commit/9c3261d) - fix tests
