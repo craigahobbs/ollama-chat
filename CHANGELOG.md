@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.80 (2026-04-23)
+
+- [9c3261d](https://github.com/craigahobbs/ollama-chat/commit/9c3261d) - fix tests
+
+- [88b1e69](https://github.com/craigahobbs/ollama-chat/commit/88b1e69) - chisel 2.0
+
 ## 0.9.79 (2026-04-23)
 
 - [b05c1d9](https://github.com/craigahobbs/ollama-chat/commit/b05c1d9) - restrict chisel version
