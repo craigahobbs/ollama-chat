@@ -505,7 +505,7 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
             ), \
             if(generating, \
                 ollamaChatConversationSVGButton(buttonSize, buttonSize, 24, 'M8,8 H16 V16 H8 Z', 'black', 'white', \
-                    systemPartial(ollamaChatConversationOnClick, args, 'stopConversation')) \
+                    systemPartial(ollamaChatConversationOnClick, args, 'stopConversation', null, false)) \
             ) \
         ] \
     })
