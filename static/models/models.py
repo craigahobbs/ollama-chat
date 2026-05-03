@@ -163,7 +163,7 @@ def main():
 
         models.append({
             'name': model_name,
-            'description': raw_model['description'],
+            'description': raw_model.get('description', 'None'),
             'modified': _parse_modified(raw_model['modified']).isoformat(),
             'downloads': _parse_count(raw_model['downloads'], model_name),
             'variants': [
