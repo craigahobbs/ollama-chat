@@ -460,7 +460,7 @@
         "name": "deepseek-ocr",
         "description": "DeepSeek-OCR is a vision-language model that can perform token-efficient OCR.",
         "modified": "2025-12-04",
-        "downloads": 434400,
+        "downloads": 434500,
         "variants": [
             {
                 "id": "deepseek-ocr:3b",
@@ -1255,7 +1255,7 @@
     },
     {
         "name": "granite4.1",
-        "description": "None",
+        "description": "No model description provided.",
         "modified": "2026-04-30",
         "downloads": 20700,
         "variants": [
@@ -1878,7 +1878,7 @@
         "name": "mistral-medium-3.5",
         "description": "Mistral Medium 3.5 is the first flagship model of Mistral AI that merged instruction-following, reasoning, and coding in a single set of 128B weights.",
         "modified": "2026-04-29",
-        "downloads": 7542,
+        "downloads": 7544,
         "variants": [
             {
                 "id": "mistral-medium-3.5:128b",
@@ -2088,7 +2088,7 @@
         "name": "nemotron3",
         "description": "NVIDIA Nemotron 3 Nano Omni is a multimodal large language model that unifies video, audio, image, and text understanding to support enterprise-grade Q&A, summarization, transcription, and document intelligence workflows.",
         "modified": "2026-04-28",
-        "downloads": 274600,
+        "downloads": 274800,
         "variants": [
             {
                 "id": "nemotron3:33b",
@@ -2101,7 +2101,7 @@
         "name": "neural-chat",
         "description": "A fine-tuned model based on Mistral with good coverage of domain and language.",
         "modified": "2024-05-03",
-        "downloads": 989200,
+        "downloads": 989300,
         "variants": [
             {
                 "id": "neural-chat:7b",
@@ -2791,7 +2791,7 @@
         "name": "qwen3-next",
         "description": "The first installment in the Qwen3-Next series with strong performance in terms of both parameter efficiency and inference speed.",
         "modified": "2026-01-03",
-        "downloads": 533400,
+        "downloads": 533500,
         "variants": [
             {
                 "id": "qwen3-next:80b",
