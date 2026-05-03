@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.82 (2026-05-03)
+
+- [963e9bc](https://github.com/craigahobbs/ollama-chat/commit/963e9bc) - fix stop conversation SVG button on-click issue introduced by markdown-up 4.0's elementModelRender SVG onclick behavior
+
 ## 0.9.81 (2026-04-23)
 
 - [5c674ec](https://github.com/craigahobbs/ollama-chat/commit/5c674ec) - update markdown-up html stubs
