@@ -203,6 +203,7 @@ async function ollamaChatTemplatePage(args):
                             'rows': 8, \
                             'style': arrayJoin([ \
                                 'background-color: white', \
+                                'color: black', \
                                 'font-size: inherit', \
                                 'font-family: inherit', \
                                 'padding: 0.5em', \
