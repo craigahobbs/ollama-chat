@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.83 (2026-05-23)
+
+- [443b292](https://github.com/craigahobbs/ollama-chat/commit/443b292) - fix invisible chat text issue caused by markdown.css changes
+
 ## 0.9.82 (2026-05-03)
 
 - [963e9bc](https://github.com/craigahobbs/ollama-chat/commit/963e9bc) - fix stop conversation SVG button on-click issue introduced by markdown-up 4.0's elementModelRender SVG onclick behavior
