@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.84 (2026-05-26)
+
+- [2db13e8](https://github.com/craigahobbs/ollama-chat/commit/2db13e8) - improve dark mode
+
 ## 0.9.83 (2026-05-23)
 
 - [443b292](https://github.com/craigahobbs/ollama-chat/commit/443b292) - fix invisible chat text issue caused by markdown.css changes
