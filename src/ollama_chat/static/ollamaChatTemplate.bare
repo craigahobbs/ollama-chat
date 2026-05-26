@@ -202,8 +202,8 @@ async function ollamaChatTemplatePage(args):
                             'id': ollamaChatTemplateInputID, \
                             'rows': 8, \
                             'style': arrayJoin([ \
-                                'background-color: white', \
-                                'color: black', \
+                                'background-color: var(--barescript-color-background)', \
+                                'color: var(--barescript-color-foreground)', \
                                 'font-size: inherit', \
                                 'font-family: inherit', \
                                 'padding: 0.5em', \

@@ -414,9 +414,9 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
         'attr': { \
             'style': arrayJoin([ \
                 'align-items: left', \
-                'background-color: #e0e0e0', \
+                'background-color: var(--barescript-color-background-code)', \
                 'border-radius: ' + numberToFixed(borderRadiusPx, ollamaChatConversationSVGPrecision) + 'px', \
-                'color: black', \
+                'color: var(--barescript-color-foreground)', \
                 'display: flex', \
                 'left: ' + numberToFixed(topBottomPx, ollamaChatConversationSVGPrecision) + 'px', \
                 'padding: ' + numberToFixed(menuPadPx, ollamaChatConversationSVGPrecision) + 'px', \
@@ -459,7 +459,7 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
         'attr': { \
             'style': arrayJoin([ \
                 'align-items: ' + if(multiline, 'flex-end', 'center'), \
-                'background-color: #c0c0c0', \
+                'background-color: var(--barescript-color-border)', \
                 'border-radius: ' + numberToFixed(borderRadiusPx, ollamaChatConversationSVGPrecision) + 'px', \
                 'bottom: ' + numberToFixed(topBottomPx, ollamaChatConversationSVGPrecision) + 'px', \
                 'display: flex', \
@@ -470,7 +470,7 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
             ], '; ') \
         }, \
         'elem': [ \
-            ollamaChatConversationSVGButton(0.75 * buttonSize, buttonSize, 24, 'M4,6 H20 M4,12 H20 M4,18 H20', 'none', 'none', multilineFn), \
+            ollamaChatConversationSVGButton(0.75 * buttonSize, buttonSize, 24, 'M4,6 H20 M4,12 H20 M4,18 H20', false, false, multilineFn), \
             { \
                 'html': if(multiline, 'textarea', 'input'), \
                 'attr': { \
@@ -479,8 +479,8 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
                     'placeholder': 'Type your message...', \
                     'rows': if(multiline, 8), \
                     'style': arrayJoin([ \
-                        'background-color: white', \
-                        'color: black', \
+                        'background-color: var(--barescript-color-background)', \
+                        'color: var(--barescript-color-foreground)', \
                         'border: none', \
                         'flex: 1', \
                         'font-size: inherit', \
@@ -501,11 +501,11 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
                 ) \
             }, \
             if(!generating, \
-                ollamaChatConversationSVGButton(buttonSize, buttonSize, 24, 'M12,18 V7 M7,12 L12,7 L17,12', 'none', 'white', \
+                ollamaChatConversationSVGButton(buttonSize, buttonSize, 24, 'M12,18 V7 M7,12 L12,7 L17,12', false, true, \
                     systemPartial(ollamaChatConversationOnPrompt, args)) \
             ), \
             if(generating, \
-                ollamaChatConversationSVGButton(buttonSize, buttonSize, 24, 'M8,8 H16 V16 H8 Z', 'black', 'white', \
+                ollamaChatConversationSVGButton(buttonSize, buttonSize, 24, 'M8,8 H16 V16 H8 Z', true, true, \
                     systemPartial(ollamaChatConversationOnClick, args, 'stopConversation', null, false)) \
             ) \
         ] \
@@ -516,7 +516,9 @@ endfunction
 
 
 # Create an SVG button element model
-function ollamaChatConversationSVGButton(width, height, viewSize, symbolPath, symbolFill, backgroundColor, callback):
+function ollamaChatConversationSVGButton(width, height, viewSize, symbolPath, symbolFill, backgroundFill, callback):
+    symbolFillColor = if(symbolFill, 'var(--barescript-color-foreground)', 'none')
+    symbolStrokeColor = if(symbolFill, 'none', 'var(--barescript-color-foreground)')
     return { \
         'html': 'button', \
         'attr': { \
@@ -527,7 +529,7 @@ function ollamaChatConversationSVGButton(width, height, viewSize, symbolPath, sy
                 'padding: 0', \
                 'cursor: pointer' \
             ], '; '), \
-            'onmouseover': "this.children[0].style.opacity='" + if(backgroundColor != 'none', '0.8', '0.6') + "';", \
+            'onmouseover': "this.children[0].style.opacity='" + if(backgroundFill, '0.8', '0.6') + "';", \
             'onmouseout': "this.children[0].style.opacity='1';" \
         }, \
         'elem': { \
@@ -541,23 +543,22 @@ function ollamaChatConversationSVGButton(width, height, viewSize, symbolPath, sy
                 'preserveAspectRatio': 'none' \
             }, \
             'elem': [ \
-                if(backgroundColor != 'none', { \
+                if(backgroundFill, { \
                     'svg': 'circle', \
                     'attr': { \
                         'cx': numberToFixed(0.5 * viewSize, ollamaChatConversationSVGPrecision), \
                         'cy': numberToFixed(0.5 * viewSize, ollamaChatConversationSVGPrecision), \
                         'r': numberToFixed(0.5 * viewSize, ollamaChatConversationSVGPrecision), \
-                        'stroke': 'none', \
-                        'fill': backgroundColor \
+                        'style': 'fill: var(--barescript-color-background); stroke: none' \
                     } \
                 }), \
                 { \
                     'svg': 'path', \
                     'attr': { \
                         'd': symbolPath, \
-                        'stroke': if(symbolFill == 'none', 'black', 'none'), \
-                        'fill': symbolFill, \
-                        'stroke-width': numberToFixed(0.1 * viewSize) \
+                        'style': 'fill: ' + symbolFillColor + \
+                            '; stroke: ' + symbolStrokeColor + \
+                            '; stroke-width: ' + numberToFixed(0.1 * viewSize) \
                     } \
                 } \
             ] \
