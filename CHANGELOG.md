@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.85 (2026-06-03)
+
+- [738ae47](https://github.com/craigahobbs/ollama-chat/commit/738ae47) - fix for mlx models
+
 ## 0.9.84 (2026-05-26)
 
 - [2db13e8](https://github.com/craigahobbs/ollama-chat/commit/2db13e8) - improve dark mode
