@@ -544,14 +544,17 @@ def get_models(ctx, unused_req):
 
 
 def _parse_parameter_size(ctx, parameter_size):
-    value = float(parameter_size[:-1])
-    unit = parameter_size[-1]
-    if unit == 'B':
-        return int(value * 1000000000)
-    elif unit == 'M':
-        return int(value * 1000000)
-    elif unit == 'K':
-        return int(value * 1000)
+    try:
+        value = float(parameter_size[:-1])
+        unit = parameter_size[-1]
+        if unit == 'B':
+            return int(value * 1000000000)
+        elif unit == 'M':
+            return int(value * 1000000)
+        elif unit == 'K':
+            return int(value * 1000)
+    except (ValueError, IndexError):
+        pass
 
     ctx.log.warning(f'Invalid parameter size "{parameter_size}"')
     return 0
