@@ -169,9 +169,10 @@ class DownloadManager():
         except:
             pass
 
-        # Delete the application's download entry
-        if manager.model in manager.app.downloads:
-            del manager.app.downloads[manager.model]
+        # Delete the application's download entry (under the config lock, and only if it's still ours)
+        with manager.app.config():
+            if manager.app.downloads.get(manager.model) is manager:
+                del manager.app.downloads[manager.model]
 
 
 # The Ollama Chat API type model
@@ -238,7 +239,7 @@ def move_template(ctx, req):
     with ctx.app.config(save=True) as config:
         # Find the template index
         id_ = req['id']
-        templates = config['templates'] or []
+        templates = config.get('templates') or []
         ix_tmpl = next((ix for ix, tmpl in enumerate(templates) if tmpl['id'] == id_), None)
         if ix_tmpl is None:
             raise chisel.ActionError('UnknownTemplateID')
@@ -269,7 +270,7 @@ def delete_template(ctx, req):
 @chisel.action(name='getTemplate', types=OLLAMA_CHAT_TYPES)
 def get_template(ctx, req):
     template_id = req['id']
-    with ctx.app.config(save=True) as config:
+    with ctx.app.config() as config:
         templates = config.get('templates') or []
         template = next((template for template in templates if template['id'] == template_id), None)
         if template is None:
@@ -513,7 +514,7 @@ def get_models(ctx, unused_req):
     response_models = [
         {
             'id': model['model'],
-            'name': model['model'][:model['model'].index(':')],
+            'name': model['model'].split(':')[0],
             'parameters': _parse_parameter_size(ctx, model['details']['parameter_size']),
             'size': model['size'],
             'modified': model['modified_at']
@@ -563,7 +564,9 @@ def _parse_parameter_size(ctx, parameter_size):
 @chisel.action(name='downloadModel', types=OLLAMA_CHAT_TYPES)
 def download_model(ctx, req):
     with ctx.app.config():
-        ctx.app.downloads[req['model']] = DownloadManager(ctx.app, req['model'])
+        model = req['model']
+        if model not in ctx.app.downloads:
+            ctx.app.downloads[model] = DownloadManager(ctx.app, model)
 
 
 @chisel.action(name='stopModelDownload', types=OLLAMA_CHAT_TYPES)

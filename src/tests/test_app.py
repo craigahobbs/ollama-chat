@@ -673,6 +673,32 @@ class TestAPI(unittest.TestCase):
                 self.assertEqual(json.load(config_fh), original_config)
 
 
+    def test_move_template_no_templates(self):
+        original_config = {'conversations': []}
+        test_files = [
+            ('ollama-chat.json', json.dumps(original_config))
+        ]
+        with create_test_files(test_files) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Try to move when templates key doesn't exist
+            status, headers, content_bytes = app.request(
+                'POST', '/moveTemplate', wsgi_input=json.dumps({'id': 'tmpl1', 'down': True}).encode('utf-8')
+            )
+            self.assertEqual(status, '400 Bad Request')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'error': 'UnknownTemplateID'})
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
 
     def test_delete_template_success(self):
         test_files = [
@@ -2314,6 +2340,53 @@ class TestAPI(unittest.TestCase):
                 self.assertEqual(json.load(config_fh), original_config)
 
 
+    def test_get_models_no_tag(self):
+        original_config = {'conversations': []}
+        test_files = [
+            ('ollama-chat.json', json.dumps(original_config))
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # A model id with no ":" tag
+            mock_list_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_list_response.status = 200
+            mock_list_response.json.return_value = {
+                'models': [
+                    {
+                        'model': 'tagless',
+                        'details': {'parameter_size': '7B'},
+                        'size': 4100000000,
+                        'modified_at': '2023-10-01T12:00:00+00:00'
+                    }
+                ]
+            }
+
+            # Configure the mock PoolManager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_list_response
+
+            status, headers, content_bytes = app.request('GET', '/getModels')
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {
+                'models': [
+                    {
+                        'id': 'tagless',
+                        'name': 'tagless',
+                        'parameters': 7000000000,
+                        'size': 4100000000,
+                        'modified': '2023-10-01T12:00:00+00:00'
+                    }
+                ],
+                'downloading': []
+            })
+            mock_list_response.close.assert_called_once_with()
+
+
     def test_get_models_parameter_size_warning(self):
         original_config = {'model': 'llm', 'conversations': []}
         test_files = [
@@ -2621,6 +2694,37 @@ class TestAPI(unittest.TestCase):
             # Verify the config file
             with open(config_path, 'r', encoding='utf-8') as config_fh:
                 self.assertEqual(json.load(config_fh), original_config)
+
+
+    def test_download_model_already_downloading(self):
+        original_config = {'conversations': []}
+        test_files = [
+            ('ollama-chat.json', json.dumps(original_config))
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('ollama_chat.app.DownloadManager') as mock_download_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # A download is already in progress for the model
+            existing_manager = unittest.mock.Mock()
+            app.downloads['llm:7b'] = existing_manager
+
+            # Initiate a duplicate model download
+            request = {'model': 'llm:7b'}
+            status, headers, content_bytes = app.request('POST', '/downloadModel', wsgi_input=json.dumps(request).encode('utf-8'))
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {})
+
+            # Verify no new DownloadManager was created and the in-flight download is untouched
+            mock_download_manager.assert_not_called()
+            self.assertIs(app.downloads['llm:7b'], existing_manager)
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
 
 
     def test_stop_model_download_success(self):

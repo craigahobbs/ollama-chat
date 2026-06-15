@@ -52,7 +52,7 @@ struct ConversationExchange
     optional string thinking
 
 
-# An conversation template info struct
+# A conversation template info struct
 struct ConversationTemplateInfo
 
     # The template identifier
@@ -62,7 +62,7 @@ struct ConversationTemplateInfo
     string title
 
 
-# An conversation template
+# A conversation template
 struct ConversationTemplate (ConversationTemplateInfo)
 
     # The template command name
@@ -75,7 +75,7 @@ struct ConversationTemplate (ConversationTemplateInfo)
     optional ConversationTemplateVariable[len > 0] variables
 
 
-# An conversation template variable
+# A conversation template variable
 struct ConversationTemplateVariable
 
     # The variable name (e.g. "CityState")
@@ -149,7 +149,7 @@ typedef OllamaChatModel[len > 0] OllamaChatModels
 group
 
 
-# An downloadable model
+# A downloadable model
 struct OllamaChatModel
 
     # The model name
@@ -168,7 +168,7 @@ struct OllamaChatModel
     OllamaChatModelVariant[len > 0] variants
 
 
-# An downloadable model variant
+# A downloadable model variant
 struct OllamaChatModelVariant
 
     # The variant's ID
@@ -442,7 +442,7 @@ action deleteConversationExchange
         UnknownConversationID
 
 
-# Regnerate the model's response of the most recent exchange of a conversation
+# Regenerate the model's response of the most recent exchange of a conversation
 action regenerateConversationExchange
     urls
         POST
@@ -468,7 +468,7 @@ action getModels
         # The available models
         ModelInfo[] models
 
-        # The available models
+        # The downloading models
         ModelDownloadInfo[] downloading
 
 

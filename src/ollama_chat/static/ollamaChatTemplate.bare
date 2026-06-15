@@ -150,15 +150,16 @@ async function ollamaChatTemplatePage(args):
             varID = stringNew(ixVariable)
             markdownPrint('', '### Variable #' + (ixVariable + 1))
             if action == 'variable' && actionID == varID:
+                variableUpdateFn = systemPartial(ollamaChatTemplateOnVariableUpdate, template, ixVariable)
                 elementModelRender([ \
                     {'html': 'p', 'elem': {'html': 'b', 'elem': {'text': 'Name:'}}}, \
-                    {'html': 'p', 'elem': formsTextElements(ollamaChatTemplateInputID, varName, 50, nameClickFn)}, \
+                    {'html': 'p', 'elem': formsTextElements(ollamaChatTemplateInputID, varName, 50, variableUpdateFn)}, \
                     {'html': 'p', 'elem': {'html': 'b', 'elem': {'text': 'Label:'}}}, \
-                    {'html': 'p', 'elem': formsTextElements(ollamaChatTemplateInputID2, varLabel, 50, nameClickFn)}, \
+                    {'html': 'p', 'elem': formsTextElements(ollamaChatTemplateInputID2, varLabel, 50, variableUpdateFn)}, \
                     {'html': 'p', 'elem': [ \
                         formsLinkElements('Cancel', argsURL(ollamaChatArguments)), \
                         {'text': spacer + '|' + spacer}, \
-                        formsLinkButtonElements('Update', systemPartial(ollamaChatTemplateOnVariableUpdate, template, ixVariable)), \
+                        formsLinkButtonElements('Update', variableUpdateFn), \
                         {'text': spacer}, \
                         formsLinkButtonElements('Remove', systemPartial(ollamaChatTemplateOnVariableRemove, template, ixVariable)), \
                         {'text': spacer}, \

@@ -1254,6 +1254,31 @@ url content
         self.assertDictEqual(flags, {})
 
 
+    def test_url_show(self):
+        mock_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+        mock_response.status = 200
+        mock_response.data = b'url content'
+
+        mock_chat = unittest.mock.Mock()
+        mock_chat.app.pool_manager.request.return_value = mock_response
+
+        flags = {}
+        self.assertEqual(
+            _process_commands(mock_chat, '/url http://example.com -n', flags),
+            '''\
+<http://example.com>
+```
+url content
+```
+</ http://example.com>'''
+        )
+        self.assertDictEqual(flags, {'show': True})
+
+        # Show mode requires a second render pass, but the URL is still fetched only once
+        self.assertEqual(mock_chat.app.pool_manager.request.call_count, 1)
+        mock_response.close.assert_called_once_with()
+
+
     def test_multiple_commands(self):
         test_files = [
             ('test.txt', 'file content')

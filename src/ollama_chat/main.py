@@ -92,7 +92,7 @@ def main(argv=None):
                 response_obj = urllib3.request('POST', f'{url}startConversation', json=request_input, retries=0)
                 try:
                     if response_obj.status != 200:
-                        raise urllib3.exceptions.HTTPError(f'startConversation failed ({response.status})')
+                        raise urllib3.exceptions.HTTPError(f'startConversation failed ({response_obj.status})')
                     response = response_obj.json()
                 finally:
                     response_obj.close()
@@ -121,7 +121,7 @@ def main(argv=None):
                 response_obj = urllib3.request('POST', f'{url}startTemplate', json=request_input, retries=0)
                 try:
                     if response_obj.status != 200:
-                        raise urllib3.exceptions.HTTPError(f'startTemplate failed ({response.status})')
+                        raise urllib3.exceptions.HTTPError(f'startTemplate failed ({response_obj.status})')
                     response = response_obj.json()
                 finally:
                     response_obj.close()

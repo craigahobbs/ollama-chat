@@ -164,18 +164,22 @@ def config_template_prompts(template, variable_values):
 
 # Process prompt commands
 def _process_commands(chat, prompt, flags):
-    actual_prompt = _R_COMMAND.sub(functools.partial(_process_commands_sub, chat, flags), prompt)
-    if 'show' in flags:
-        flags.clear()
+    # Determine whether any command requests "show" mode (the whole prompt is rendered with
+    # fenced content). This scan pass parses each command's arguments but performs no file or
+    # URL I/O, so a "-n" command's content is read/fetched once below instead of twice.
+    scan_flags = {}
+    _R_COMMAND.sub(functools.partial(_process_commands_sub, chat, scan_flags, True), prompt)
+    if 'show' in scan_flags:
         flags['show'] = True
-        actual_prompt = _R_COMMAND.sub(functools.partial(_process_commands_sub, chat, flags), prompt)
-    return actual_prompt
+
+    # Process the commands
+    return _R_COMMAND.sub(functools.partial(_process_commands_sub, chat, flags, False), prompt)
 
 _R_COMMAND = re.compile(r'^/(?P<cmd>\?|dir|do|file|image|url)(?P<args> .*)?$', re.MULTILINE)
 
 
 # Command prompt regex substitution function
-def _process_commands_sub(chat, flags, match):
+def _process_commands_sub(chat, flags, scan, match):
     # Parse command arguments
     command = match.group('cmd')
     argv = [command, *shlex.split(match.group('args') or '')]
@@ -188,6 +192,10 @@ def _process_commands_sub(chat, flags, match):
     # Respond with processed prompt?
     if hasattr(args, 'show') and args.show:
         flags['show'] = True
+
+    # The scan pass only collects rendering flags; skip all command I/O
+    if scan:
+        return ''
 
     # Include files from a directory?
     if command == 'dir':
