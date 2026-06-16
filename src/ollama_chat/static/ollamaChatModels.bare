@@ -96,7 +96,7 @@ async function ollamaChatModelsPage(args):
                 {'html': 'tbody', 'elem': modelTableRows} \
             ]} \
         ]
-        spacer = stringFromCharCode(160, 160)
+        spacer = '\u00a0\u00a0'
         for model in models:
             modelID = objectGet(model, 'id')
             modelName = objectGet(model, 'name')
@@ -219,7 +219,7 @@ async function ollamaChatModelsDownloadPage(args):
     )
 
     # Render the filters
-    filterSpacer = stringFromCharCode(160) + '|' + stringFromCharCode(160)
+    filterSpacer = '\u00a0|\u00a0'
     markdownPrint( \
         '**Recent:** ' + \
             ollamaChatModelsFilterLink('1 month', 1, 'filterMonths', filterMonths) + filterSpacer + \
@@ -251,7 +251,7 @@ async function ollamaChatModelsDownloadPage(args):
     minModified = if(filterMonths == 0, null, datetimeNew(datetimeYear(today), datetimeMonth(today) - filterMonths, datetimeDay(today)))
 
     # Render the models
-    variantIndent = stringFromCharCode(160, 160, 160, 160)
+    variantIndent = '\u00a0\u00a0\u00a0\u00a0'
     for model in models:
         name = objectGet(model, 'name')
         description = objectGet(model, 'description')

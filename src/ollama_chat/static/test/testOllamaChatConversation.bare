@@ -165,23 +165,39 @@ function testOllamaChatConversationFloatingConv():
 endfunction
 
 
-# Expected element-model for an exchange's User:/Model: header block
-function testOllamaChatConversationExchangeHeader(user):
+# Expected previous/next navigation <p> below a User heading (nextAnchor = the Next link's anchor suffix)
+function testOllamaChatConversationMessageNavElements(prevIx, nextAnchor):
+    links = []
+    if prevIx != null:
+        arrayPush(links, formsLinkElements('Previous', "#var.vId='C1'&chat-message-" + prevIx))
+        arrayPush(links, {'text': '\u00a0|\u00a0'})
+    endif
+    arrayPush(links, formsLinkElements('Next', "#var.vId='C1'&" + nextAnchor))
+    return {'html': 'p', 'elem': links}
+endfunction
+
+
+# Expected per-exchange element model: anchor + User heading + nav + user message + Model heading
+function testOllamaChatConversationMessage(ixMessage, prevIx, nextAnchor, user):
     return [ \
-        { \
-            'html': 'h2', \
-            'elem': {'text': 'User:'} \
-        }, \
-        { \
-            'html': 'p', \
-            'attr': {'style': 'white-space: pre-wrap;'}, \
-            'elem': {'text': user} \
-        }, \
-        { \
-            'html': 'h2', \
-            'elem': {'text': 'Model:'} \
-        } \
+        {'html': 'div', 'attr': {'id': "var.vId='C1'&chat-message-" + ixMessage}}, \
+        {'html': 'h2', 'elem': {'text': 'User:'}}, \
+        testOllamaChatConversationMessageNavElements(prevIx, nextAnchor), \
+        {'html': 'p', 'attr': {'style': 'white-space: pre-wrap;'}, 'elem': {'text': user}}, \
+        {'html': 'h2', 'elem': {'text': 'Model:'}} \
     ]
+endfunction
+
+
+# Expected bottom menu <p> (Previous to the top of the last message ixLast, plus Delete and Regenerate)
+function testOllamaChatConversationBottomMenu(ixLast):
+    return {'html': 'p', 'elem': [ \
+        formsLinkElements('Previous', "#var.vId='C1'&chat-message-" + ixLast), \
+        {'text': '\u00a0|\u00a0'}, \
+        formsLinkButtonElements('Delete', '<function>'), \
+        {'text': '\u00a0|\u00a0'}, \
+        formsLinkButtonElements('Regenerate', '<function>') \
+    ]}
 endfunction
 
 
@@ -204,13 +220,10 @@ function testOllamaChatConversationFloatingConvGenerating():
 endfunction
 
 
-# The reset-anchor div
+# The reset-anchor div (an empty div is invisible; documentSetReset only needs the element id present)
 testOllamaChatConversationResetDiv = { \
     'html': 'div', \
-    'attr': { \
-        'id': 'ollama-chat-document-reset-id', \
-        'style': 'display: none;' \
-    } \
+    'attr': {'id': 'ollama-chat-document-reset-id'} \
 }
 
 
@@ -222,19 +235,10 @@ function testOllamaChatConversationPage1ExchangeCalls():
         ['documentSetFocus', ['ollama-chat-prompt']], \
         ['documentSetTitle', ['Chat']], \
         ['markdownPrint', ['# Chat','','**Model:** m:1']], \
-        ['elementModelRender', [testOllamaChatConversationExchangeHeader('u1')]], \
+        ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-bottom', 'u1')]], \
         ['elementModelRender', [testOllamaChatConversationResetDiv]], \
         ['markdownPrint', ['','r1']], \
-        ['elementModelRender', [ \
-            { \
-                'html': 'p', \
-                'elem': [ \
-                    formsLinkButtonElements('Delete', '<function>'), \
-                    {'text': '\u00a0\u00a0'}, \
-                    formsLinkButtonElements('Regenerate', '<function>') \
-                ] \
-            } \
-        ]], \
+        ['elementModelRender', [testOllamaChatConversationBottomMenu(0)]], \
         ['elementModelRender', [ \
             [ \
                 { \
@@ -288,7 +292,7 @@ async function testOllamaChatConversationPageWithExchanges():
     systemGlobalSet('vId', 'C1')
     args = argsParse(ollamaChatArguments)
     conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': false, 'exchanges': [ \
-        {'user': 'u1', 'model': 'r1'}, {'user': 'u2', 'model': 'r2'} \
+        {'user': 'u1', 'model': 'r1'}, {'user': 'u2', 'model': 'r2'}, {'user': 'u3', 'model': 'r3'} \
     ]}}
     unittestMockAll({'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv))})
     ollamaChatConversationPage(args)
@@ -298,29 +302,14 @@ async function testOllamaChatConversationPageWithExchanges():
         ['documentSetFocus', ['ollama-chat-prompt']], \
         ['documentSetTitle', ['Chat']], \
         ['markdownPrint', ['# Chat','','**Model:** m:1']], \
-        ['elementModelRender', [testOllamaChatConversationExchangeHeader('u1')]], \
+        ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-message-1', 'u1')]], \
         ['markdownPrint', ['','r1']], \
-        ['elementModelRender', [testOllamaChatConversationExchangeHeader('u2')]], \
-        ['elementModelRender', [ \
-            { \
-                'html': 'div', \
-                'attr': { \
-                    'id': 'ollama-chat-document-reset-id', \
-                    'style': 'display: none;' \
-                } \
-            } \
-        ]], \
+        ['elementModelRender', [testOllamaChatConversationMessage(1, 0, 'chat-message-2', 'u2')]], \
         ['markdownPrint', ['','r2']], \
-        ['elementModelRender', [ \
-            { \
-                'html': 'p', \
-                'elem': [ \
-                    formsLinkButtonElements('Delete', '<function>'), \
-                    {'text': '\u00a0\u00a0'}, \
-                    formsLinkButtonElements('Regenerate', '<function>') \
-                ] \
-            } \
-        ]], \
+        ['elementModelRender', [testOllamaChatConversationMessage(2, 1, 'chat-bottom', 'u3')]], \
+        ['elementModelRender', [testOllamaChatConversationResetDiv]], \
+        ['markdownPrint', ['','r3']], \
+        ['elementModelRender', [testOllamaChatConversationBottomMenu(2)]], \
         ['elementModelRender', [ \
             [ \
                 { \
@@ -381,19 +370,10 @@ async function testOllamaChatConversationPageTitleEdit():
             ] \
         ]], \
         ['documentSetFocus', ['ollama-chat-title']], \
-        ['elementModelRender', [testOllamaChatConversationExchangeHeader('u1')]], \
+        ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-bottom', 'u1')]], \
         ['elementModelRender', [testOllamaChatConversationResetDiv]], \
         ['markdownPrint', ['','r1']], \
-        ['elementModelRender', [ \
-            { \
-                'html': 'p', \
-                'elem': [ \
-                    formsLinkButtonElements('Delete', '<function>'), \
-                    {'text': '\u00a0\u00a0'}, \
-                    formsLinkButtonElements('Regenerate', '<function>') \
-                ] \
-            } \
-        ]], \
+        ['elementModelRender', [testOllamaChatConversationBottomMenu(0)]], \
         ['elementModelRender', [ \
             [ \
                 { \
@@ -466,7 +446,7 @@ async function testOllamaChatConversationOnTimeoutChanged():
         ['documentSetFocus', ['ollama-chat-prompt']], \
         ['documentSetTitle', ['Chat']], \
         ['markdownPrint', ['# Chat','','**Model:** m:1']], \
-        ['elementModelRender', [testOllamaChatConversationExchangeHeader('u1')]], \
+        ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-bottom', 'u1')]], \
         ['elementModelRender', [testOllamaChatConversationResetDiv]], \
         ['markdownPrint', ['','r1']], \
         ['elementModelRender', [ \

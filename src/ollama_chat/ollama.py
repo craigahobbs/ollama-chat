@@ -8,11 +8,13 @@ import os
 import urllib3
 
 
+# Helper function to get an Ollama API URL
 def _get_ollama_url(path):
     ollama_host = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
     return f'{ollama_host}{path}'
 
 
+# Call the Ollama chat API and yield each streamed JSON response chunk
 def ollama_chat(pool_manager, model, messages):
     # Is this a thinking model?
     url_show = _get_ollama_url('/api/show')
@@ -43,6 +45,7 @@ def ollama_chat(pool_manager, model, messages):
         response_chat.close()
 
 
+# List the locally available Ollama models
 def ollama_list(pool_manager):
     url_list = _get_ollama_url('/api/tags')
     response_list = pool_manager.request('GET', url_list, retries=0)
@@ -62,6 +65,7 @@ def ollama_list(pool_manager):
         response_list.close()
 
 
+# Delete a locally available Ollama model
 def ollama_delete(pool_manager, model):
     url_delete = _get_ollama_url('/api/delete')
     data_delete = {'model': model}
@@ -73,6 +77,7 @@ def ollama_delete(pool_manager, model):
         response_delete.close()
 
 
+# Pull an Ollama model, yielding each streamed JSON progress chunk
 def ollama_pull(pool_manager, model):
     url_pull = _get_ollama_url('/api/pull')
     data_pull = {'model': model, 'stream': True}

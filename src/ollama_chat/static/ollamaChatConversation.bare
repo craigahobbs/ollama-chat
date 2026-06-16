@@ -44,7 +44,7 @@ async function ollamaChatConversationPage(args):
             {'html': 'p', 'elem': formsTextElements(ollamaChatConversationTitleID, title, 50, titleClickFn)}, \
             {'html': 'p', 'elem': [ \
                 formsLinkButtonElements('Update', titleClickFn), \
-                {'text': stringFromCharCode(160, 160)}, \
+                {'text': '\u00a0\u00a0'}, \
                 formsLinkButtonElements('Cancel', cancelClickFn) \
             ]} \
         ])
@@ -62,8 +62,12 @@ async function ollamaChatConversationPage(args):
     # Render the exchanges
     ixExchangeLast = arrayLength(exchanges) - 1
     for exchange, ixExchange in exchanges:
+        # Render the message: anchor, User heading, previous/next navigation, user message, Model heading
+        messageElementID = stringSlice(argsURL(ollamaChatArguments, null, false, ollamaChatConversationMessageID + '-' + ixExchange), 1)
         elementModelRender([ \
+            {'html': 'div', 'attr': {'id': messageElementID}}, \
             {'html': 'h2', 'elem': {'text': 'User:'}}, \
+            ollamaChatConversationMessageNavElements(ixExchange, ixExchangeLast), \
             { \
                 'html': 'p', \
                 'attr': {'style': 'white-space: pre-wrap;'}, \
@@ -78,7 +82,7 @@ async function ollamaChatConversationPage(args):
     endfor
 
     # Render the document reset ID
-    elementModelRender({'html': 'div', 'attr': {'id': ollamaChatConversationResetID, 'style': 'display: none;'}})
+    elementModelRender({'html': 'div', 'attr': {'id': ollamaChatConversationResetID}})
 
     # Render the bottom of the conversation page
     ollamaChatConversationPageBottom(args, conversation, generating)
@@ -105,12 +109,15 @@ function ollamaChatConversationPageBottom(args, conversation, generating):
         deleteExchangeFn = systemPartial(ollamaChatConversationOnClick, args, 'deleteConversationExchange')
         regenerateExchangeFn = systemPartial(ollamaChatConversationOnClick, args, 'regenerateConversationExchange')
 
-        # Render the regenerate and delete links
+        # Render the bottom menu: a Previous link to the top of the last message plus the delete and regenerate links
         if !generating:
             elementModelRender( \
                 {'html': 'p', 'elem': [ \
+                    formsLinkElements('Previous', \
+                        argsURL(ollamaChatArguments, null, false, ollamaChatConversationMessageID + '-' + ixLastExchange)), \
+                    {'text': '\u00a0|\u00a0'}, \
                     formsLinkButtonElements('Delete', deleteExchangeFn), \
-                    {'text': stringFromCharCode(160, 160)}, \
+                    {'text': '\u00a0|\u00a0'}, \
                     formsLinkButtonElements('Regenerate', regenerateExchangeFn) \
                 ]} \
             )
@@ -174,6 +181,26 @@ function ollamaChatConversationResponseRenderBottom(args, exchange, ixExchange):
 endfunction
 
 
+# Helper that returns a message's previous/next navigation paragraph (rendered below its User heading)
+function ollamaChatConversationMessageNavElements(ixExchange, ixExchangeLast):
+    # Link to the previous message (except the first)
+    links = []
+    if ixExchange != 0:
+        arrayPush(links, formsLinkElements('Previous', \
+            argsURL(ollamaChatArguments, null, false, ollamaChatConversationMessageID + '-' + (ixExchange - 1))))
+    endif
+
+    # Link to the next message, or to the conversation bottom for the last message
+    if arrayLength(links):
+        arrayPush(links, {'text': '\u00a0|\u00a0'})
+    endif
+    nextAnchor = if(ixExchange != ixExchangeLast, ollamaChatConversationMessageID + '-' + (ixExchange + 1), ollamaChatConversationBottomID)
+    arrayPush(links, formsLinkElements('Next', argsURL(ollamaChatArguments, null, false, nextAnchor)))
+
+    return {'html': 'p', 'elem': links}
+endfunction
+
+
 # Conversation update timeout handler
 async function ollamaChatConversationOnTimeout(args, originalExchangeCount, originalThinking):
     id = objectGet(args, 'id')
@@ -233,6 +260,10 @@ ollamaChatConversationResetID = 'ollama-chat-document-reset-id'
 
 # The conversation bottom element ID (for scroll to bottom)
 ollamaChatConversationBottomID = 'chat-bottom'
+
+
+# The conversation message element ID prefix (for previous/next navigation)
+ollamaChatConversationMessageID = 'chat-message'
 
 
 # The SVG numeric attribute precision
@@ -408,7 +439,7 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
     )
 
     # The menu controls
-    separator = stringFromCharCode(160) + '|' + stringFromCharCode(160)
+    separator = '\u00a0|\u00a0'
     arrayPush(elements, { \
         'html': 'div', \
         'attr': { \

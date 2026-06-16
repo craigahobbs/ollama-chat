@@ -76,7 +76,7 @@ async function ollamaChatTemplatePage(args):
     templateID = objectGet(args, 'id')
     action = objectGet(args, 'action')
     actionID = objectGet(args, 'actionID')
-    spacer = stringFromCharCode(160, 160)
+    spacer = '\u00a0\u00a0'
 
     # Get the template
     templateResponse = systemFetch('getTemplate?id=' + templateID)
