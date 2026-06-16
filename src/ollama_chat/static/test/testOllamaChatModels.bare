@@ -1,0 +1,780 @@
+# Licensed under the MIT License
+# https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
+
+include <unittest.bare>
+include <unittestMock.bare>
+
+include '../ollamaChat.bare'
+include 'testOllamaChatHelpers.bare'
+
+
+#
+# ollamaChatModelsFormatCount - parameter count formatting
+#
+
+
+function testOllamaChatModelsFormatCount():
+    unittestEqual(ollamaChatModelsFormatCount(3000), '3.0K')
+    unittestEqual(ollamaChatModelsFormatCount(500), '0.5K')
+    unittestEqual(ollamaChatModelsFormatCount(3000000), '3.0M')
+    unittestEqual(ollamaChatModelsFormatCount(1500000), '1.5M')
+    unittestEqual(ollamaChatModelsFormatCount(7000000000), '7.0B')
+endfunction
+unittestRunTest('testOllamaChatModelsFormatCount')
+
+
+#
+# ollamaChatModelsFormatSize - byte size formatting
+#
+
+
+function testOllamaChatModelsFormatSize():
+    unittestEqual(ollamaChatModelsFormatSize(1800), '1.8KB')
+    unittestEqual(ollamaChatModelsFormatSize(1800000), '1.7MB')
+    unittestEqual(ollamaChatModelsFormatSize(4100000000), '3.8GB')
+endfunction
+unittestRunTest('testOllamaChatModelsFormatSize')
+
+
+#
+# ollamaChatModelsModelURL - Ollama library URL
+#
+
+
+function testOllamaChatModelsModelURL():
+    unittestEqual(ollamaChatModelsModelURL('llm'), 'https://ollama.com/library/llm')
+    unittestEqual(ollamaChatModelsModelURL('llama3.2'), 'https://ollama.com/library/llama3.2')
+endfunction
+unittestRunTest('testOllamaChatModelsModelURL')
+
+
+#
+# ollamaChatModelsFilterLink - filter toggle link
+#
+
+
+function testOllamaChatModelsFilterLink():
+    # Current selection - rendered as plain (escaped) text
+    unittestEqual(ollamaChatModelsFilterLink('All', 0, 'filterMonths', 0), 'All')
+
+    # Not selected - rendered as a navigation link
+    unittestEqual(ollamaChatModelsFilterLink('1 month', 1, 'filterMonths', 6), '[1 month](#var.vFilterMonths=1)')
+endfunction
+unittestRunTest('testOllamaChatModelsFilterLink')
+
+
+#
+# ollamaChatModelsSort - the model sort comparator
+#
+
+
+function testOllamaChatModelsSort():
+    less = {'name': 'aaa', 'downloads': 100, 'modified': '2023-01-01'}
+    more = {'name': 'bbb', 'downloads': 200, 'modified': '2023-02-01'}
+
+    # Downloads - higher downloads sorts first
+    unittestEqual(ollamaChatModelsSort('Downloads', less, more), 1)
+    unittestEqual(ollamaChatModelsSort('Downloads', more, less), -1)
+
+    # Downloads tie - fall back to modified (newer first)
+    sameDownloadsOld = {'name': 'aaa', 'downloads': 100, 'modified': '2023-01-01'}
+    sameDownloadsNew = {'name': 'bbb', 'downloads': 100, 'modified': '2023-02-01'}
+    unittestEqual(ollamaChatModelsSort('Downloads', sameDownloadsOld, sameDownloadsNew), 1)
+
+    # Downloads and modified tie - fall back to name (ascending)
+    tieA = {'name': 'aaa', 'downloads': 100, 'modified': '2023-01-01'}
+    tieB = {'name': 'bbb', 'downloads': 100, 'modified': '2023-01-01'}
+    unittestEqual(ollamaChatModelsSort('Downloads', tieA, tieB), -1)
+
+    # Modified - newer sorts first
+    unittestEqual(ollamaChatModelsSort('Modified', less, more), 1)
+
+    # Modified tie - fall back to downloads
+    unittestEqual(ollamaChatModelsSort('Modified', tieA, more), 1)
+
+    # Name - ascending
+    unittestEqual(ollamaChatModelsSort('Name', less, more), -1)
+
+    # All equal - zero
+    unittestEqual(ollamaChatModelsSort('Name', tieA, sameDownloadsOld), 0)
+endfunction
+unittestRunTest('testOllamaChatModelsSort')
+
+
+#
+# ollamaChatModelsOnModelSelect
+#
+
+
+async function testOllamaChatModelsOnModelSelect():
+    unittestMockAll({})
+    ollamaChatModelsOnModelSelect('m:1')
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'setModel', \
+                'body': '{"model":"m:1"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatModelsOnModelSelect')
+
+
+#
+# ollamaChatModelsOnDownload
+#
+
+
+async function testOllamaChatModelsOnDownload():
+    unittestMockAll({})
+    ollamaChatModelsOnDownload('m:1')
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'downloadModel', \
+                'body': '{"model":"m:1"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ["#var.vView='models'"]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatModelsOnDownload')
+
+
+#
+# ollamaChatModelsOnDownloadStop / OnDelete - fetch then re-render the models page
+#
+
+
+async function testOllamaChatModelsOnDownloadStop():
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({'systemFetch': {'getModels': jsonStringify({'model': 'm:1', 'models': [], 'downloading': []})}})
+    ollamaChatModelsOnDownloadStop(args, 'big:1')
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'stopModelDownload', \
+                'body': '{"model":"big:1"}' \
+            } \
+        ]], \
+        ['systemFetch', ['getModels']], \
+        ['documentSetTitle', ['Ollama Chat - Models']], \
+        ['markdownPrint', [ \
+            '[Back](#var=)', \
+            '', \
+            '# Ollama Chat \- Models', \
+            '', \
+            '**Current Model:** m:1', \
+            '', \
+            "[Download Models](#var.vView='download')" \
+        ]], \
+        ['markdownPrint', ['','## Models']], \
+        ['markdownPrint', ['','There are no downloaded models.']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatModelsOnDownloadStop')
+
+
+async function testOllamaChatModelsOnDelete():
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({'systemFetch': {'getModels': jsonStringify({'model': 'm:1', 'models': [], 'downloading': []})}})
+    ollamaChatModelsOnDelete(args, 'llm:7b')
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'deleteModel', \
+                'body': '{"model":"llm:7b"}' \
+            } \
+        ]], \
+        ['systemFetch', ['getModels']], \
+        ['documentSetTitle', ['Ollama Chat - Models']], \
+        ['markdownPrint', [ \
+            '[Back](#var=)', \
+            '', \
+            '# Ollama Chat \- Models', \
+            '', \
+            '**Current Model:** m:1', \
+            '', \
+            "[Download Models](#var.vView='download')" \
+        ]], \
+        ['markdownPrint', ['','## Models']], \
+        ['markdownPrint', ['','There are no downloaded models.']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatModelsOnDelete')
+
+
+#
+# ollamaChatModelsPage - render branches
+#
+
+
+async function testOllamaChatModelsPageEmpty():
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({'systemFetch': {'getModels': jsonStringify({'model': 'm:1', 'models': [], 'downloading': []})}})
+    ollamaChatModelsPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getModels']], \
+        ['documentSetTitle', ['Ollama Chat - Models']], \
+        ['markdownPrint', [ \
+            '[Back](#var=)', \
+            '', \
+            '# Ollama Chat \- Models', \
+            '', \
+            '**Current Model:** m:1', \
+            '', \
+            "[Download Models](#var.vView='download')" \
+        ]], \
+        ['markdownPrint', ['','## Models']], \
+        ['markdownPrint', ['','There are no downloaded models.']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatModelsPageEmpty')
+
+
+async function testOllamaChatModelsPageSelected():
+    systemGlobalSet('vAction', 'model')
+    systemGlobalSet('vActionID', 'llm:7b')
+    args = argsParse(ollamaChatArguments)
+    model = {'id': 'llm:7b', 'name': 'llm', 'parameters': 7000000000, 'size': 4100000000, 'modified': '2023-10-01T12:00:00+00:00'}
+    unittestMockAll({'systemFetch': {'getModels': jsonStringify({'model': 'm:1', 'models': [model], 'downloading': []})}})
+    ollamaChatModelsPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getModels']], \
+        ['documentSetTitle', ['Ollama Chat - Models']], \
+        ['markdownPrint', [ \
+            '[Back](#var=)', \
+            '', \
+            '# Ollama Chat \- Models', \
+            '', \
+            '**Current Model:** m:1', \
+            '', \
+            "[Download Models](#var.vView='download')" \
+        ]], \
+        ['markdownPrint', ['','## Models']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'table', \
+                    'elem': [ \
+                        { \
+                            'html': 'tbody', \
+                            'elem': [ \
+                                { \
+                                    'html': 'tr', \
+                                    'elem': [ \
+                                        { \
+                                            'html': 'th', \
+                                            'elem': {'text': 'Model'} \
+                                        }, \
+                                        { \
+                                            'html': 'th', \
+                                            'attr': {'style': 'text-align: right;'}, \
+                                            'elem': {'text': 'Parameters'} \
+                                        }, \
+                                        { \
+                                            'html': 'th', \
+                                            'attr': {'style': 'text-align: right;'}, \
+                                            'elem': {'text': 'Size'} \
+                                        }, \
+                                        { \
+                                            'html': 'th', \
+                                            'elem': {'text': 'Modified'} \
+                                        }, \
+                                        { \
+                                            'html': 'th', \
+                                            'elem': {'text': ''} \
+                                        } \
+                                    ] \
+                                }, \
+                                { \
+                                    'html': 'tr', \
+                                    'elem': [ \
+                                        { \
+                                            'html': 'td', \
+                                            'elem': formsLinkButtonElements('llm:7b', '<function>') \
+                                        }, \
+                                        { \
+                                            'html': 'td', \
+                                            'attr': {'style': 'text-align: right;'}, \
+                                            'elem': {'text': '7.0B'} \
+                                        }, \
+                                        { \
+                                            'html': 'td', \
+                                            'attr': {'style': 'text-align: right;'}, \
+                                            'elem': {'text': '3.8GB'} \
+                                        }, \
+                                        { \
+                                            'html': 'td', \
+                                            'elem': {'text': '2023-10-01'} \
+                                        }, \
+                                        [ \
+                                            formsLinkElements('Cancel', '#var='), \
+                                            [ \
+                                                {'text': '\u00a0\u00a0|\u00a0\u00a0'}, \
+                                                formsLinkButtonElements('Delete', '<function>'), \
+                                                {'text': '\u00a0\u00a0'}, \
+                                                formsLinkButtonElements('Update', '<function>'), \
+                                                {'text': '\u00a0\u00a0'}, \
+                                                formsLinkElements('Info', 'https://ollama.com/library/llm') \
+                                            ] \
+                                        ] \
+                                    ] \
+                                } \
+                            ] \
+                        } \
+                    ] \
+                } \
+            ] \
+        ]] \
+    ])
+    systemGlobalSet('vAction', null)
+    systemGlobalSet('vActionID', null)
+endfunction
+unittestRunTest('testOllamaChatModelsPageSelected')
+
+
+async function testOllamaChatModelsPageDownloading():
+    args = argsParse(ollamaChatArguments)
+    dl = {'id': 'big:1', 'status': 'pulling', 'completed': 500, 'size': 1000}
+    unittestMockAll({'systemFetch': {'getModels': jsonStringify({'model': 'm:1', 'models': [], 'downloading': [dl]})}})
+    ollamaChatModelsPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getModels']], \
+        ['documentSetTitle', ['Ollama Chat - Models']], \
+        ['markdownPrint', [ \
+            '[Back](#var=)', \
+            '', \
+            '# Ollama Chat \- Models', \
+            '', \
+            '**Current Model:** m:1', \
+            '', \
+            "[Download Models](#var.vView='download')" \
+        ]], \
+        ['markdownPrint', ['','## Downloading']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'table', \
+                    'elem': [ \
+                        { \
+                            'html': 'tbody', \
+                            'elem': [ \
+                                { \
+                                    'html': 'tr', \
+                                    'elem': [ \
+                                        { \
+                                            'html': 'th', \
+                                            'elem': {'text': 'Model'} \
+                                        }, \
+                                        { \
+                                            'html': 'th', \
+                                            'elem': {'text': 'Progress'} \
+                                        }, \
+                                        { \
+                                            'html': 'th', \
+                                            'elem': {'text': 'Status'} \
+                                        }, \
+                                        { \
+                                            'html': 'th', \
+                                            'elem': {'text': ''} \
+                                        } \
+                                    ] \
+                                }, \
+                                { \
+                                    'html': 'tr', \
+                                    'elem': [ \
+                                        { \
+                                            'html': 'td', \
+                                            'elem': {'text': 'big:1'} \
+                                        }, \
+                                        { \
+                                            'html': 'td', \
+                                            'elem': {'text': '50% of 1.0KB'} \
+                                        }, \
+                                        { \
+                                            'html': 'td', \
+                                            'elem': {'text': 'pulling'} \
+                                        }, \
+                                        formsLinkButtonElements('Stop', '<function>') \
+                                    ] \
+                                } \
+                            ] \
+                        } \
+                    ] \
+                } \
+            ] \
+        ]], \
+        ['windowSetTimeout', ['<function>',2000]], \
+        ['markdownPrint', ['','## Models']], \
+        ['markdownPrint', ['','There are no downloaded models.']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatModelsPageDownloading')
+
+
+#
+# ollamaChatModelsDownloadPage - render branches
+#
+
+
+async function testOllamaChatModelsDownloadPageAll():
+    systemGlobalSet('vFilterMonths', 0)
+    systemGlobalSet('vFilterCompatible', false)
+    args = argsParse(ollamaChatArguments)
+    url = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+    model = {'name': 'gemma', 'description': 'A model', 'modified': '2024-01-15', 'downloads': 1500000, 'variants': [ \
+        {'id': 'gemma:2b', 'size': '2B', 'parameters': 2000000000}, \
+        {'id': 'gemma:70b', 'size': '70B', 'parameters': 70000000000} \
+    ]}
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000}), url: jsonStringify([model])}})
+    ollamaChatModelsDownloadPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getSystemInfo']], \
+        ['systemFetch', [url]], \
+        ['documentSetTitle', ['Ollama Chat - Download']], \
+        ['markdownPrint', ["[Back](#var.vView='models')",'','# Ollama Chat \- Download']], \
+        ['markdownPrint', [ \
+            '**Recent:** [1 month](#var.vFilterCompatible=false&var.vFilterMonths=1)' + \
+                '\u00a0|\u00a0' + \
+                '[3 months](#var.vFilterCompatible=false&var.vFilterMonths=3)' + \
+                '\u00a0|\u00a0' + \
+                '[6 month](#var.vFilterCompatible=false)' + \
+                '\u00a0|\u00a0' + \
+                'All', \
+            '', \
+            '**Show:** [Compatible](#var.vFilterMonths=0)' + '\u00a0|\u00a0' + 'All', \
+            '', \
+            "**Sort:** [Downloads](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vSort='Downloads')" + \
+                '\u00a0|\u00a0' + \
+                'Modified' + \
+                '\u00a0|\u00a0' + \
+                "[Name](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vSort='Name')" \
+        ]], \
+        ['markdownPrint', [ \
+            '## gemma', \
+            '', \
+            'A model', \
+            '', \
+            '**Parameters:** 2B, 70B \\', \
+            '**Downloads:** 1.5M \\', \
+            '**Modified:** 2024-01-15', \
+            '', \
+            "[Download](#var.vAction='model'&var.vActionID='gemma'&var.vFilterCompatible=false&var.vFilterMonths=0)", \
+            '\u00a0|\u00a0' + '[Info](https://ollama.com/library/gemma)' \
+        ]] \
+    ])
+    systemGlobalSet('vFilterMonths', null)
+    systemGlobalSet('vFilterCompatible', null)
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageAll')
+
+
+async function testOllamaChatModelsDownloadPageSelected():
+    systemGlobalSet('vFilterMonths', 0)
+    systemGlobalSet('vFilterCompatible', false)
+    systemGlobalSet('vAction', 'model')
+    systemGlobalSet('vActionID', 'gemma')
+    args = argsParse(ollamaChatArguments)
+    url = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+    model = {'name': 'gemma', 'description': 'A model', 'modified': '2024-01-15', 'downloads': 1500000, 'variants': [ \
+        {'id': 'gemma:2b', 'size': '2B', 'parameters': 2000000000}, \
+        {'id': 'gemma:70b', 'size': '70B', 'parameters': 70000000000} \
+    ]}
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000}), url: jsonStringify([model])}})
+    ollamaChatModelsDownloadPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getSystemInfo']], \
+        ['systemFetch', [url]], \
+        ['documentSetTitle', ['Ollama Chat - Download']], \
+        ['markdownPrint', ["[Back](#var.vView='models')",'','# Ollama Chat \- Download']], \
+        ['markdownPrint', [ \
+            '**Recent:** [1 month](#var.vFilterCompatible=false&var.vFilterMonths=1)' + \
+                '\u00a0|\u00a0' + \
+                '[3 months](#var.vFilterCompatible=false&var.vFilterMonths=3)' + \
+                '\u00a0|\u00a0' + \
+                '[6 month](#var.vFilterCompatible=false)' + \
+                '\u00a0|\u00a0' + \
+                'All', \
+            '', \
+            '**Show:** [Compatible](#var.vFilterMonths=0)' + '\u00a0|\u00a0' + 'All', \
+            '', \
+            "**Sort:** [Downloads](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vSort='Downloads')" + \
+                '\u00a0|\u00a0' + \
+                'Modified' + \
+                '\u00a0|\u00a0' + \
+                "[Name](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vSort='Name')" \
+        ]], \
+        ['markdownPrint', [ \
+            '## gemma', \
+            '', \
+            'A model', \
+            '', \
+            '**Parameters:** 2B, 70B \\', \
+            '**Downloads:** 1.5M \\', \
+            '**Modified:** 2024-01-15', \
+            '', \
+            "[Cancel](#var.vFilterCompatible=false&var.vFilterMonths=0)", \
+            null \
+        ]], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'p', \
+                    'elem': [{'text': '\u00a0\u00a0\u00a0\u00a0'}, formsLinkButtonElements('gemma:2b', '<function>')] \
+                }, \
+                { \
+                    'html': 'p', \
+                    'elem': [{'text': '\u00a0\u00a0\u00a0\u00a0'}, formsLinkButtonElements('gemma:70b', '<function>')] \
+                } \
+            ] \
+        ]] \
+    ])
+    systemGlobalSet('vFilterMonths', null)
+    systemGlobalSet('vFilterCompatible', null)
+    systemGlobalSet('vAction', null)
+    systemGlobalSet('vActionID', null)
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageSelected')
+
+
+async function testOllamaChatModelsDownloadPageSortDownloads():
+    systemGlobalSet('vFilterMonths', 0)
+    systemGlobalSet('vFilterCompatible', false)
+    systemGlobalSet('vSort', 'Downloads')
+    args = argsParse(ollamaChatArguments)
+    url = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+    model = {'name': 'gemma', 'description': 'A model', 'modified': '2024-01-15', 'downloads': 1500000, 'variants': [ \
+        {'id': 'gemma:2b', 'size': '2B', 'parameters': 2000000000} \
+    ]}
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000}), url: jsonStringify([model])}})
+    ollamaChatModelsDownloadPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getSystemInfo']], \
+        ['systemFetch', [url]], \
+        ['documentSetTitle', ['Ollama Chat - Download']], \
+        ['markdownPrint', ["[Back](#var.vView='models')",'','# Ollama Chat \- Download']], \
+        ['markdownPrint', [ \
+            "**Recent:** [1 month](#var.vFilterCompatible=false&var.vFilterMonths=1&var.vSort='Downloads')" + \
+                '\u00a0|\u00a0' + \
+                "[3 months](#var.vFilterCompatible=false&var.vFilterMonths=3&var.vSort='Downloads')" + \
+                '\u00a0|\u00a0' + \
+                "[6 month](#var.vFilterCompatible=false&var.vSort='Downloads')" + \
+                '\u00a0|\u00a0' + \
+                'All', \
+            '', \
+            "**Show:** [Compatible](#var.vFilterMonths=0&var.vSort='Downloads')" + '\u00a0|\u00a0' + 'All', \
+            '', \
+            '**Sort:** Downloads' + \
+                '\u00a0|\u00a0' + \
+                '[Modified](#var.vFilterCompatible=false&var.vFilterMonths=0)' + \
+                '\u00a0|\u00a0' + \
+                "[Name](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vSort='Name')" \
+        ]], \
+        ['markdownPrint', [ \
+            '## gemma', \
+            '', \
+            'A model', \
+            '', \
+            '**Parameters:** 2B \\', \
+            '**Downloads:** 1.5M \\', \
+            '**Modified:** 2024-01-15', \
+            '', \
+            "[Download](#var.vAction='model'&var.vActionID='gemma'" + \
+                "&var.vFilterCompatible=false&var.vFilterMonths=0&var.vSort='Downloads')", \
+            '\u00a0|\u00a0' + '[Info](https://ollama.com/library/gemma)' \
+        ]] \
+    ])
+    systemGlobalSet('vFilterMonths', null)
+    systemGlobalSet('vFilterCompatible', null)
+    systemGlobalSet('vSort', null)
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageSortDownloads')
+
+
+async function testOllamaChatModelsDownloadPageSortName():
+    systemGlobalSet('vFilterMonths', 0)
+    systemGlobalSet('vFilterCompatible', false)
+    systemGlobalSet('vSort', 'Name')
+    args = argsParse(ollamaChatArguments)
+    url = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+    model = {'name': 'gemma', 'description': 'A model', 'modified': '2024-01-15', 'downloads': 1500000, 'variants': [ \
+        {'id': 'gemma:2b', 'size': '2B', 'parameters': 2000000000} \
+    ]}
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000}), url: jsonStringify([model])}})
+    ollamaChatModelsDownloadPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getSystemInfo']], \
+        ['systemFetch', [url]], \
+        ['documentSetTitle', ['Ollama Chat - Download']], \
+        ['markdownPrint', ["[Back](#var.vView='models')",'','# Ollama Chat \- Download']], \
+        ['markdownPrint', [ \
+            "**Recent:** [1 month](#var.vFilterCompatible=false&var.vFilterMonths=1&var.vSort='Name')" + \
+                '\u00a0|\u00a0' + \
+                "[3 months](#var.vFilterCompatible=false&var.vFilterMonths=3&var.vSort='Name')" + \
+                '\u00a0|\u00a0' + \
+                "[6 month](#var.vFilterCompatible=false&var.vSort='Name')" + \
+                '\u00a0|\u00a0' + \
+                'All', \
+            '', \
+            "**Show:** [Compatible](#var.vFilterMonths=0&var.vSort='Name')" + '\u00a0|\u00a0' + 'All', \
+            '', \
+            "**Sort:** [Downloads](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vSort='Downloads')" + \
+                '\u00a0|\u00a0' + \
+                '[Modified](#var.vFilterCompatible=false&var.vFilterMonths=0)' + \
+                '\u00a0|\u00a0' + \
+                'Name' \
+        ]], \
+        ['markdownPrint', [ \
+            '## gemma', \
+            '', \
+            'A model', \
+            '', \
+            '**Parameters:** 2B \\', \
+            '**Downloads:** 1.5M \\', \
+            '**Modified:** 2024-01-15', \
+            '', \
+            "[Download](#var.vAction='model'&var.vActionID='gemma'&var.vFilterCompatible=false&var.vFilterMonths=0&var.vSort='Name')", \
+            '\u00a0|\u00a0' + '[Info](https://ollama.com/library/gemma)' \
+        ]] \
+    ])
+    systemGlobalSet('vFilterMonths', null)
+    systemGlobalSet('vFilterCompatible', null)
+    systemGlobalSet('vSort', null)
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageSortName')
+
+
+async function testOllamaChatModelsDownloadPageFilteredOut():
+    # Compatible filter on, the only model has no compatible variant -> filtered out (no model rendered)
+    systemGlobalSet('vFilterMonths', 0)
+    args = argsParse(ollamaChatArguments)
+    url = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+    model = {'name': 'big', 'description': 'Big', 'modified': '2024-01-15', 'downloads': 100, 'variants': [ \
+        {'id': 'big:70b', 'size': '70B', 'parameters': 70000000000} \
+    ]}
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000}), url: jsonStringify([model])}})
+    ollamaChatModelsDownloadPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getSystemInfo']], \
+        ['systemFetch', [url]], \
+        ['documentSetTitle', ['Ollama Chat - Download']], \
+        ['markdownPrint', ["[Back](#var.vView='models')",'','# Ollama Chat \- Download']], \
+        ['markdownPrint', [ \
+            '**Recent:** [1 month](#var.vFilterMonths=1)' + \
+                '\u00a0|\u00a0' + \
+                '[3 months](#var.vFilterMonths=3)' + \
+                '\u00a0|\u00a0' + \
+                '[6 month](#var=)' + \
+                '\u00a0|\u00a0' + \
+                'All', \
+            '', \
+            '**Show:** Compatible' + '\u00a0|\u00a0' + '[All](#var.vFilterCompatible=false&var.vFilterMonths=0)', \
+            '', \
+            "**Sort:** [Downloads](#var.vFilterMonths=0&var.vSort='Downloads')" + \
+                '\u00a0|\u00a0' + \
+                'Modified' + \
+                '\u00a0|\u00a0' + \
+                "[Name](#var.vFilterMonths=0&var.vSort='Name')" \
+        ]] \
+    ])
+    systemGlobalSet('vFilterMonths', null)
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageFilteredOut')
+
+
+#
+# ollamaChatMain router -> models / download error paths
+#
+
+
+async function testOllamaChatModelsMainError():
+    systemGlobalSet('vView', 'models')
+    unittestMockAll({})
+    ollamaChatMain()
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getModels']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Failed to get models']], \
+        ['markdownPrint', ['','[Click here to install Ollama](https://ollama.com/download)']] \
+    ])
+    systemGlobalSet('vView', null)
+endfunction
+unittestRunTest('testOllamaChatModelsMainError')
+
+
+async function testOllamaChatModelsMainDownloadError():
+    # getSystemInfo succeeds but the available-models fetch fails -> error page
+    systemGlobalSet('vView', 'download')
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000})}})
+    ollamaChatMain()
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getSystemInfo']], \
+        ['systemFetch', ['https://craigahobbs.github.io/ollama-chat/models/models.json']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Failed to get available models']] \
+    ])
+    systemGlobalSet('vView', null)
+endfunction
+unittestRunTest('testOllamaChatModelsMainDownloadError')
+
+
+#
+# Button callback binding verification (helpers in testOllamaChatHelpers.bare)
+#
+# The render tests above assert each button carries a callback ('<function>'),
+# but not WHICH handler or captured arguments it is bound to. These tests pull
+# the actual captured callback out of the render and invoke it, proving the
+# binding (e.g. that the model row's Delete deletes and Update re-downloads).
+#
+
+
+async function testOllamaChatModelsPageButtonBinding():
+    systemGlobalSet('vAction', 'model')
+    systemGlobalSet('vActionID', 'llm:7b')
+    args = argsParse(ollamaChatArguments)
+    model = {'id': 'llm:7b', 'name': 'llm', 'parameters': 7000000000, 'size': 4100000000, 'modified': '2023-10-01T12:00:00+00:00'}
+    dl = {'id': 'big:1', 'status': 'pulling', 'completed': 500, 'size': 1000}
+    render = systemPartial(ollamaChatModelsPage, args)
+    data = {'systemFetch': {'getModels': jsonStringify({'model': 'm:1', 'models': [model], 'downloading': [dl]})}}
+
+    # The selected model's row buttons must each be bound to their own handler
+    ollamaChatTestVerifyClick(render, 'llm:7b', systemPartial(ollamaChatModelsOnModelSelect, 'llm:7b'), data)
+    ollamaChatTestVerifyClick(render, 'Delete', systemPartial(ollamaChatModelsOnDelete, args, 'llm:7b'), data)
+    ollamaChatTestVerifyClick(render, 'Update', systemPartial(ollamaChatModelsOnDownload, 'llm:7b'), data)
+
+    # The downloading model's Stop button must stop that download
+    ollamaChatTestVerifyClick(render, 'Stop', systemPartial(ollamaChatModelsOnDownloadStop, args, 'big:1'), data)
+
+    systemGlobalSet('vAction', null)
+    systemGlobalSet('vActionID', null)
+endfunction
+unittestRunTest('testOllamaChatModelsPageButtonBinding')
+
+
+async function testOllamaChatModelsDownloadPageButtonBinding():
+    systemGlobalSet('vFilterMonths', 0)
+    systemGlobalSet('vFilterCompatible', false)
+    systemGlobalSet('vAction', 'model')
+    systemGlobalSet('vActionID', 'gemma')
+    args = argsParse(ollamaChatArguments)
+    url = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+    model = {'name': 'gemma', 'description': 'A model', 'modified': '2024-01-15', 'downloads': 1500000, 'variants': [ \
+        {'id': 'gemma:2b', 'size': '2B', 'parameters': 2000000000}, \
+        {'id': 'gemma:70b', 'size': '70B', 'parameters': 70000000000} \
+    ]}
+    render = systemPartial(ollamaChatModelsDownloadPage, args)
+    data = {'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000}), url: jsonStringify([model])}}
+
+    # Each variant's download button must be bound to its own model id
+    ollamaChatTestVerifyClick(render, 'gemma:2b', systemPartial(ollamaChatModelsOnDownload, 'gemma:2b'), data)
+    ollamaChatTestVerifyClick(render, 'gemma:70b', systemPartial(ollamaChatModelsOnDownload, 'gemma:70b'), data)
+
+    systemGlobalSet('vFilterMonths', null)
+    systemGlobalSet('vFilterCompatible', null)
+    systemGlobalSet('vAction', null)
+    systemGlobalSet('vActionID', null)
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageButtonBinding')

@@ -9,6 +9,9 @@ unittestCoverageStart()
 
 # Test includes
 include 'testOllamaChat.bare'
+include 'testOllamaChatConversation.bare'
+include 'testOllamaChatModels.bare'
+include 'testOllamaChatTemplate.bare'
 
 # Stop coverage
 unittestCoverageStop()
@@ -16,5 +19,5 @@ unittestCoverageStop()
 # Test report
 return unittestReport({ \
     'coverageExclude': ['runTests.bare'], \
-    'coverageMin': 16.3 \
+    'coverageMin': 100 \
 })

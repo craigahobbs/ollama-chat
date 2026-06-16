@@ -5,6 +5,20 @@ include <unittest.bare>
 include <unittestMock.bare>
 
 include '../ollamaChat.bare'
+include 'testOllamaChatHelpers.bare'
+
+
+# The index-page menu controls element-model
+testOllamaChatIndexMenuElements = { \
+    'html': 'p', \
+    'elem': [ \
+        formsLinkElements('Select Model', "#var.vView='models'"), \
+        {'text': '\u00a0\u00a0|\u00a0\u00a0'}, \
+        formsLinkElements('Start Conversation', "#var.vView='chat'"), \
+        {'text': '\u00a0\u00a0|\u00a0\u00a0'}, \
+        formsLinkButtonElements('Add Template', '<function>') \
+    ] \
+}
 
 
 async function testOllamaChatIndex():
@@ -21,72 +35,576 @@ async function testOllamaChatIndex():
 
     ollamaChatMain()
 
-    unittestDeepEqual( \
-        unittestMockEnd(), \
-        [ \
-            ['systemFetch', ['getConversations']], \
-            ['documentSetTitle', ['Ollama Chat']], \
-            ['markdownPrint', ['# Ollama Chat']], \
-            ['markdownPrint', ['**Current Model:** llm:7b']], \
-            ['elementModelRender', [{'html': 'p', 'elem': [ \
-                {'html': 'a', 'attr': {'href': "#var.vView='models'"}, 'elem': {'text': 'Select Model'}}, \
-                {'text': stringFromCharCode(160, 160) + '|' + stringFromCharCode(160, 160)}, \
-                {'html': 'a', 'attr': {'href': "#var.vView='chat'"}, 'elem': {'text': 'Start Conversation'}}, \
-                {'text': stringFromCharCode(160, 160) + '|' + stringFromCharCode(160, 160)}, \
-                { \
-                    'html': 'a', \
-                    'attr': {'style': 'cursor: pointer; user-select: none;'}, \
-                    'elem': {'text': 'Add Template'}, \
-                    'callback': {'click': '<function>'} \
-                } \
-            ]}]], \
-            ['markdownPrint', ['', '## Conversations']], \
-            ['elementModelRender', [ \
-                [ \
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversations']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['# Ollama Chat']], \
+        ['markdownPrint', ['**Current Model:** llm:7b']], \
+        ['elementModelRender', [ \
+            { \
+                'html': 'p', \
+                'elem': [ \
                     { \
-                        'html': 'table', \
-                        'elem': [ \
-                            { \
-                                'html': 'tbody', \
-                                'elem': [ \
-                                    { \
-                                        'html': 'tr', \
-                                        'elem': [ \
-                                            { \
-                                                'html': 'td', \
-                                                'attr': {'style': 'min-width: 10em;'}, \
-                                                'elem': { \
-                                                    'html': 'a', \
-                                                    'attr': {'href': "#var.vId='ID'&var.vView='chat'"}, \
-                                                    'elem': {'text': 'Hello'} \
-                                                } \
-                                            }, \
-                                            { \
-                                                'html': 'td', \
-                                                'elem': {'text': 'llm:7b'} \
-                                            }, \
-                                            { \
-                                                'html': 'td', \
-                                                'elem': [ \
-                                                    { \
-                                                        'html': 'a', \
-                                                        'attr': {'href': "#var.vAction='conversation'&var.vActionID='ID'"}, \
-                                                        'elem': {'text': 'Select'} \
-                                                    }, \
-                                                    null \
-                                                ] \
-                                            } \
-                                        ] \
-                                    } \
-                                ] \
-                            } \
-                        ] \
+                        'html': 'a', \
+                        'attr': {'href': "#var.vView='models'"}, \
+                        'elem': {'text': 'Select Model'} \
+                    }, \
+                    {'text': '\u00a0\u00a0|\u00a0\u00a0'}, \
+                    { \
+                        'html': 'a', \
+                        'attr': {'href': "#var.vView='chat'"}, \
+                        'elem': {'text': 'Start Conversation'} \
+                    }, \
+                    {'text': '\u00a0\u00a0|\u00a0\u00a0'}, \
+                    { \
+                        'html': 'a', \
+                        'attr': {'style': 'cursor: pointer; user-select: none;'}, \
+                        'elem': {'text': 'Add Template'}, \
+                        'callback': {'click': '<function>'} \
                     } \
                 ] \
-            ]], \
-            ['markdownPrint', ['', '## Templates']], \
-            ['markdownPrint', ['', stringFromCharCode(160, 160, 160, 160) + '*No templates*']] \
-        ] \
-    )
+            } \
+        ]], \
+        ['markdownPrint', ['','## Conversations']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'table', \
+                    'elem': [ \
+                        { \
+                            'html': 'tbody', \
+                            'elem': [ \
+                                { \
+                                    'html': 'tr', \
+                                    'elem': [ \
+                                        { \
+                                            'html': 'td', \
+                                            'attr': {'style': 'min-width: 10em;'}, \
+                                            'elem': { \
+                                                'html': 'a', \
+                                                'attr': {'href': "#var.vId='ID'&var.vView='chat'"}, \
+                                                'elem': {'text': 'Hello'} \
+                                            } \
+                                        }, \
+                                        { \
+                                            'html': 'td', \
+                                            'elem': {'text': 'llm:7b'} \
+                                        }, \
+                                        { \
+                                            'html': 'td', \
+                                            'elem': [ \
+                                                { \
+                                                    'html': 'a', \
+                                                    'attr': {'href': "#var.vAction='conversation'&var.vActionID='ID'"}, \
+                                                    'elem': {'text': 'Select'} \
+                                                }, \
+                                                null \
+                                            ] \
+                                        } \
+                                    ] \
+                                } \
+                            ] \
+                        } \
+                    ] \
+                } \
+            ] \
+        ]], \
+        ['markdownPrint', ['','## Templates']], \
+        ['markdownPrint', ['','\u00a0\u00a0\u00a0\u00a0' + '*No templates*']] \
+    ])
 endfunction
 unittestRunTest('testOllamaChatIndex')
+
+
+#
+# ollamaChatIndexOnAddTemplate
+#
+
+
+async function testOllamaChatIndexOnAddTemplate():
+    unittestMockAll({'systemFetch': {'createTemplate': jsonStringify({'id': 'NEWID'})}})
+    ollamaChatIndexOnAddTemplate()
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'createTemplate', \
+                'body': '{"prompts":["New prompt"],"title":"New template"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ["#var.vId='NEWID'&var.vView='template'"]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexOnAddTemplate')
+
+
+async function testOllamaChatIndexOnAddTemplateNull():
+    # createTemplate fails (URL not mocked) - no navigation
+    unittestMockAll({})
+    ollamaChatIndexOnAddTemplate()
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'createTemplate', \
+                'body': '{"prompts":["New prompt"],"title":"New template"}' \
+            } \
+        ]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexOnAddTemplateNull')
+
+
+#
+# ollamaChatIndexOnConversationAction
+#
+
+
+async function testOllamaChatIndexOnConversationActionDelete():
+    unittestMockAll({})
+    ollamaChatIndexOnConversationAction(null, 'C1', 'delete')
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'deleteConversation', \
+                'body': '{"id":"C1"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexOnConversationActionDelete')
+
+
+async function testOllamaChatIndexOnConversationActionMove():
+    # Non-delete actions move the conversation then re-render the index page
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({'systemFetch': {'getConversations': jsonStringify({'model': 'm:1', 'conversations': [], 'templates': []})}})
+    ollamaChatIndexOnConversationAction(args, 'C1', 'down')
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'moveConversation', \
+                'body': '{"down":true,"id":"C1"}' \
+            } \
+        ]], \
+        ['systemFetch', ['getConversations']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['# Ollama Chat']], \
+        ['markdownPrint', ['**Current Model:** m:1']], \
+        ['elementModelRender', [testOllamaChatIndexMenuElements]], \
+        ['markdownPrint', ['','## Conversations']], \
+        ['markdownPrint', ['','\u00a0\u00a0\u00a0\u00a0' + '*No conversations*']], \
+        ['markdownPrint', ['','## Templates']], \
+        ['markdownPrint', ['','\u00a0\u00a0\u00a0\u00a0' + '*No templates*']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexOnConversationActionMove')
+
+
+#
+# ollamaChatIndexOnTemplateAction
+#
+
+
+async function testOllamaChatIndexOnTemplateActionDelete():
+    unittestMockAll({})
+    ollamaChatIndexOnTemplateAction(null, 'T1', 'delete')
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'deleteTemplate', \
+                'body': '{"id":"T1"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexOnTemplateActionDelete')
+
+
+async function testOllamaChatIndexOnTemplateActionMove():
+    # Non-delete actions move the template then re-render the index page
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({'systemFetch': {'getConversations': jsonStringify({'model': 'm:1', 'conversations': [], 'templates': []})}})
+    ollamaChatIndexOnTemplateAction(args, 'T1', 'up')
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'moveTemplate', \
+                'body': '{"down":false,"id":"T1"}' \
+            } \
+        ]], \
+        ['systemFetch', ['getConversations']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['# Ollama Chat']], \
+        ['markdownPrint', ['**Current Model:** m:1']], \
+        ['elementModelRender', [testOllamaChatIndexMenuElements]], \
+        ['markdownPrint', ['','## Conversations']], \
+        ['markdownPrint', ['','\u00a0\u00a0\u00a0\u00a0' + '*No conversations*']], \
+        ['markdownPrint', ['','## Templates']], \
+        ['markdownPrint', ['','\u00a0\u00a0\u00a0\u00a0' + '*No templates*']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexOnTemplateActionMove')
+
+
+#
+# ollamaChatIndexOnRunTemplate
+#
+
+
+async function testOllamaChatIndexOnRunTemplateVariables():
+    template = {'id': 'T1', 'title': 'T', 'variables': [{'name': 'n', 'label': 'N'}], 'prompts': ['p']}
+    unittestMockAll({'systemFetch': {'getTemplate?id=T1': jsonStringify(template)}})
+    ollamaChatIndexOnRunTemplate('T1')
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getTemplate?id=T1']], \
+        ['windowSetLocation', ["#var.vId='T1'&var.vView='variables'"]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexOnRunTemplateVariables')
+
+
+async function testOllamaChatIndexOnRunTemplateNoVariables():
+    template = {'id': 'T1', 'title': 'T', 'prompts': ['p']}
+    unittestMockAll({'systemFetch': { \
+        'getTemplate?id=T1': jsonStringify(template), \
+        'startTemplate': jsonStringify({'id': 'CONV'}) \
+    }})
+    ollamaChatIndexOnRunTemplate('T1')
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getTemplate?id=T1']], \
+        ['systemFetch', [ \
+            { \
+                'url': 'startTemplate', \
+                'body': '{"id":"T1"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ["#var.vId='CONV'&var.vView='chat'&chat-bottom"]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexOnRunTemplateNoVariables')
+
+
+async function testOllamaChatIndexOnRunTemplateNull():
+    # getTemplate fails - no further calls
+    unittestMockAll({})
+    ollamaChatIndexOnRunTemplate('T1')
+    unittestDeepEqual(unittestMockEnd(), [['systemFetch', ['getTemplate?id=T1']]])
+endfunction
+unittestRunTest('testOllamaChatIndexOnRunTemplateNull')
+
+
+async function testOllamaChatIndexOnRunTemplateStartNull():
+    # getTemplate succeeds (no variables) but startTemplate fails - no navigation
+    template = {'id': 'T1', 'title': 'T', 'prompts': ['p']}
+    unittestMockAll({'systemFetch': {'getTemplate?id=T1': jsonStringify(template)}})
+    ollamaChatIndexOnRunTemplate('T1')
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getTemplate?id=T1']], \
+        ['systemFetch', [ \
+            { \
+                'url': 'startTemplate', \
+                'body': '{"id":"T1"}' \
+            } \
+        ]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexOnRunTemplateStartNull')
+
+
+#
+# ollamaChatMain router + ollamaChatIndexPage / ollamaChatErrorPage error path
+#
+
+
+async function testOllamaChatMainIndexError():
+    # Default view routes to the index page; null getConversations -> error page
+    unittestMockAll({})
+    ollamaChatMain()
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversations']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Failed to get conversations']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatMainIndexError')
+
+
+async function testOllamaChatIndexNoModel():
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({'systemFetch': {'getConversations': jsonStringify({'conversations': []})}})
+    ollamaChatIndexPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversations']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['# Ollama Chat']], \
+        ['markdownPrint', ['','Welcome to Ollama Chat! Please select a model to begin.','',"[Select Model](#var.vView='models')"]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexNoModel')
+
+
+async function testOllamaChatIndexEmpty():
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({'systemFetch': {'getConversations': jsonStringify({'model': 'm:1', 'conversations': [], 'templates': []})}})
+    ollamaChatIndexPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversations']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['# Ollama Chat']], \
+        ['markdownPrint', ['**Current Model:** m:1']], \
+        ['elementModelRender', [testOllamaChatIndexMenuElements]], \
+        ['markdownPrint', ['','## Conversations']], \
+        ['markdownPrint', ['','\u00a0\u00a0\u00a0\u00a0' + '*No conversations*']], \
+        ['markdownPrint', ['','## Templates']], \
+        ['markdownPrint', ['','\u00a0\u00a0\u00a0\u00a0' + '*No templates*']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexEmpty')
+
+
+async function testOllamaChatIndexGenerating():
+    args = argsParse(ollamaChatArguments)
+    conv = {'id': 'C1', 'model': 'm:1', 'title': 'Chat', 'generating': true}
+    unittestMockAll({'systemFetch': {'getConversations': jsonStringify({'model': 'm:1', 'conversations': [conv], 'templates': []})}})
+    ollamaChatIndexPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversations']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['# Ollama Chat']], \
+        ['markdownPrint', ['**Current Model:** m:1']], \
+        ['elementModelRender', [testOllamaChatIndexMenuElements]], \
+        ['markdownPrint', ['','## Conversations']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'table', \
+                    'elem': [ \
+                        { \
+                            'html': 'tbody', \
+                            'elem': [ \
+                                { \
+                                    'html': 'tr', \
+                                    'elem': [ \
+                                        { \
+                                            'html': 'td', \
+                                            'attr': {'style': 'min-width: 10em;'}, \
+                                            'elem': { \
+                                                'html': 'a', \
+                                                'attr': {'href': "#var.vId='C1'&var.vView='chat'&chat-bottom"}, \
+                                                'elem': {'text': 'Chat'} \
+                                            } \
+                                        }, \
+                                        { \
+                                            'html': 'td', \
+                                            'elem': {'text': 'm:1'} \
+                                        }, \
+                                        { \
+                                            'html': 'td', \
+                                            'elem': {'text': 'Generating...'} \
+                                        } \
+                                    ] \
+                                } \
+                            ] \
+                        } \
+                    ] \
+                } \
+            ] \
+        ]], \
+        ['markdownPrint', ['','## Templates']], \
+        ['markdownPrint', ['','\u00a0\u00a0\u00a0\u00a0' + '*No templates*']], \
+        ['windowSetTimeout', ['<function>',2000]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexGenerating')
+
+
+async function testOllamaChatIndexConversationSelected():
+    systemGlobalSet('vAction', 'conversation')
+    systemGlobalSet('vActionID', 'C1')
+    args = argsParse(ollamaChatArguments)
+    conv = {'id': 'C1', 'model': 'm:1', 'title': 'Chat', 'generating': false}
+    unittestMockAll({'systemFetch': {'getConversations': jsonStringify({'model': 'm:1', 'conversations': [conv], 'templates': []})}})
+    ollamaChatIndexPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversations']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['# Ollama Chat']], \
+        ['markdownPrint', ['**Current Model:** m:1']], \
+        ['elementModelRender', [testOllamaChatIndexMenuElements]], \
+        ['markdownPrint', ['','## Conversations']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'table', \
+                    'elem': [ \
+                        { \
+                            'html': 'tbody', \
+                            'elem': [ \
+                                { \
+                                    'html': 'tr', \
+                                    'elem': [ \
+                                        { \
+                                            'html': 'td', \
+                                            'attr': {'style': 'min-width: 10em;'}, \
+                                            'elem': formsLinkElements('Chat', "#var.vId='C1'&var.vView='chat'") \
+                                        }, \
+                                        { \
+                                            'html': 'td', \
+                                            'elem': {'text': 'm:1'} \
+                                        }, \
+                                        { \
+                                            'html': 'td', \
+                                            'elem': [ \
+                                                formsLinkElements('Cancel', '#var='), \
+                                                [ \
+                                                    {'text': '\u00a0\u00a0|\u00a0\u00a0'}, \
+                                                    formsLinkButtonElements('Up', '<function>'), \
+                                                    {'text': '\u00a0\u00a0'}, \
+                                                    formsLinkButtonElements('Down', '<function>'), \
+                                                    {'text': '\u00a0\u00a0'}, \
+                                                    formsLinkButtonElements('Delete', '<function>') \
+                                                ] \
+                                            ] \
+                                        } \
+                                    ] \
+                                } \
+                            ] \
+                        } \
+                    ] \
+                } \
+            ] \
+        ]], \
+        ['markdownPrint', ['','## Templates']], \
+        ['markdownPrint', ['','\u00a0\u00a0\u00a0\u00a0' + '*No templates*']] \
+    ])
+    systemGlobalSet('vAction', null)
+    systemGlobalSet('vActionID', null)
+endfunction
+unittestRunTest('testOllamaChatIndexConversationSelected')
+
+
+async function testOllamaChatIndexTemplateSelected():
+    systemGlobalSet('vAction', 'template')
+    systemGlobalSet('vActionID', 'TT')
+    args = argsParse(ollamaChatArguments)
+    tmpl = {'id': 'TT', 'title': 'Tmpl'}
+    unittestMockAll({'systemFetch': {'getConversations': jsonStringify({'model': 'm:1', 'conversations': [], 'templates': [tmpl]})}})
+    ollamaChatIndexPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversations']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['# Ollama Chat']], \
+        ['markdownPrint', ['**Current Model:** m:1']], \
+        ['elementModelRender', [testOllamaChatIndexMenuElements]], \
+        ['markdownPrint', ['','## Conversations']], \
+        ['markdownPrint', ['','\u00a0\u00a0\u00a0\u00a0' + '*No conversations*']], \
+        ['markdownPrint', ['','## Templates']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'table', \
+                    'elem': [ \
+                        { \
+                            'html': 'tbody', \
+                            'elem': [ \
+                                { \
+                                    'html': 'tr', \
+                                    'elem': [ \
+                                        { \
+                                            'html': 'td', \
+                                            'attr': {'style': 'min-width: 10em;'}, \
+                                            'elem': formsLinkButtonElements('Tmpl', '<function>') \
+                                        }, \
+                                        { \
+                                            'html': 'td', \
+                                            'elem': [ \
+                                                formsLinkElements('Cancel', '#var='), \
+                                                [ \
+                                                    {'text': '\u00a0\u00a0|\u00a0\u00a0'}, \
+                                                    formsLinkButtonElements('Up', '<function>'), \
+                                                    {'text': '\u00a0\u00a0'}, \
+                                                    formsLinkButtonElements('Down', '<function>'), \
+                                                    {'text': '\u00a0\u00a0'}, \
+                                                    formsLinkElements('Edit', "#var.vId='TT'&var.vView='template'"), \
+                                                    {'text': '\u00a0\u00a0'}, \
+                                                    formsLinkButtonElements('Delete', '<function>') \
+                                                ] \
+                                            ] \
+                                        } \
+                                    ] \
+                                } \
+                            ] \
+                        } \
+                    ] \
+                } \
+            ] \
+        ]] \
+    ])
+    systemGlobalSet('vAction', null)
+    systemGlobalSet('vActionID', null)
+endfunction
+unittestRunTest('testOllamaChatIndexTemplateSelected')
+
+
+#
+# Button callback binding verification (helpers in testOllamaChatHelpers.bare)
+#
+# The render tests above assert each button carries a callback ('<function>'),
+# but not WHICH handler or captured arguments it is bound to. These tests pull
+# the actual captured callback out of the render and invoke it, proving the
+# binding (e.g. that "Up" moves up and not down/delete).
+#
+
+
+async function testOllamaChatIndexConversationActionBinding():
+    systemGlobalSet('vAction', 'conversation')
+    systemGlobalSet('vActionID', 'C1')
+    args = argsParse(ollamaChatArguments)
+    conv = {'id': 'C1', 'model': 'm:1', 'title': 'Chat', 'generating': false}
+    render = systemPartial(ollamaChatIndexPage, args)
+    convData = {'systemFetch': {'getConversations': jsonStringify({'model': 'm:1', 'conversations': [conv], 'templates': []})}}
+
+    # Each action button must be bound to its own action argument
+    ollamaChatTestVerifyClick(render, 'Up', systemPartial(ollamaChatIndexOnConversationAction, args, 'C1', 'up'), convData)
+    ollamaChatTestVerifyClick(render, 'Down', systemPartial(ollamaChatIndexOnConversationAction, args, 'C1', 'down'), convData)
+    ollamaChatTestVerifyClick(render, 'Delete', systemPartial(ollamaChatIndexOnConversationAction, args, 'C1', 'delete'), convData)
+
+    # The menu's Add Template button must be bound to the add-template handler
+    ollamaChatTestVerifyClick(render, 'Add Template', ollamaChatIndexOnAddTemplate, \
+        {'systemFetch': { \
+            'getConversations': jsonStringify({'model': 'm:1', 'conversations': [conv], 'templates': []}), \
+            'createTemplate': jsonStringify({'id': 'NEWID'}) \
+        }})
+
+    systemGlobalSet('vAction', null)
+    systemGlobalSet('vActionID', null)
+endfunction
+unittestRunTest('testOllamaChatIndexConversationActionBinding')
+
+
+async function testOllamaChatIndexTemplateActionBinding():
+    systemGlobalSet('vAction', 'template')
+    systemGlobalSet('vActionID', 'TT')
+    args = argsParse(ollamaChatArguments)
+    tmpl = {'id': 'TT', 'title': 'Tmpl'}
+    render = systemPartial(ollamaChatIndexPage, args)
+    tmplData = {'systemFetch': {'getConversations': jsonStringify({'model': 'm:1', 'conversations': [], 'templates': [tmpl]})}}
+
+    # Each action button must be bound to its own action argument
+    ollamaChatTestVerifyClick(render, 'Up', systemPartial(ollamaChatIndexOnTemplateAction, args, 'TT', 'up'), tmplData)
+    ollamaChatTestVerifyClick(render, 'Down', systemPartial(ollamaChatIndexOnTemplateAction, args, 'TT', 'down'), tmplData)
+    ollamaChatTestVerifyClick(render, 'Delete', systemPartial(ollamaChatIndexOnTemplateAction, args, 'TT', 'delete'), tmplData)
+
+    # The template title button must start that template
+    ollamaChatTestVerifyClick(render, 'Tmpl', systemPartial(ollamaChatIndexOnRunTemplate, 'TT'), \
+        {'systemFetch': { \
+            'getConversations': jsonStringify({'model': 'm:1', 'conversations': [], 'templates': [tmpl]}), \
+            'getTemplate?id=TT': jsonStringify({'id': 'TT', 'title': 'Tmpl', 'prompts': ['p']}), \
+            'startTemplate': jsonStringify({'id': 'CONV'}) \
+        }})
+
+    systemGlobalSet('vAction', null)
+    systemGlobalSet('vActionID', null)
+endfunction
+unittestRunTest('testOllamaChatIndexTemplateActionBinding')

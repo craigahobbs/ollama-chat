@@ -1,0 +1,96 @@
+# Licensed under the MIT License
+# https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
+
+include <unittest.bare>
+include <unittestMock.bare>
+
+
+#
+# Shared button callback-binding test helpers
+#
+# The render tests assert each button carries a callback ('<function>'), but not
+# WHICH handler or captured arguments it is bound to (every function serializes
+# to the same '<function>' placeholder under unittestDeepEqual). These helpers
+# pull the actual captured callback out of the recorded call log / returned
+# element model and invoke it, proving the binding (e.g. that "Up" moves up and
+# not down/delete, that a swap or miswire would be caught).
+#
+
+
+# Recursively find a labeled button's real click callback in a rendered element
+# model. The call log / returned model holds the live function (not the
+# '<function>' deep-equal placeholder), so it can be invoked to verify binding.
+function ollamaChatTestFindClick(model, text):
+    type = systemType(model)
+    if type == 'array':
+        for item in model:
+            found = ollamaChatTestFindClick(item, text)
+            if found != null:
+                return found
+            endif
+        endfor
+    elif type == 'object':
+        elem = objectGet(model, 'elem')
+        callback = objectGet(model, 'callback')
+        if callback != null && systemType(elem) == 'object' && objectGet(elem, 'text') == text:
+            return objectGet(callback, 'click')
+        endif
+        return ollamaChatTestFindClick(elem, text)
+    endif
+    return null
+endfunction
+
+
+# Collect the real click callbacks of every labeled button matching text, in
+# document order. Used to disambiguate repeated labels (e.g. the template page's
+# two "Add" buttons) by position.
+function ollamaChatTestFindClicks(model, text, result):
+    type = systemType(model)
+    if type == 'array':
+        for item in model:
+            ollamaChatTestFindClicks(item, text, result)
+        endfor
+    elif type == 'object':
+        elem = objectGet(model, 'elem')
+        callback = objectGet(model, 'callback')
+        if callback != null && systemType(elem) == 'object' && objectGet(elem, 'text') == text:
+            arrayPush(result, objectGet(callback, 'click'))
+        endif
+        ollamaChatTestFindClicks(objectGet(model, 'elem'), text, result)
+    endif
+    return result
+endfunction
+
+
+# Assert that invoking actualFn produces the same recorded call log as invoking
+# expectedFn (each under fresh mocks from data). Proves a captured button
+# callback is bound to the intended handler and arguments.
+async function ollamaChatTestSameEffect(actualFn, expectedFn, data):
+    unittestMockAll(data)
+    expectedFn()
+    expected = unittestMockEnd()
+    unittestMockAll(data)
+    actualFn()
+    unittestDeepEqual(unittestMockEnd(), expected)
+endfunction
+
+
+# Render a page via renderFn (re-rendered fresh for each button so handlers that
+# mutate captured state don't leak between checks), find the labeled button in
+# the recorded call log, then verify its binding with ollamaChatTestSameEffect.
+async function ollamaChatTestVerifyClick(renderFn, text, expectedFn, data):
+    unittestMockAll(data)
+    renderFn()
+    found = ollamaChatTestFindClick(unittestMockEnd(), text)
+    ollamaChatTestSameEffect(found, expectedFn, data)
+endfunction
+
+
+# Like ollamaChatTestVerifyClick but selects the ix-th button matching text (for
+# pages with repeated labels, e.g. the template page's two "Add" buttons).
+async function ollamaChatTestVerifyClickN(renderFn, text, ix, expectedFn, data):
+    unittestMockAll(data)
+    renderFn()
+    found = arrayGet(ollamaChatTestFindClicks(unittestMockEnd(), text, []), ix)
+    ollamaChatTestSameEffect(found, expectedFn, data)
+endfunction

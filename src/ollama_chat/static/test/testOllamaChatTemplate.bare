@@ -1,0 +1,972 @@
+# Licensed under the MIT License
+# https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
+
+include <unittest.bare>
+include <unittestMock.bare>
+
+include '../ollamaChat.bare'
+include 'testOllamaChatHelpers.bare'
+
+
+# Expected element-model for the "Add" button rows (variables / prompts)
+testOllamaChatTemplateAddButton = [ \
+    { \
+        'html': 'p', \
+        'elem': formsLinkButtonElements('Add', '<function>') \
+    } \
+]
+
+
+# Expected element-model for a formsTextElements text input
+function testOllamaChatTemplateInput(id, value):
+    return { \
+        'html': 'input', \
+        'attr': { \
+            'autocomplete': 'off', \
+            'id': id, \
+            'size': 50, \
+            'style': 'font-size: inherit; border: thin solid black; padding: 0.4em;', \
+            'type': 'text', \
+            'value': value \
+        }, \
+        'callback': {'keyup': '<function>'} \
+    }
+endfunction
+
+
+# The Cancel/Update/Remove/Up/Down button row shared by the variable and prompt edit forms
+function testOllamaChatTemplateVarPromptButtons():
+    return [ \
+        formsLinkElements('Cancel', "#var.vId='T1'"), \
+        {'text': '\u00a0\u00a0|\u00a0\u00a0'}, \
+        formsLinkButtonElements('Update', '<function>'), \
+        {'text': '\u00a0\u00a0'}, \
+        formsLinkButtonElements('Remove', '<function>'), \
+        {'text': '\u00a0\u00a0'}, \
+        formsLinkButtonElements('Up', '<function>'), \
+        {'text': '\u00a0\u00a0'}, \
+        formsLinkButtonElements('Down', '<function>') \
+    ]
+endfunction
+
+
+# The title edit link shown when the title is not being edited
+function testOllamaChatTemplateTitleEditLink():
+    return [['markdownPrint', ['',"[Edit](#var.vAction='title'&var.vId='T1')"]]]
+endfunction
+
+
+# The template name display section
+function testOllamaChatTemplateNameDisplay():
+    return [ \
+        ['markdownPrint', ['','## Template Name']], \
+        ['markdownPrint', ['','**Name:** mytmpl','',"[Edit](#var.vAction='name'&var.vId='T1')"]] \
+    ]
+endfunction
+
+
+# The variables section header
+function testOllamaChatTemplateVarsHeader():
+    return [ \
+        ['markdownPrint', ['','## Variables','','Variables are used within the template title and prompts like so: `{{variableName}}`']] \
+    ]
+endfunction
+
+
+# The variables display section (header + one variable + Add button)
+function testOllamaChatTemplateVarsDisplay():
+    result = testOllamaChatTemplateVarsHeader()
+    arrayExtend(result, [ \
+        ['markdownPrint', ['','### Variable #1']], \
+        ['markdownPrint', ['','**Name:** v1','','**Label:** L1','',"[Edit](#var.vAction='variable'&var.vActionID='0'&var.vId='T1')"]], \
+        ['elementModelRender', [testOllamaChatTemplateAddButton]] \
+    ])
+    return result
+endfunction
+
+
+# The prompts display section (header + one prompt + Add button)
+function testOllamaChatTemplatePromptsDisplay():
+    return [ \
+        ['markdownPrint', ['','## Prompts']], \
+        ['markdownPrint', ['','### Prompt #1']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'p', \
+                    'attr': {'style': 'white-space: pre-wrap;'}, \
+                    'elem': {'text': 'prompt one'} \
+                }, \
+                { \
+                    'html': 'p', \
+                    'elem': [formsLinkElements('Edit', "#var.vAction='prompt'&var.vActionID='0'&var.vId='T1'")] \
+                } \
+            ] \
+        ]], \
+        ['elementModelRender', [testOllamaChatTemplateAddButton]] \
+    ]
+endfunction
+
+
+#
+# ollamaChatTemplatePage - render branches
+#
+
+
+async function testOllamaChatTemplatePageDefault():
+    systemGlobalSet('vId', 'T1')
+    args = argsParse(ollamaChatArguments)
+    tmpl = {'id': 'T1', 'title': 'My Template', 'name': 'mytmpl', 'variables': [{'name': 'v1', 'label': 'L1'}], 'prompts': ['prompt one']}
+    unittestMockAll({'systemFetch': {'getTemplate?id=T1': jsonStringify(tmpl)}})
+    ollamaChatTemplatePage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getTemplate?id=T1']], \
+        ['documentSetTitle', ['My Template']], \
+        ['markdownPrint', ['[Back](#var=)','','# My Template']], \
+        ['markdownPrint', ['',"[Edit](#var.vAction='title'&var.vId='T1')"]], \
+        ['markdownPrint', ['','## Template Name']], \
+        ['markdownPrint', ['','**Name:** mytmpl','',"[Edit](#var.vAction='name'&var.vId='T1')"]], \
+        ['markdownPrint', ['','## Variables','','Variables are used within the template title and prompts like so: `{{variableName}}`']], \
+        ['markdownPrint', ['','### Variable #1']], \
+        ['markdownPrint', ['','**Name:** v1','','**Label:** L1','',"[Edit](#var.vAction='variable'&var.vActionID='0'&var.vId='T1')"]], \
+        ['elementModelRender', [testOllamaChatTemplateAddButton]], \
+        ['markdownPrint', ['','## Prompts']], \
+        ['markdownPrint', ['','### Prompt #1']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'p', \
+                    'attr': {'style': 'white-space: pre-wrap;'}, \
+                    'elem': {'text': 'prompt one'} \
+                }, \
+                { \
+                    'html': 'p', \
+                    'elem': [formsLinkElements('Edit', "#var.vAction='prompt'&var.vActionID='0'&var.vId='T1'")] \
+                } \
+            ] \
+        ]], \
+        ['elementModelRender', [testOllamaChatTemplateAddButton]] \
+    ])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatTemplatePageDefault')
+
+
+async function testOllamaChatTemplatePageEmpty():
+    systemGlobalSet('vId', 'T1')
+    args = argsParse(ollamaChatArguments)
+    tmpl = {'id': 'T1', 'title': 'My Template', 'prompts': []}
+    unittestMockAll({'systemFetch': {'getTemplate?id=T1': jsonStringify(tmpl)}})
+    ollamaChatTemplatePage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getTemplate?id=T1']], \
+        ['documentSetTitle', ['My Template']], \
+        ['markdownPrint', ['[Back](#var=)','','# My Template']], \
+        ['markdownPrint', ['',"[Edit](#var.vAction='title'&var.vId='T1')"]], \
+        ['markdownPrint', ['','## Template Name']], \
+        ['markdownPrint', ['','The template is unnamed','',"[Edit](#var.vAction='name'&var.vId='T1')"]], \
+        ['markdownPrint', ['','## Variables','','Variables are used within the template title and prompts like so: `{{variableName}}`']], \
+        ['markdownPrint', ['','The template has no variables.']], \
+        ['elementModelRender', [testOllamaChatTemplateAddButton]], \
+        ['markdownPrint', ['','## Prompts']], \
+        ['markdownPrint', ['','The template has no prompts.']], \
+        ['elementModelRender', [testOllamaChatTemplateAddButton]] \
+    ])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatTemplatePageEmpty')
+
+
+async function testOllamaChatTemplatePageTitleEdit():
+    systemGlobalSet('vId', 'T1')
+    systemGlobalSet('vAction', 'title')
+    args = argsParse(ollamaChatArguments)
+    tmpl = {'id': 'T1', 'title': 'My Template', 'name': 'mytmpl', 'variables': [{'name': 'v1', 'label': 'L1'}], 'prompts': ['prompt one']}
+    unittestMockAll({'systemFetch': {'getTemplate?id=T1': jsonStringify(tmpl)}})
+    ollamaChatTemplatePage(args)
+    expected = [ \
+        ['systemFetch', ['getTemplate?id=T1']], \
+        ['documentSetTitle', ['My Template']], \
+        ['markdownPrint', ['[Back](#var=)','','# My Template']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'p', \
+                    'elem': testOllamaChatTemplateInput('ollama-chat-template-input', 'My Template') \
+                }, \
+                { \
+                    'html': 'p', \
+                    'elem': [ \
+                        formsLinkElements('Cancel', "#var.vId='T1'"), \
+                        {'text': '\u00a0\u00a0|\u00a0\u00a0'}, \
+                        formsLinkButtonElements('Update', '<function>') \
+                    ] \
+                } \
+            ] \
+        ]], \
+        ['documentSetFocus', ['ollama-chat-template-input']] \
+    ]
+    arrayExtend(expected, testOllamaChatTemplateNameDisplay())
+    arrayExtend(expected, testOllamaChatTemplateVarsDisplay())
+    arrayExtend(expected, testOllamaChatTemplatePromptsDisplay())
+    unittestDeepEqual(unittestMockEnd(), expected)
+    systemGlobalSet('vId', null)
+    systemGlobalSet('vAction', null)
+endfunction
+unittestRunTest('testOllamaChatTemplatePageTitleEdit')
+
+
+async function testOllamaChatTemplatePageNameEdit():
+    systemGlobalSet('vId', 'T1')
+    systemGlobalSet('vAction', 'name')
+    args = argsParse(ollamaChatArguments)
+    tmpl = {'id': 'T1', 'title': 'My Template', 'name': 'mytmpl', 'variables': [{'name': 'v1', 'label': 'L1'}], 'prompts': ['prompt one']}
+    unittestMockAll({'systemFetch': {'getTemplate?id=T1': jsonStringify(tmpl)}})
+    ollamaChatTemplatePage(args)
+    expected = [ \
+        ['systemFetch', ['getTemplate?id=T1']], \
+        ['documentSetTitle', ['My Template']], \
+        ['markdownPrint', ['[Back](#var=)','','# My Template']] \
+    ]
+    arrayExtend(expected, testOllamaChatTemplateTitleEditLink())
+    arrayExtend(expected, [ \
+        ['markdownPrint', ['','## Template Name']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'p', \
+                    'elem': testOllamaChatTemplateInput('ollama-chat-template-input', 'mytmpl') \
+                }, \
+                { \
+                    'html': 'p', \
+                    'elem': [ \
+                        formsLinkElements('Cancel', "#var.vId='T1'"), \
+                        {'text': '\u00a0\u00a0|\u00a0\u00a0'}, \
+                        formsLinkButtonElements('Update', '<function>'), \
+                        {'text': '\u00a0\u00a0'}, \
+                        formsLinkButtonElements('Remove', '<function>') \
+                    ] \
+                } \
+            ] \
+        ]], \
+        ['documentSetFocus', ['ollama-chat-template-input']] \
+    ])
+    arrayExtend(expected, testOllamaChatTemplateVarsDisplay())
+    arrayExtend(expected, testOllamaChatTemplatePromptsDisplay())
+    unittestDeepEqual(unittestMockEnd(), expected)
+    systemGlobalSet('vId', null)
+    systemGlobalSet('vAction', null)
+endfunction
+unittestRunTest('testOllamaChatTemplatePageNameEdit')
+
+
+async function testOllamaChatTemplatePageVariableEdit():
+    systemGlobalSet('vId', 'T1')
+    systemGlobalSet('vAction', 'variable')
+    systemGlobalSet('vActionID', '0')
+    args = argsParse(ollamaChatArguments)
+    tmpl = {'id': 'T1', 'title': 'My Template', 'name': 'mytmpl', 'variables': [{'name': 'v1', 'label': 'L1'}], 'prompts': ['prompt one']}
+    unittestMockAll({'systemFetch': {'getTemplate?id=T1': jsonStringify(tmpl)}})
+    ollamaChatTemplatePage(args)
+    expected = [ \
+        ['systemFetch', ['getTemplate?id=T1']], \
+        ['documentSetTitle', ['My Template']], \
+        ['markdownPrint', ['[Back](#var=)','','# My Template']] \
+    ]
+    arrayExtend(expected, testOllamaChatTemplateTitleEditLink())
+    arrayExtend(expected, testOllamaChatTemplateNameDisplay())
+    arrayExtend(expected, testOllamaChatTemplateVarsHeader())
+    arrayExtend(expected, [ \
+        ['markdownPrint', ['','### Variable #1']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'p', \
+                    'elem': { \
+                        'html': 'b', \
+                        'elem': {'text': 'Name:'} \
+                    } \
+                }, \
+                { \
+                    'html': 'p', \
+                    'elem': testOllamaChatTemplateInput('ollama-chat-template-input', 'v1') \
+                }, \
+                { \
+                    'html': 'p', \
+                    'elem': { \
+                        'html': 'b', \
+                        'elem': {'text': 'Label:'} \
+                    } \
+                }, \
+                { \
+                    'html': 'p', \
+                    'elem': testOllamaChatTemplateInput('ollama-chat-template-input2', 'L1') \
+                }, \
+                { \
+                    'html': 'p', \
+                    'elem': testOllamaChatTemplateVarPromptButtons() \
+                } \
+            ] \
+        ]], \
+        ['documentSetFocus', ['ollama-chat-template-input']], \
+        ['elementModelRender', [testOllamaChatTemplateAddButton]] \
+    ])
+    arrayExtend(expected, testOllamaChatTemplatePromptsDisplay())
+    unittestDeepEqual(unittestMockEnd(), expected)
+    systemGlobalSet('vId', null)
+    systemGlobalSet('vAction', null)
+    systemGlobalSet('vActionID', null)
+endfunction
+unittestRunTest('testOllamaChatTemplatePageVariableEdit')
+
+
+async function testOllamaChatTemplatePagePromptEdit():
+    systemGlobalSet('vId', 'T1')
+    systemGlobalSet('vAction', 'prompt')
+    systemGlobalSet('vActionID', '0')
+    args = argsParse(ollamaChatArguments)
+    tmpl = {'id': 'T1', 'title': 'My Template', 'name': 'mytmpl', 'variables': [{'name': 'v1', 'label': 'L1'}], 'prompts': ['prompt one']}
+    unittestMockAll({'systemFetch': {'getTemplate?id=T1': jsonStringify(tmpl)}})
+    ollamaChatTemplatePage(args)
+    expected = [ \
+        ['systemFetch', ['getTemplate?id=T1']], \
+        ['documentSetTitle', ['My Template']], \
+        ['markdownPrint', ['[Back](#var=)','','# My Template']] \
+    ]
+    arrayExtend(expected, testOllamaChatTemplateTitleEditLink())
+    arrayExtend(expected, testOllamaChatTemplateNameDisplay())
+    arrayExtend(expected, testOllamaChatTemplateVarsDisplay())
+    arrayExtend(expected, [ \
+        ['markdownPrint', ['','## Prompts']], \
+        ['markdownPrint', ['','### Prompt #1']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'p', \
+                    'elem': { \
+                        'html': 'textarea', \
+                        'attr': { \
+                            'autocomplete': 'off', \
+                            'id': 'ollama-chat-template-input', \
+                            'rows': 8, \
+                            'style': arrayJoin( \
+                                [ \
+                                    'background-color: var(--barescript-color-background)', \
+                                    'color: var(--barescript-color-foreground)', \
+                                    'font-size: inherit', \
+                                    'font-family: inherit', \
+                                    'padding: 0.5em', \
+                                    'resize: none', \
+                                    'width: calc(100% - 1em)' \
+                                ], \
+                                '; ' \
+                            ) \
+                        }, \
+                        'elem': {'text': 'prompt one'} \
+                    } \
+                }, \
+                { \
+                    'html': 'p', \
+                    'elem': testOllamaChatTemplateVarPromptButtons() \
+                } \
+            ] \
+        ]], \
+        ['documentSetFocus', ['ollama-chat-template-input']], \
+        ['elementModelRender', [testOllamaChatTemplateAddButton]] \
+    ])
+    unittestDeepEqual(unittestMockEnd(), expected)
+    systemGlobalSet('vId', null)
+    systemGlobalSet('vAction', null)
+    systemGlobalSet('vActionID', null)
+endfunction
+unittestRunTest('testOllamaChatTemplatePagePromptEdit')
+
+
+#
+# ollamaChatTemplateVariablesPage
+#
+
+
+async function testOllamaChatTemplateVariablesPage():
+    systemGlobalSet('vId', 'T1')
+    args = argsParse(ollamaChatArguments)
+    tmpl = {'id': 'T1', 'title': 'My Template', 'variables': [{'name': 'v1', 'label': 'L1'}, {'name': 'v2', 'label': 'L2'}]}
+    unittestMockAll({'systemFetch': {'getTemplate?id=T1': jsonStringify(tmpl)}})
+    ollamaChatTemplateVariablesPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getTemplate?id=T1']], \
+        ['documentSetTitle', ['Variables - My Template']], \
+        ['markdownPrint', ['[Back](#var=)','','# Variables \- My Template']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'p', \
+                    'elem': { \
+                        'html': 'b', \
+                        'elem': {'text': 'L1'} \
+                    } \
+                }, \
+                { \
+                    'html': 'p', \
+                    'elem': { \
+                        'html': 'input', \
+                        'attr': { \
+                            'autocomplete': 'off', \
+                            'id': 'variable-v1', \
+                            'size': 50, \
+                            'style': 'font-size: inherit; border: thin solid black; padding: 0.4em;', \
+                            'type': 'text', \
+                            'value': '' \
+                        }, \
+                        'callback': null \
+                    } \
+                } \
+            ] \
+        ]], \
+        ['documentSetFocus', ['variable-v1']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'p', \
+                    'elem': { \
+                        'html': 'b', \
+                        'elem': {'text': 'L2'} \
+                    } \
+                }, \
+                { \
+                    'html': 'p', \
+                    'elem': { \
+                        'html': 'input', \
+                        'attr': { \
+                            'autocomplete': 'off', \
+                            'id': 'variable-v2', \
+                            'size': 50, \
+                            'style': 'font-size: inherit; border: thin solid black; padding: 0.4em;', \
+                            'type': 'text', \
+                            'value': '' \
+                        }, \
+                        'callback': {'keyup': '<function>'} \
+                    } \
+                } \
+            ] \
+        ]], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'p', \
+                    'elem': formsLinkButtonElements('Start Conversation', '<function>') \
+                } \
+            ] \
+        ]] \
+    ])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatTemplateVariablesPage')
+
+
+#
+# ollamaChatTemplateOnTitle
+#
+
+
+async function testOllamaChatTemplateOnTitleNonEmpty():
+    unittestMockAll({'documentInputValue': {'ollama-chat-template-input': 'New Title'}})
+    ollamaChatTemplateOnTitle({'id': 'T1', 'title': 'Old', 'prompts': ['p0']})
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['documentInputValue', ['ollama-chat-template-input']], \
+        ['systemFetch', [ \
+            { \
+                'url': 'updateTemplate', \
+                'body': '{"id":"T1","prompts":["p0"],"title":"New Title"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnTitleNonEmpty')
+
+
+async function testOllamaChatTemplateOnTitleEmpty():
+    unittestMockAll({'documentInputValue': {'ollama-chat-template-input': '  '}})
+    ollamaChatTemplateOnTitle({'id': 'T1', 'title': 'Old', 'prompts': ['p0']})
+    unittestDeepEqual(unittestMockEnd(), [['documentInputValue', ['ollama-chat-template-input']], ['windowSetLocation', ['#var=']]])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnTitleEmpty')
+
+
+#
+# ollamaChatTemplateOnName / OnNameRemove
+#
+
+
+async function testOllamaChatTemplateOnNameNonEmpty():
+    unittestMockAll({'documentInputValue': {'ollama-chat-template-input': 'myname'}})
+    ollamaChatTemplateOnName({'id': 'T1', 'title': 'Old', 'prompts': ['p0']})
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['documentInputValue', ['ollama-chat-template-input']], \
+        ['systemFetch', [ \
+            { \
+                'url': 'updateTemplate', \
+                'body': '{"id":"T1","name":"myname","prompts":["p0"],"title":"Old"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnNameNonEmpty')
+
+
+async function testOllamaChatTemplateOnNameEmpty():
+    unittestMockAll({'documentInputValue': {'ollama-chat-template-input': ''}})
+    ollamaChatTemplateOnName({'id': 'T1', 'title': 'Old', 'prompts': ['p0']})
+    unittestDeepEqual(unittestMockEnd(), [['documentInputValue', ['ollama-chat-template-input']], ['windowSetLocation', ['#var=']]])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnNameEmpty')
+
+
+async function testOllamaChatTemplateOnNameRemove():
+    unittestMockAll({})
+    ollamaChatTemplateOnNameRemove({'id': 'T1', 'title': 'Old', 'name': 'n', 'prompts': ['p0']})
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'updateTemplate', \
+                'body': '{"id":"T1","prompts":["p0"],"title":"Old"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnNameRemove')
+
+
+#
+# ollamaChatTemplateOnVariableAdd
+#
+
+
+async function testOllamaChatTemplateOnVariableAddNew():
+    unittestMockAll({})
+    ollamaChatTemplateOnVariableAdd({'id': 'T1', 'title': 'Old', 'prompts': ['p0']})
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'updateTemplate', \
+                'body': '{"id":"T1","prompts":["p0"],"title":"Old","variables":[{"label":"New Variable","name":"NewVariable"}]}' \
+            } \
+        ]], \
+        ['windowSetLocation', ["#var.vAction='variable'&var.vActionID='0'"]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnVariableAddNew')
+
+
+async function testOllamaChatTemplateOnVariableAddExisting():
+    unittestMockAll({})
+    ollamaChatTemplateOnVariableAdd({'id': 'T1', 'title': 'Old', 'variables': [{'name': 'a', 'label': 'A'}], 'prompts': ['p0']})
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'updateTemplate', \
+                'body': '{"id":"T1","prompts":["p0"],"title":"Old","variables":[' + \
+                    '{"label":"A","name":"a"},{"label":"New Variable","name":"NewVariable"}]}' \
+            } \
+        ]], \
+        ['windowSetLocation', ["#var.vAction='variable'&var.vActionID='1'"]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnVariableAddExisting')
+
+
+#
+# ollamaChatTemplateOnVariableUpdate
+#
+
+
+async function testOllamaChatTemplateOnVariableUpdateBoth():
+    unittestMockAll({'documentInputValue': {'ollama-chat-template-input': 'NN', 'ollama-chat-template-input2': 'LL'}})
+    ollamaChatTemplateOnVariableUpdate({'id': 'T1', 'title': 'Old', 'variables': [{'name': 'a', 'label': 'A'}], 'prompts': ['p0']}, 0)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['documentInputValue', ['ollama-chat-template-input']], \
+        ['documentInputValue', ['ollama-chat-template-input2']], \
+        ['systemFetch', [ \
+            { \
+                'url': 'updateTemplate', \
+                'body': '{"id":"T1","prompts":["p0"],"title":"Old","variables":[{"label":"LL","name":"NN"}]}' \
+            } \
+        ]], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnVariableUpdateBoth')
+
+
+async function testOllamaChatTemplateOnVariableUpdateNeither():
+    unittestMockAll({'documentInputValue': {'ollama-chat-template-input': '  ', 'ollama-chat-template-input2': '  '}})
+    ollamaChatTemplateOnVariableUpdate({'id': 'T1', 'title': 'Old', 'variables': [{'name': 'a', 'label': 'A'}], 'prompts': ['p0']}, 0)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['documentInputValue', ['ollama-chat-template-input']], \
+        ['documentInputValue', ['ollama-chat-template-input2']], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnVariableUpdateNeither')
+
+
+#
+# ollamaChatTemplateOnVariableRemove
+#
+
+
+async function testOllamaChatTemplateOnVariableRemoveKeepArray():
+    unittestMockAll({})
+    ollamaChatTemplateOnVariableRemove({'id': 'T1', 'title': 'Old', \
+        'variables': [{'name': 'a', 'label': 'A'}, {'name': 'b', 'label': 'B'}], 'prompts': ['p0']}, 0)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'updateTemplate', \
+                'body': '{"id":"T1","prompts":["p0"],"title":"Old","variables":[{"label":"B","name":"b"}]}' \
+            } \
+        ]], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnVariableRemoveKeepArray')
+
+
+async function testOllamaChatTemplateOnVariableRemoveEmptyArray():
+    unittestMockAll({})
+    ollamaChatTemplateOnVariableRemove({'id': 'T1', 'title': 'Old', 'variables': [{'name': 'a', 'label': 'A'}], 'prompts': ['p0']}, 0)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'updateTemplate', \
+                'body': '{"id":"T1","prompts":["p0"],"title":"Old"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnVariableRemoveEmptyArray')
+
+
+#
+# ollamaChatTemplateOnVariableMove
+#
+
+
+async function testOllamaChatTemplateOnVariableMoveDown():
+    unittestMockAll({})
+    ollamaChatTemplateOnVariableMove({'id': 'T1', 'title': 'Old', \
+        'variables': [{'name': 'a', 'label': 'A'}, {'name': 'b', 'label': 'B'}], 'prompts': ['p0']}, 0, true)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'updateTemplate', \
+                'body': '{"id":"T1","prompts":["p0"],"title":"Old","variables":[{"label":"B","name":"b"},{"label":"A","name":"a"}]}' \
+            } \
+        ]], \
+        ['windowSetLocation', ["#var.vAction='variable'&var.vActionID='1'"]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnVariableMoveDown')
+
+
+async function testOllamaChatTemplateOnVariableMoveNoop():
+    # Move first variable up - out of bounds, no-op
+    unittestMockAll({})
+    ollamaChatTemplateOnVariableMove({'id': 'T1', 'title': 'Old', 'variables': [{'name': 'a', 'label': 'A'}], 'prompts': ['p0']}, 0, false)
+    unittestDeepEqual(unittestMockEnd(), [])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnVariableMoveNoop')
+
+
+#
+# ollamaChatTemplateOnPromptAdd / Update / Remove / Move
+#
+
+
+async function testOllamaChatTemplateOnPromptAdd():
+    unittestMockAll({})
+    ollamaChatTemplateOnPromptAdd({'id': 'T1', 'title': 'Old', 'prompts': ['p0']})
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'updateTemplate', \
+                'body': '{"id":"T1","prompts":["p0","New prompt"],"title":"Old"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ["#var.vAction='prompt'&var.vActionID='1'"]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnPromptAdd')
+
+
+async function testOllamaChatTemplateOnPromptUpdateNonEmpty():
+    unittestMockAll({'documentInputValue': {'ollama-chat-template-input': 'new prompt'}})
+    ollamaChatTemplateOnPromptUpdate({'id': 'T1', 'title': 'Old', 'prompts': ['p0']}, 0)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['documentInputValue', ['ollama-chat-template-input']], \
+        ['systemFetch', [ \
+            { \
+                'url': 'updateTemplate', \
+                'body': '{"id":"T1","prompts":["new prompt"],"title":"Old"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnPromptUpdateNonEmpty')
+
+
+async function testOllamaChatTemplateOnPromptUpdateEmpty():
+    unittestMockAll({'documentInputValue': {'ollama-chat-template-input': '  '}})
+    ollamaChatTemplateOnPromptUpdate({'id': 'T1', 'title': 'Old', 'prompts': ['p0']}, 0)
+    unittestDeepEqual(unittestMockEnd(), [['documentInputValue', ['ollama-chat-template-input']], ['windowSetLocation', ['#var=']]])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnPromptUpdateEmpty')
+
+
+async function testOllamaChatTemplateOnPromptRemove():
+    unittestMockAll({})
+    ollamaChatTemplateOnPromptRemove({'id': 'T1', 'title': 'Old', 'prompts': ['p0', 'p1']}, 0)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'updateTemplate', \
+                'body': '{"id":"T1","prompts":["p1"],"title":"Old"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnPromptRemove')
+
+
+async function testOllamaChatTemplateOnPromptMoveDown():
+    unittestMockAll({})
+    ollamaChatTemplateOnPromptMove({'id': 'T1', 'title': 'Old', 'prompts': ['p0', 'p1']}, 0, true)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'updateTemplate', \
+                'body': '{"id":"T1","prompts":["p1","p0"],"title":"Old"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ["#var.vAction='prompt'&var.vActionID='1'"]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnPromptMoveDown')
+
+
+async function testOllamaChatTemplateOnPromptMoveNoop():
+    # Move last prompt down - out of bounds, no-op
+    unittestMockAll({})
+    ollamaChatTemplateOnPromptMove({'id': 'T1', 'title': 'Old', 'prompts': ['p0', 'p1']}, 1, true)
+    unittestDeepEqual(unittestMockEnd(), [])
+endfunction
+unittestRunTest('testOllamaChatTemplateOnPromptMoveNoop')
+
+
+#
+# ollamaChatTemplateVariablesOnSubmit
+#
+
+
+async function testOllamaChatTemplateVariablesOnSubmit():
+    unittestMockAll({'documentInputValue': {'variable-city': 'Seattle'}, 'systemFetch': {'startTemplate': jsonStringify({'id': 'CONV'})}})
+    ollamaChatTemplateVariablesOnSubmit('T1', [{'name': 'city', 'label': 'City'}])
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['documentInputValue', ['variable-city']], \
+        ['systemFetch', [ \
+            { \
+                'url': 'startTemplate', \
+                'body': '{"id":"T1","variables":{"city":"Seattle"}}' \
+            } \
+        ]], \
+        ['windowSetLocation', ["#var.vId='CONV'&var.vView='chat'"]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateVariablesOnSubmit')
+
+
+async function testOllamaChatTemplateVariablesOnSubmitNull():
+    # startTemplate fails - no navigation
+    unittestMockAll({'documentInputValue': {'variable-city': 'Seattle'}})
+    ollamaChatTemplateVariablesOnSubmit('T1', [{'name': 'city', 'label': 'City'}])
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['documentInputValue', ['variable-city']], \
+        ['systemFetch', [ \
+            { \
+                'url': 'startTemplate', \
+                'body': '{"id":"T1","variables":{"city":"Seattle"}}' \
+            } \
+        ]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatTemplateVariablesOnSubmitNull')
+
+
+#
+# ollamaChatMain router -> template / variables error paths
+#
+
+
+async function testOllamaChatTemplateMainError():
+    systemGlobalSet('vView', 'template')
+    systemGlobalSet('vId', 'T1')
+    unittestMockAll({})
+    ollamaChatMain()
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getTemplate?id=T1']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Unknown template ID']] \
+    ])
+    systemGlobalSet('vView', null)
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatTemplateMainError')
+
+
+async function testOllamaChatTemplateMainVariablesError():
+    systemGlobalSet('vView', 'variables')
+    systemGlobalSet('vId', 'T1')
+    unittestMockAll({})
+    ollamaChatMain()
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getTemplate?id=T1']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Unknown template ID']] \
+    ])
+    systemGlobalSet('vView', null)
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatTemplateMainVariablesError')
+
+
+#
+# Button callback binding verification (helpers in testOllamaChatHelpers.bare)
+#
+# The render tests above assert each button carries a callback ('<function>'),
+# but not WHICH handler or captured arguments it is bound to. These tests pull
+# the actual captured callback out of the render and invoke it, proving the
+# binding (e.g. that a variable's Up moves up, Down moves down, Remove removes).
+# ollamaChatTestVerifyClick re-renders fresh per button so the template-mutating
+# handlers don't leak state between checks.
+#
+
+
+async function testOllamaChatTemplateTitleButtonBinding():
+    systemGlobalSet('vId', 'T1')
+    systemGlobalSet('vAction', 'title')
+    args = argsParse(ollamaChatArguments)
+    tmplJSON = jsonStringify({'id': 'T1', 'title': 'My Title', 'prompts': ['p']})
+    render = systemPartial(ollamaChatTemplatePage, args)
+    data = {'systemFetch': {'getTemplate?id=T1': tmplJSON}, 'documentInputValue': {'ollama-chat-template-input': 'Updated'}}
+
+    # The title Update button must update this template's title
+    ollamaChatTestVerifyClick(render, 'Update', systemPartial(ollamaChatTemplateOnTitle, jsonParse(tmplJSON)), data)
+
+    systemGlobalSet('vId', null)
+    systemGlobalSet('vAction', null)
+endfunction
+unittestRunTest('testOllamaChatTemplateTitleButtonBinding')
+
+
+async function testOllamaChatTemplateNameButtonBinding():
+    systemGlobalSet('vId', 'T1')
+    systemGlobalSet('vAction', 'name')
+    args = argsParse(ollamaChatArguments)
+    tmplJSON = jsonStringify({'id': 'T1', 'title': 'T', 'name': 'oldname', 'prompts': ['p']})
+    render = systemPartial(ollamaChatTemplatePage, args)
+    data = {'systemFetch': {'getTemplate?id=T1': tmplJSON}, 'documentInputValue': {'ollama-chat-template-input': 'newname'}}
+
+    # Update sets the name; Remove deletes it
+    ollamaChatTestVerifyClick(render, 'Update', systemPartial(ollamaChatTemplateOnName, jsonParse(tmplJSON)), data)
+    ollamaChatTestVerifyClick(render, 'Remove', systemPartial(ollamaChatTemplateOnNameRemove, jsonParse(tmplJSON)), data)
+
+    systemGlobalSet('vId', null)
+    systemGlobalSet('vAction', null)
+endfunction
+unittestRunTest('testOllamaChatTemplateNameButtonBinding')
+
+
+async function testOllamaChatTemplateVariableButtonBinding():
+    systemGlobalSet('vId', 'T1')
+    systemGlobalSet('vAction', 'variable')
+    systemGlobalSet('vActionID', '1')
+    args = argsParse(ollamaChatArguments)
+    tmplJSON = jsonStringify({'id': 'T1', 'title': 'T', 'variables': [ \
+        {'name': 'a', 'label': 'A'}, {'name': 'b', 'label': 'B'}, {'name': 'c', 'label': 'C'} \
+    ], 'prompts': ['p']})
+    render = systemPartial(ollamaChatTemplatePage, args)
+    data = {'systemFetch': {'getTemplate?id=T1': tmplJSON}, \
+        'documentInputValue': {'ollama-chat-template-input': 'bb', 'ollama-chat-template-input2': 'BB'}}
+
+    # The middle variable's buttons must each bind to their own action at index 1
+    ollamaChatTestVerifyClick(render, 'Update', systemPartial(ollamaChatTemplateOnVariableUpdate, jsonParse(tmplJSON), 1), data)
+    ollamaChatTestVerifyClick(render, 'Remove', systemPartial(ollamaChatTemplateOnVariableRemove, jsonParse(tmplJSON), 1), data)
+    ollamaChatTestVerifyClick(render, 'Up', systemPartial(ollamaChatTemplateOnVariableMove, jsonParse(tmplJSON), 1), data)
+    ollamaChatTestVerifyClick(render, 'Down', systemPartial(ollamaChatTemplateOnVariableMove, jsonParse(tmplJSON), 1, true), data)
+
+    systemGlobalSet('vId', null)
+    systemGlobalSet('vAction', null)
+    systemGlobalSet('vActionID', null)
+endfunction
+unittestRunTest('testOllamaChatTemplateVariableButtonBinding')
+
+
+async function testOllamaChatTemplatePromptButtonBinding():
+    systemGlobalSet('vId', 'T1')
+    systemGlobalSet('vAction', 'prompt')
+    systemGlobalSet('vActionID', '1')
+    args = argsParse(ollamaChatArguments)
+    tmplJSON = jsonStringify({'id': 'T1', 'title': 'T', 'prompts': ['p0', 'p1', 'p2']})
+    render = systemPartial(ollamaChatTemplatePage, args)
+    data = {'systemFetch': {'getTemplate?id=T1': tmplJSON}, 'documentInputValue': {'ollama-chat-template-input': 'p1new'}}
+
+    # The middle prompt's buttons must each bind to their own action at index 1
+    ollamaChatTestVerifyClick(render, 'Update', systemPartial(ollamaChatTemplateOnPromptUpdate, jsonParse(tmplJSON), 1), data)
+    ollamaChatTestVerifyClick(render, 'Remove', systemPartial(ollamaChatTemplateOnPromptRemove, jsonParse(tmplJSON), 1), data)
+    ollamaChatTestVerifyClick(render, 'Up', systemPartial(ollamaChatTemplateOnPromptMove, jsonParse(tmplJSON), 1), data)
+    ollamaChatTestVerifyClick(render, 'Down', systemPartial(ollamaChatTemplateOnPromptMove, jsonParse(tmplJSON), 1, true), data)
+
+    systemGlobalSet('vId', null)
+    systemGlobalSet('vAction', null)
+    systemGlobalSet('vActionID', null)
+endfunction
+unittestRunTest('testOllamaChatTemplatePromptButtonBinding')
+
+
+async function testOllamaChatTemplateAddButtonBinding():
+    systemGlobalSet('vId', 'T1')
+    args = argsParse(ollamaChatArguments)
+    tmplJSON = jsonStringify({'id': 'T1', 'title': 'T', 'variables': [{'name': 'a', 'label': 'A'}], 'prompts': ['p']})
+    render = systemPartial(ollamaChatTemplatePage, args)
+    data = {'systemFetch': {'getTemplate?id=T1': tmplJSON}}
+
+    # The page renders two "Add" buttons - the first adds a variable, the second a prompt
+    ollamaChatTestVerifyClickN(render, 'Add', 0, systemPartial(ollamaChatTemplateOnVariableAdd, jsonParse(tmplJSON)), data)
+    ollamaChatTestVerifyClickN(render, 'Add', 1, systemPartial(ollamaChatTemplateOnPromptAdd, jsonParse(tmplJSON)), data)
+
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatTemplateAddButtonBinding')
+
+
+async function testOllamaChatTemplateVariablesPageBinding():
+    systemGlobalSet('vId', 'T1')
+    args = argsParse(ollamaChatArguments)
+    tmplJSON = jsonStringify({'id': 'T1', 'title': 'T', 'variables': [{'name': 'a', 'label': 'A'}], 'prompts': ['p']})
+    render = systemPartial(ollamaChatTemplateVariablesPage, args)
+    data = {'systemFetch': {'getTemplate?id=T1': tmplJSON, 'startTemplate': jsonStringify({'id': 'CONV'})}, \
+        'documentInputValue': {'variable-a': 'val'}}
+
+    # The Start Conversation button must submit this template's variables
+    ollamaChatTestVerifyClick(render, 'Start Conversation', \
+        systemPartial(ollamaChatTemplateVariablesOnSubmit, 'T1', objectGet(jsonParse(tmplJSON), 'variables')), data)
+
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatTemplateVariablesPageBinding')

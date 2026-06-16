@@ -1,0 +1,1248 @@
+# Licensed under the MIT License
+# https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
+
+include <unittest.bare>
+include <unittestMock.bare>
+
+include '../ollamaChat.bare'
+include 'testOllamaChatHelpers.bare'
+
+
+# Computed-style fixtures for the floating controls (documentFontSize mock = 16, windowHeight mock = 768)
+testOllamaChatConversationTopSpace = { \
+    'html': 'div', \
+    'attr': {'style': 'height: 32.000px'} \
+}
+testOllamaChatConversationMenuStyle = arrayJoin([ \
+    'align-items: left', \
+    'background-color: var(--barescript-color-background-code)', \
+    'border-radius: 8.000px', \
+    'color: var(--barescript-color-foreground)', \
+    'display: flex', \
+    'left: 16.000px', \
+    'padding: 10.400px', \
+    'position: fixed', \
+    'top: 16.000px' \
+], '; ')
+testOllamaChatConversationInputStyle = arrayJoin([ \
+    'background-color: var(--barescript-color-background)', \
+    'color: var(--barescript-color-foreground)', \
+    'border: none', \
+    'flex: 1', \
+    'font-size: inherit', \
+    'font-family: inherit', \
+    'margin-left: 8.000px', \
+    'margin-right: 8.000px', \
+    'min-width: 0', \
+    'outline: none', \
+    'padding: 8.000px', \
+    'resize: none' \
+], '; ')
+
+
+# The prompt-row div style (align-items differs for multiline)
+function testOllamaChatConversationPromptDivStyle(multiline):
+    return arrayJoin([ \
+        'align-items: ' + if(multiline, 'flex-end', 'center'), \
+        'background-color: var(--barescript-color-border)', \
+        'border-radius: 8.000px', \
+        'bottom: 16.000px', \
+        'display: flex', \
+        'left: 32.000px', \
+        'padding: 12.000px', \
+        'position: fixed', \
+        'right: 32.000px' \
+    ], '; ')
+endfunction
+
+
+# Expected SVG buttons (built from the separately-tested builder; dummy callback -> '<function>')
+function testOllamaChatConversationHamburger():
+    return ollamaChatConversationSVGButton(24, 32, 24, 'M4,6 H20 M4,12 H20 M4,18 H20', false, false, '<function>')
+endfunction
+function testOllamaChatConversationSendButton():
+    return ollamaChatConversationSVGButton(32, 32, 24, 'M12,18 V7 M7,12 L12,7 L17,12', false, true, '<function>')
+endfunction
+function testOllamaChatConversationStopButton():
+    return ollamaChatConversationSVGButton(32, 32, 24, 'M8,8 H16 V16 H8 Z', true, true, '<function>')
+endfunction
+
+
+# Expected single-line prompt input element (callback is {'keyup': '<function>'} or null while generating)
+function testOllamaChatConversationPromptInput(value, callback):
+    return { \
+        'html': 'input', \
+        'attr': { \
+            'autocomplete': 'off', \
+            'id': 'ollama-chat-prompt', \
+            'placeholder': 'Type your message...', \
+            'rows': null, \
+            'style': testOllamaChatConversationInputStyle, \
+            'type': 'text', \
+            'value': value \
+        }, \
+        'callback': callback, \
+        'elem': null \
+    }
+endfunction
+
+
+# Expected multiline prompt textarea element
+function testOllamaChatConversationTextarea():
+    return { \
+        'html': 'textarea', \
+        'attr': { \
+            'autocomplete': 'off', \
+            'id': 'ollama-chat-prompt', \
+            'placeholder': 'Type your message...', \
+            'rows': 8, \
+            'style': testOllamaChatConversationInputStyle, \
+            'type': null, \
+            'value': null \
+        }, \
+        'callback': null, \
+        'elem': null \
+    }
+endfunction
+
+
+# Expected menu div (Back / Top / Bottom plus an optional conversation-controls part)
+function testOllamaChatConversationMenuDiv(topHref, bottomHref, convPart):
+    return { \
+        'html': 'div', \
+        'attr': {'style': testOllamaChatConversationMenuStyle}, \
+        'elem': [ \
+            formsLinkElements('Back', '#var='), \
+            {'text': '\u00a0|\u00a0'}, \
+            formsLinkElements('Top', topHref), \
+            {'text': '\u00a0|\u00a0'}, \
+            formsLinkElements('Bottom', bottomHref), \
+            convPart \
+        ] \
+    }
+endfunction
+
+
+# The full floating-controls model for a new (no-conversation) chat
+function testOllamaChatConversationFloatingNoConv():
+    return [ \
+        testOllamaChatConversationTopSpace, \
+        testOllamaChatConversationMenuDiv('#var=&_top', '#var=&chat-bottom', null), \
+        { \
+            'html': 'div', \
+            'attr': {'style': testOllamaChatConversationPromptDivStyle(false)}, \
+            'elem': [ \
+                testOllamaChatConversationHamburger(), \
+                testOllamaChatConversationPromptInput(null, {'keyup': '<function>'}), \
+                testOllamaChatConversationSendButton(), \
+                null \
+            ] \
+        } \
+    ]
+endfunction
+
+
+# The full floating-controls model for a conversation (not generating, menu collapsed)
+function testOllamaChatConversationFloatingConv():
+    return [ \
+        testOllamaChatConversationTopSpace, \
+        testOllamaChatConversationMenuDiv( \
+            "#var.vId='C1'&_top", \
+            "#var.vId='C1'&chat-bottom", \
+            [{'text': '\u00a0|\u00a0'}, formsLinkButtonElements('>>', '<function>'), null] \
+        ), \
+        { \
+            'html': 'div', \
+            'attr': {'style': testOllamaChatConversationPromptDivStyle(false)}, \
+            'elem': [ \
+                testOllamaChatConversationHamburger(), \
+                testOllamaChatConversationPromptInput(null, {'keyup': '<function>'}), \
+                testOllamaChatConversationSendButton(), \
+                null \
+            ] \
+        } \
+    ]
+endfunction
+
+
+# Expected element-model for an exchange's User:/Model: header block
+function testOllamaChatConversationExchangeHeader(user):
+    return [ \
+        { \
+            'html': 'h2', \
+            'elem': {'text': 'User:'} \
+        }, \
+        { \
+            'html': 'p', \
+            'attr': {'style': 'white-space: pre-wrap;'}, \
+            'elem': {'text': user} \
+        }, \
+        { \
+            'html': 'h2', \
+            'elem': {'text': 'Model:'} \
+        } \
+    ]
+endfunction
+
+
+# The full floating-controls model for a generating conversation (stop button, no menu controls)
+function testOllamaChatConversationFloatingConvGenerating():
+    return [ \
+        testOllamaChatConversationTopSpace, \
+        testOllamaChatConversationMenuDiv("#var.vId='C1'&_top", "#var.vId='C1'&chat-bottom", null), \
+        { \
+            'html': 'div', \
+            'attr': {'style': testOllamaChatConversationPromptDivStyle(false)}, \
+            'elem': [ \
+                testOllamaChatConversationHamburger(), \
+                testOllamaChatConversationPromptInput(null, null), \
+                null, \
+                testOllamaChatConversationStopButton() \
+            ] \
+        } \
+    ]
+endfunction
+
+
+# The reset-anchor div
+testOllamaChatConversationResetDiv = { \
+    'html': 'div', \
+    'attr': { \
+        'id': 'ollama-chat-document-reset-id', \
+        'style': 'display: none;' \
+    } \
+}
+
+
+# The call-log entries for a full single-exchange (not generating) conversation page render
+function testOllamaChatConversationPage1ExchangeCalls():
+    return [ \
+        ['systemFetch', ['getConversation?id=C1']], \
+        ['elementModelRender', [testOllamaChatConversationFloatingConv()]], \
+        ['documentSetFocus', ['ollama-chat-prompt']], \
+        ['documentSetTitle', ['Chat']], \
+        ['markdownPrint', ['# Chat','','**Model:** m:1']], \
+        ['elementModelRender', [testOllamaChatConversationExchangeHeader('u1')]], \
+        ['elementModelRender', [testOllamaChatConversationResetDiv]], \
+        ['markdownPrint', ['','r1']], \
+        ['elementModelRender', [ \
+            { \
+                'html': 'p', \
+                'elem': [ \
+                    formsLinkButtonElements('Delete', '<function>'), \
+                    {'text': '\u00a0\u00a0'}, \
+                    formsLinkButtonElements('Regenerate', '<function>') \
+                ] \
+            } \
+        ]], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'div', \
+                    'attr': {'style': 'height: 64.000px'} \
+                }, \
+                { \
+                    'html': 'div', \
+                    'attr': {'id': "var.vId='C1'&chat-bottom"} \
+                } \
+            ] \
+        ]] \
+    ]
+endfunction
+
+
+#
+# ollamaChatConversationFloatingElements - no conversation (new chat)
+#
+
+
+function testOllamaChatConversationFloatingNewConv():
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({})
+    els = ollamaChatConversationFloatingElements(args, null, false)
+    unittestMockEnd()
+    unittestDeepEqual(els, testOllamaChatConversationFloatingNoConv())
+endfunction
+unittestRunTest('testOllamaChatConversationFloatingNewConv')
+
+
+#
+# ollamaChatConversationPage
+#
+
+
+async function testOllamaChatConversationPageNewConv():
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({})
+    ollamaChatConversationPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['elementModelRender', [testOllamaChatConversationFloatingNoConv()]], \
+        ['documentSetFocus', ['ollama-chat-prompt']], \
+        ['documentSetTitle', ['Ollama Chat']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatConversationPageNewConv')
+
+
+async function testOllamaChatConversationPageWithExchanges():
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': false, 'exchanges': [ \
+        {'user': 'u1', 'model': 'r1'}, {'user': 'u2', 'model': 'r2'} \
+    ]}}
+    unittestMockAll({'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv))})
+    ollamaChatConversationPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversation?id=C1']], \
+        ['elementModelRender', [testOllamaChatConversationFloatingConv()]], \
+        ['documentSetFocus', ['ollama-chat-prompt']], \
+        ['documentSetTitle', ['Chat']], \
+        ['markdownPrint', ['# Chat','','**Model:** m:1']], \
+        ['elementModelRender', [testOllamaChatConversationExchangeHeader('u1')]], \
+        ['markdownPrint', ['','r1']], \
+        ['elementModelRender', [testOllamaChatConversationExchangeHeader('u2')]], \
+        ['elementModelRender', [ \
+            { \
+                'html': 'div', \
+                'attr': { \
+                    'id': 'ollama-chat-document-reset-id', \
+                    'style': 'display: none;' \
+                } \
+            } \
+        ]], \
+        ['markdownPrint', ['','r2']], \
+        ['elementModelRender', [ \
+            { \
+                'html': 'p', \
+                'elem': [ \
+                    formsLinkButtonElements('Delete', '<function>'), \
+                    {'text': '\u00a0\u00a0'}, \
+                    formsLinkButtonElements('Regenerate', '<function>') \
+                ] \
+            } \
+        ]], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'div', \
+                    'attr': {'style': 'height: 64.000px'} \
+                }, \
+                { \
+                    'html': 'div', \
+                    'attr': {'id': "var.vId='C1'&chat-bottom"} \
+                } \
+            ] \
+        ]] \
+    ])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationPageWithExchanges')
+
+
+async function testOllamaChatConversationPageTitleEdit():
+    systemGlobalSet('vId', 'C1')
+    systemGlobalSet('vAction', 'title')
+    args = argsParse(ollamaChatArguments)
+    conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': false, \
+        'exchanges': [{'user': 'u1', 'model': 'r1'}]}}
+    unittestMockAll({'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv))})
+    ollamaChatConversationPage(args)
+    expected = [ \
+        ['systemFetch', ['getConversation?id=C1']], \
+        ['elementModelRender', [testOllamaChatConversationFloatingConv()]], \
+        ['documentSetFocus', ['ollama-chat-prompt']], \
+        ['documentSetTitle', ['Chat']], \
+        ['markdownPrint', ['','**Title:**']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'p', \
+                    'elem': { \
+                        'html': 'input', \
+                        'attr': { \
+                            'autocomplete': 'off', \
+                            'id': 'ollama-chat-title', \
+                            'size': 50, \
+                            'style': 'font-size: inherit; border: thin solid black; padding: 0.4em;', \
+                            'type': 'text', \
+                            'value': 'Chat' \
+                        }, \
+                        'callback': {'keyup': '<function>'} \
+                    } \
+                }, \
+                { \
+                    'html': 'p', \
+                    'elem': [ \
+                        formsLinkButtonElements('Update', '<function>'), \
+                        {'text': '\u00a0\u00a0'}, \
+                        formsLinkButtonElements('Cancel', '<function>') \
+                    ] \
+                } \
+            ] \
+        ]], \
+        ['documentSetFocus', ['ollama-chat-title']], \
+        ['elementModelRender', [testOllamaChatConversationExchangeHeader('u1')]], \
+        ['elementModelRender', [testOllamaChatConversationResetDiv]], \
+        ['markdownPrint', ['','r1']], \
+        ['elementModelRender', [ \
+            { \
+                'html': 'p', \
+                'elem': [ \
+                    formsLinkButtonElements('Delete', '<function>'), \
+                    {'text': '\u00a0\u00a0'}, \
+                    formsLinkButtonElements('Regenerate', '<function>') \
+                ] \
+            } \
+        ]], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'div', \
+                    'attr': {'style': 'height: 64.000px'} \
+                }, \
+                { \
+                    'html': 'div', \
+                    'attr': {'id': "var.vId='C1'&chat-bottom"} \
+                } \
+            ] \
+        ]] \
+    ]
+    unittestDeepEqual(unittestMockEnd(), expected)
+    systemGlobalSet('vId', null)
+    systemGlobalSet('vAction', null)
+endfunction
+unittestRunTest('testOllamaChatConversationPageTitleEdit')
+
+
+#
+# ollamaChatConversationOnTimeout
+#
+
+
+async function testOllamaChatConversationOnTimeoutError():
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({})
+    ollamaChatConversationOnTimeout(args, 1, false)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversation?id=C1']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Unknown conversation ID']] \
+    ])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationOnTimeoutError')
+
+
+async function testOllamaChatConversationOnTimeoutDone():
+    # Generation finished -> save the prompt and re-render the full page
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': false, \
+        'exchanges': [{'user': 'u1', 'model': 'r1'}]}}
+    unittestMockAll({'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv)), \
+        'documentInputValue': {'ollama-chat-prompt': ''}})
+    ollamaChatConversationOnTimeout(args, 1, false)
+    expected = [['systemFetch', ['getConversation?id=C1']], ['documentInputValue', ['ollama-chat-prompt']]]
+    arrayExtend(expected, testOllamaChatConversationPage1ExchangeCalls())
+    unittestDeepEqual(unittestMockEnd(), expected)
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationOnTimeoutDone')
+
+
+async function testOllamaChatConversationOnTimeoutChanged():
+    # Still generating but the exchange count changed -> full re-render
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': true, \
+        'exchanges': [{'user': 'u1', 'model': 'r1'}]}}
+    unittestMockAll({'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv))})
+    ollamaChatConversationOnTimeout(args, 0, false)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversation?id=C1']], \
+        ['systemFetch', ['getConversation?id=C1']], \
+        ['elementModelRender', [testOllamaChatConversationFloatingConvGenerating()]], \
+        ['documentSetFocus', ['ollama-chat-prompt']], \
+        ['documentSetTitle', ['Chat']], \
+        ['markdownPrint', ['# Chat','','**Model:** m:1']], \
+        ['elementModelRender', [testOllamaChatConversationExchangeHeader('u1')]], \
+        ['elementModelRender', [testOllamaChatConversationResetDiv]], \
+        ['markdownPrint', ['','r1']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'div', \
+                    'attr': {'style': 'height: 512.000px'} \
+                }, \
+                { \
+                    'html': 'div', \
+                    'attr': {'id': "var.vId='C1'&chat-bottom"} \
+                } \
+            ] \
+        ]], \
+        ['windowSetTimeout', ['<function>',500]] \
+    ])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationOnTimeoutChanged')
+
+
+async function testOllamaChatConversationOnTimeoutUnchanged():
+    # Still generating, nothing changed -> partial re-render of just the page bottom
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': true, \
+        'exchanges': [{'user': 'u1', 'model': 'r1'}]}}
+    unittestMockAll({'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv))})
+    ollamaChatConversationOnTimeout(args, 1, false)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversation?id=C1']], \
+        ['documentSetReset', ['ollama-chat-document-reset-id']], \
+        ['markdownPrint', ['','r1']], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'div', \
+                    'attr': {'style': 'height: 512.000px'} \
+                }, \
+                { \
+                    'html': 'div', \
+                    'attr': {'id': "var.vId='C1'&chat-bottom"} \
+                } \
+            ] \
+        ]], \
+        ['windowSetTimeout', ['<function>',500]] \
+    ])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationOnTimeoutUnchanged')
+
+
+#
+# ollamaChatConversationOnClick / OnPrompt - page re-render paths
+#
+
+
+async function testOllamaChatConversationOnClickRerender():
+    # No navigation URL -> call the API then re-render the page in place
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': false, \
+        'exchanges': [{'user': 'u1', 'model': 'r1'}]}}
+    unittestMockAll({'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv)), \
+        'documentInputValue': {'ollama-chat-prompt': ''}})
+    ollamaChatConversationOnClick(args, 'deleteConversationExchange', null, null)
+    expected = [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'deleteConversationExchange', \
+                'body': '{"id":"C1"}' \
+            } \
+        ]], \
+        ['documentInputValue', ['ollama-chat-prompt']] \
+    ]
+    arrayExtend(expected, testOllamaChatConversationPage1ExchangeCalls())
+    unittestDeepEqual(unittestMockEnd(), expected)
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationOnClickRerender')
+
+
+async function testOllamaChatConversationOnPromptReply():
+    # Existing conversation -> reply, re-render the page, scroll to bottom
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': false, \
+        'exchanges': [{'user': 'u1', 'model': 'r1'}]}}
+    unittestMockAll({'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv))})
+    ollamaChatConversationOnPrompt(args, 'hello')
+    expected = [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'replyConversation', \
+                'body': '{"id":"C1","user":"hello"}' \
+            } \
+        ]] \
+    ]
+    arrayExtend(expected, testOllamaChatConversationPage1ExchangeCalls())
+    arrayExtend(expected, [['windowSetLocation', ["#var.vId='C1'&chat-bottom"]]])
+    unittestDeepEqual(unittestMockEnd(), expected)
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationOnPromptReply')
+
+
+function testOllamaChatConversationFloatingGenerating():
+    conv = {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'exchanges': [{'user': 'u', 'model': 'r'}]}
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({})
+    els = ollamaChatConversationFloatingElements(args, conv, true)
+    unittestMockEnd()
+    unittestDeepEqual(els, [ \
+        testOllamaChatConversationTopSpace, \
+        testOllamaChatConversationMenuDiv('#var=&_top', '#var=&chat-bottom', null), \
+        { \
+            'html': 'div', \
+            'attr': {'style': testOllamaChatConversationPromptDivStyle(false)}, \
+            'elem': [ \
+                testOllamaChatConversationHamburger(), \
+                testOllamaChatConversationPromptInput(null, null), \
+                null, \
+                testOllamaChatConversationStopButton() \
+            ] \
+        } \
+    ])
+endfunction
+unittestRunTest('testOllamaChatConversationFloatingGenerating')
+
+
+function testOllamaChatConversationFloatingMultiline():
+    systemGlobalSet('vMultiline', true)
+    conv = {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'exchanges': [{'user': 'u', 'model': 'r'}]}
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({})
+    els = ollamaChatConversationFloatingElements(args, conv, false)
+    unittestMockEnd()
+    unittestDeepEqual(els, [ \
+        testOllamaChatConversationTopSpace, \
+        testOllamaChatConversationMenuDiv( \
+            '#var.vMultiline=true&_top', \
+            '#var.vMultiline=true&chat-bottom', \
+            [{'text': '\u00a0|\u00a0'}, formsLinkButtonElements('>>', '<function>'), null] \
+        ), \
+        { \
+            'html': 'div', \
+            'attr': {'style': testOllamaChatConversationPromptDivStyle(true)}, \
+            'elem': [ \
+                testOllamaChatConversationHamburger(), \
+                testOllamaChatConversationTextarea(), \
+                testOllamaChatConversationSendButton(), \
+                null \
+            ] \
+        } \
+    ])
+    systemGlobalSet('vMultiline', null)
+endfunction
+unittestRunTest('testOllamaChatConversationFloatingMultiline')
+
+
+function testOllamaChatConversationFloatingSavedPrompt():
+    conv = {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'exchanges': [{'user': 'u', 'model': 'r'}]}
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({})
+    sessionStorageSet('ollama-chat-conversation-message', 'draft text')
+    els = ollamaChatConversationFloatingElements(args, conv, false)
+    unittestMockEnd()
+    unittestDeepEqual(els, [ \
+        testOllamaChatConversationTopSpace, \
+        testOllamaChatConversationMenuDiv( \
+            '#var=&_top', \
+            '#var=&chat-bottom', \
+            [{'text': '\u00a0|\u00a0'}, formsLinkButtonElements('>>', '<function>'), null] \
+        ), \
+        { \
+            'html': 'div', \
+            'attr': {'style': testOllamaChatConversationPromptDivStyle(false)}, \
+            'elem': [ \
+                testOllamaChatConversationHamburger(), \
+                testOllamaChatConversationPromptInput('draft text', {'keyup': '<function>'}), \
+                testOllamaChatConversationSendButton(), \
+                null \
+            ] \
+        } \
+    ])
+endfunction
+unittestRunTest('testOllamaChatConversationFloatingSavedPrompt')
+
+
+function testOllamaChatConversationFloatingMenuOpen():
+    systemGlobalSet('vMenu', true)
+    systemGlobalSet('vId', 'C1')
+    # The title is long enough that the markdown's first 20 chars (used by the windowURLObject
+    # download href) contain no "*", which urlEncode encodes differently across bare runtimes.
+    conv = {'id': 'C1', 'title': 'Conversation Number 1', 'model': 'm:1', 'exchanges': [{'user': 'u', 'model': 'r'}]}
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({})
+    els = ollamaChatConversationFloatingElements(args, conv, false)
+    unittestMockEnd()
+    downloadLink = {'html': 'a', 'attr': { \
+        'href': 'blob:text/markdown-#%20Conversation%20Numbe', 'download': 'conversation-number-1.md' \
+    }, 'elem': {'text': 'Download'}}
+    unittestDeepEqual(els, [ \
+        testOllamaChatConversationTopSpace, \
+        testOllamaChatConversationMenuDiv( \
+            "#var.vId='C1'&var.vMenu=true&_top", \
+            "#var.vId='C1'&var.vMenu=true&chat-bottom", \
+            [ \
+                {'text': '\u00a0|\u00a0'}, \
+                formsLinkButtonElements('<<', '<function>'), \
+                [ \
+                    {'text': '\u00a0|\u00a0'}, \
+                    formsLinkButtonElements('Title', '<function>'), \
+                    {'text': '\u00a0|\u00a0'}, \
+                    formsLinkButtonElements('Text', '<function>'), \
+                    {'text': '\u00a0|\u00a0'}, \
+                    downloadLink, \
+                    {'text': '\u00a0|\u00a0'}, \
+                    formsLinkButtonElements('Template', '<function>'), \
+                    {'text': '\u00a0|\u00a0'}, \
+                    formsLinkButtonElements('Delete', '<function>') \
+                ] \
+            ] \
+        ), \
+        { \
+            'html': 'div', \
+            'attr': {'style': testOllamaChatConversationPromptDivStyle(false)}, \
+            'elem': [ \
+                testOllamaChatConversationHamburger(), \
+                testOllamaChatConversationPromptInput(null, {'keyup': '<function>'}), \
+                testOllamaChatConversationSendButton(), \
+                null \
+            ] \
+        } \
+    ])
+    systemGlobalSet('vMenu', null)
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationFloatingMenuOpen')
+
+
+#
+# ollamaChatConversationSVGButton - SVG button element model builder
+#
+
+
+function testOllamaChatConversationSVGButtonStroke():
+    # symbolFill = false (stroked symbol), backgroundFill = false (no circle)
+    unittestDeepEqual( \
+        ollamaChatConversationSVGButton(24, 32, 24, 'M4,6 H20', false, false, ollamaChatModelsModelURL), \
+        { \
+            'html': 'button', \
+            'attr': { \
+                'type': 'button', \
+                'style': 'background: transparent; border: none; padding: 0; cursor: pointer', \
+                'onmouseover': "this.children[0].style.opacity='0.6';", \
+                'onmouseout': "this.children[0].style.opacity='1';" \
+            }, \
+            'elem': { \
+                'svg': 'svg', \
+                'attr': { \
+                    'width': '24.000', \
+                    'height': '32.000', \
+                    'viewBox': '0 0 24 24', \
+                    'fill': 'none', \
+                    'style': 'vertical-align: middle', \
+                    'preserveAspectRatio': 'none' \
+                }, \
+                'elem': [ \
+                    null, \
+                    { \
+                        'svg': 'path', \
+                        'attr': { \
+                            'd': 'M4,6 H20', \
+                            'style': 'fill: none; stroke: var(--barescript-color-foreground); stroke-width: 2.40' \
+                        } \
+                    } \
+                ] \
+            }, \
+            'callback': {'click': '<function>'} \
+        } \
+    )
+endfunction
+unittestRunTest('testOllamaChatConversationSVGButtonStroke')
+
+
+function testOllamaChatConversationSVGButtonFilled():
+    # symbolFill = true (filled symbol), backgroundFill = true (circle background)
+    unittestDeepEqual( \
+        ollamaChatConversationSVGButton(32, 32, 24, 'M12,18 V7', true, true, ollamaChatModelsModelURL), \
+        { \
+            'html': 'button', \
+            'attr': { \
+                'type': 'button', \
+                'style': 'background: transparent; border: none; padding: 0; cursor: pointer', \
+                'onmouseover': "this.children[0].style.opacity='0.8';", \
+                'onmouseout': "this.children[0].style.opacity='1';" \
+            }, \
+            'elem': { \
+                'svg': 'svg', \
+                'attr': { \
+                    'width': '32.000', \
+                    'height': '32.000', \
+                    'viewBox': '0 0 24 24', \
+                    'fill': 'none', \
+                    'style': 'vertical-align: middle', \
+                    'preserveAspectRatio': 'none' \
+                }, \
+                'elem': [ \
+                    { \
+                        'svg': 'circle', \
+                        'attr': { \
+                            'cx': '12.000', \
+                            'cy': '12.000', \
+                            'r': '12.000', \
+                            'style': 'fill: var(--barescript-color-background); stroke: none' \
+                        } \
+                    }, \
+                    { \
+                        'svg': 'path', \
+                        'attr': { \
+                            'd': 'M12,18 V7', \
+                            'style': 'fill: var(--barescript-color-foreground); stroke: none; stroke-width: 2.40' \
+                        } \
+                    } \
+                ] \
+            }, \
+            'callback': {'click': '<function>'} \
+        } \
+    )
+endfunction
+unittestRunTest('testOllamaChatConversationSVGButtonFilled')
+
+
+#
+# ollamaChatConversationResponseRenderTop / RenderBottom
+#
+
+
+function testOllamaChatConversationResponseTopTextView():
+    systemGlobalSet('vText', true)
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({})
+    ollamaChatConversationResponseRenderTop(args, {'user': 'u', 'model': 'resp', 'thinking': 't'}, 0)
+    unittestDeepEqual(unittestMockEnd(), [])
+    systemGlobalSet('vText', null)
+endfunction
+unittestRunTest('testOllamaChatConversationResponseTopTextView')
+
+
+function testOllamaChatConversationResponseTopNoThinking():
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({})
+    ollamaChatConversationResponseRenderTop(args, {'user': 'u', 'model': 'resp'}, 0)
+    unittestDeepEqual(unittestMockEnd(), [])
+endfunction
+unittestRunTest('testOllamaChatConversationResponseTopNoThinking')
+
+
+function testOllamaChatConversationResponseTopShow():
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({})
+    ollamaChatConversationResponseRenderTop(args, {'user': 'u', 'model': 'resp', 'thinking': 't'}, 0)
+    unittestDeepEqual(unittestMockEnd(), [['markdownPrint', ['','[Show Thinking](#var.vThink=0)']]])
+endfunction
+unittestRunTest('testOllamaChatConversationResponseTopShow')
+
+
+function testOllamaChatConversationResponseTopHide():
+    systemGlobalSet('vThink', 0)
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({})
+    ollamaChatConversationResponseRenderTop(args, {'user': 'u', 'model': 'resp', 'thinking': 't'}, 0)
+    unittestDeepEqual(unittestMockEnd(), [['markdownPrint', ['','[Hide Thinking](#var=)']]])
+    systemGlobalSet('vThink', null)
+endfunction
+unittestRunTest('testOllamaChatConversationResponseTopHide')
+
+
+function testOllamaChatConversationResponseBottomTextView():
+    systemGlobalSet('vText', true)
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({})
+    ollamaChatConversationResponseRenderBottom(args, {'user': 'u', 'model': 'resp'}, 0)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['elementModelRender', [ \
+            { \
+                'html': 'pre', \
+                'elem': {'text': 'resp'} \
+            } \
+        ]] \
+    ])
+    systemGlobalSet('vText', null)
+endfunction
+unittestRunTest('testOllamaChatConversationResponseBottomTextView')
+
+
+function testOllamaChatConversationResponseBottomMarkdown():
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({})
+    ollamaChatConversationResponseRenderBottom(args, {'user': 'u', 'model': 'resp'}, 0)
+    unittestDeepEqual(unittestMockEnd(), [['markdownPrint', ['','resp']]])
+endfunction
+unittestRunTest('testOllamaChatConversationResponseBottomMarkdown')
+
+
+function testOllamaChatConversationResponseBottomThinkingShown():
+    systemGlobalSet('vThink', 0)
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({})
+    ollamaChatConversationResponseRenderBottom(args, {'user': 'u', 'model': 'resp', 'thinking': 'thoughts'}, 0)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['markdownPrint', ['','**<think>**','','thoughts','','**</think>**','','-----']], \
+        ['markdownPrint', ['','resp']] \
+    ])
+    systemGlobalSet('vThink', null)
+endfunction
+unittestRunTest('testOllamaChatConversationResponseBottomThinkingShown')
+
+
+#
+# ollamaChatConversationSavePrompt
+#
+
+
+function testOllamaChatConversationSavePromptEmpty():
+    # Whitespace-only prompt is not saved
+    unittestMockAll({'documentInputValue': {'ollama-chat-prompt': '  '}})
+    ollamaChatConversationSavePrompt()
+    unittestDeepEqual(unittestMockEnd(), [['documentInputValue', ['ollama-chat-prompt']]])
+endfunction
+unittestRunTest('testOllamaChatConversationSavePromptEmpty')
+
+
+function testOllamaChatConversationSavePromptNonEmpty():
+    unittestMockAll({'documentInputValue': {'ollama-chat-prompt': 'draft'}})
+    ollamaChatConversationSavePrompt()
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['documentInputValue', ['ollama-chat-prompt']], \
+        ['sessionStorageSet', ['ollama-chat-conversation-message','draft']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatConversationSavePromptNonEmpty')
+
+
+#
+# ollamaChatConversationOnClick
+#
+
+
+async function testOllamaChatConversationOnClickApiNav():
+    # api + url + noSave: fetch then navigate, no prompt save
+    unittestMockAll({})
+    ollamaChatConversationOnClick({'id': 'C1'}, 'deleteConversation', '#var=', true)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'deleteConversation', \
+                'body': '{"id":"C1"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatConversationOnClickApiNav')
+
+
+async function testOllamaChatConversationOnClickSaveNav():
+    # url only, noSave false: save prompt then navigate
+    unittestMockAll({'documentInputValue': {'ollama-chat-prompt': 'draft'}})
+    ollamaChatConversationOnClick({'id': 'C1'}, null, '#var.vMenu=true', false)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['documentInputValue', ['ollama-chat-prompt']], \
+        ['sessionStorageSet', ['ollama-chat-conversation-message','draft']], \
+        ['windowSetLocation', ['#var.vMenu=true']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatConversationOnClickSaveNav')
+
+
+#
+# ollamaChatConversationOnTitleUpdate
+#
+
+
+async function testOllamaChatConversationOnTitleUpdateNonEmpty():
+    unittestMockAll({'documentInputValue': {'ollama-chat-title': 'New Title', 'ollama-chat-prompt': ''}})
+    ollamaChatConversationOnTitleUpdate({'id': 'C1'})
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['documentInputValue', ['ollama-chat-title']], \
+        ['systemFetch', [ \
+            { \
+                'url': 'setConversationTitle', \
+                'body': '{"id":"C1","title":"New Title"}' \
+            } \
+        ]], \
+        ['documentInputValue', ['ollama-chat-prompt']], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatConversationOnTitleUpdateNonEmpty')
+
+
+async function testOllamaChatConversationOnTitleUpdateEmpty():
+    # Empty title - no setConversationTitle fetch
+    unittestMockAll({'documentInputValue': {'ollama-chat-title': '  ', 'ollama-chat-prompt': ''}})
+    ollamaChatConversationOnTitleUpdate({'id': 'C1'})
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['documentInputValue', ['ollama-chat-title']], \
+        ['documentInputValue', ['ollama-chat-prompt']], \
+        ['windowSetLocation', ['#var=']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatConversationOnTitleUpdateEmpty')
+
+
+#
+# ollamaChatConversationOnTemplate
+#
+
+
+async function testOllamaChatConversationOnTemplate():
+    conversation = {'title': 'Conv', 'exchanges': [{'user': 'u1', 'model': 'm1'}, {'user': 'u2', 'model': 'm2'}]}
+    unittestMockAll({'systemFetch': {'createTemplate': jsonStringify({'id': 'TID'})}})
+    ollamaChatConversationOnTemplate(conversation)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'createTemplate', \
+                'body': '{"prompts":["u1","u2"],"title":"Conv"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ["#var.vId='TID'&var.vView='template'"]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatConversationOnTemplate')
+
+
+async function testOllamaChatConversationOnTemplateNull():
+    # createTemplate fails - no navigation
+    conversation = {'title': 'Conv', 'exchanges': [{'user': 'u1', 'model': 'm1'}]}
+    unittestMockAll({})
+    ollamaChatConversationOnTemplate(conversation)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'createTemplate', \
+                'body': '{"prompts":["u1"],"title":"Conv"}' \
+            } \
+        ]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatConversationOnTemplateNull')
+
+
+#
+# ollamaChatConversationOnPrompt
+#
+
+
+async function testOllamaChatConversationOnPromptStart():
+    # No conversation id - start a new conversation and navigate to it
+    unittestMockAll({'systemFetch': {'startConversation': jsonStringify({'id': 'CONV'})}})
+    ollamaChatConversationOnPrompt({'id': null}, 'Hello')
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'startConversation', \
+                'body': '{"user":"Hello"}' \
+            } \
+        ]], \
+        ['windowSetLocation', ["#var.vId='CONV'&chat-bottom"]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatConversationOnPromptStart')
+
+
+async function testOllamaChatConversationOnPromptEmpty():
+    # Empty prompt - no action
+    unittestMockAll({})
+    ollamaChatConversationOnPrompt({'id': null}, '')
+    unittestDeepEqual(unittestMockEnd(), [])
+endfunction
+unittestRunTest('testOllamaChatConversationOnPromptEmpty')
+
+
+async function testOllamaChatConversationOnPromptStartNull():
+    # Start fails - no navigation
+    unittestMockAll({})
+    ollamaChatConversationOnPrompt({'id': null}, 'Hello')
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [ \
+            { \
+                'url': 'startConversation', \
+                'body': '{"user":"Hello"}' \
+            } \
+        ]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatConversationOnPromptStartNull')
+
+
+#
+# ollamaChatMain router -> conversation error path
+#
+
+
+async function testOllamaChatConversationMainError():
+    systemGlobalSet('vView', 'chat')
+    systemGlobalSet('vId', 'C1')
+    unittestMockAll({})
+    ollamaChatMain()
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversation?id=C1']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Unknown conversation ID']] \
+    ])
+    systemGlobalSet('vView', null)
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationMainError')
+
+
+#
+# Button callback binding verification (helpers in testOllamaChatHelpers.bare)
+#
+# The render tests above assert each control carries a callback ('<function>'),
+# but not WHICH handler or captured arguments it is bound to. These tests pull
+# the actual captured callback out of the model and invoke it, proving the
+# binding (e.g. that the Title button navigates to the title URL and the send
+# button submits the prompt). The Download control is a plain <a href>, so its
+# binding is already covered by the structural render assertions above.
+#
+
+
+async function testOllamaChatConversationMenuButtonBinding():
+    systemGlobalSet('vMenu', true)
+    systemGlobalSet('vId', 'C1')
+    conv = {'id': 'C1', 'title': 'Conversation Number 1', 'model': 'm:1', 'exchanges': [{'user': 'u', 'model': 'r'}]}
+    args = argsParse(ollamaChatArguments)
+
+    # Capture the live menu-control callbacks (menu expanded, not generating)
+    unittestMockAll({})
+    els = ollamaChatConversationFloatingElements(args, conv, false)
+    unittestMockEnd()
+
+    # The navigation buttons must each call OnClick with their own toggle URL
+    navData = {'documentInputValue': {'ollama-chat-prompt': ''}}
+    ollamaChatTestSameEffect( \
+        ollamaChatTestFindClick(els, '<<'), \
+        systemPartial(ollamaChatConversationOnClick, args, null, argsURL(ollamaChatArguments, {'menu': false})), \
+        navData \
+    )
+    ollamaChatTestSameEffect( \
+        ollamaChatTestFindClick(els, 'Title'), \
+        systemPartial(ollamaChatConversationOnClick, args, null, argsURL(ollamaChatArguments, {'action': 'title'})), \
+        navData \
+    )
+    ollamaChatTestSameEffect( \
+        ollamaChatTestFindClick(els, 'Text'), \
+        systemPartial(ollamaChatConversationOnClick, args, null, argsURL(ollamaChatArguments, {'text': true})), \
+        navData \
+    )
+
+    # The Delete button must call the deleteConversation API then navigate to the index
+    ollamaChatTestSameEffect( \
+        ollamaChatTestFindClick(els, 'Delete'), \
+        systemPartial(ollamaChatConversationOnClick, args, 'deleteConversation', argsURL(ollamaChatArguments, null, true), true), \
+        {} \
+    )
+
+    # The Template button must build a template from this conversation
+    ollamaChatTestSameEffect( \
+        ollamaChatTestFindClick(els, 'Template'), \
+        systemPartial(ollamaChatConversationOnTemplate, conv), \
+        {'systemFetch': {'createTemplate': jsonStringify({'id': 'TID'})}} \
+    )
+
+    systemGlobalSet('vMenu', null)
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationMenuButtonBinding')
+
+
+async function testOllamaChatConversationPromptButtonBinding():
+    args = argsParse(ollamaChatArguments)
+
+    # Capture the live prompt-control callbacks for a new (no-conversation) chat
+    unittestMockAll({})
+    els = ollamaChatConversationFloatingElements(args, null, false)
+    unittestMockEnd()
+    promptElem = objectGet(arrayGet(els, 2), 'elem')
+    multilineFn = objectGet(objectGet(arrayGet(promptElem, 0), 'callback'), 'click')
+    keyupFn = objectGet(objectGet(arrayGet(promptElem, 1), 'callback'), 'keyup')
+    sendFn = objectGet(objectGet(arrayGet(promptElem, 2), 'callback'), 'click')
+
+    # The hamburger button toggles multiline mode
+    ollamaChatTestSameEffect( \
+        multilineFn, \
+        systemPartial(ollamaChatConversationOnClick, args, null, argsURL(ollamaChatArguments, {'multiline': true})), \
+        {'documentInputValue': {'ollama-chat-prompt': ''}} \
+    )
+
+    # The send button and the prompt's Enter key both submit the prompt
+    startData = {'systemFetch': {'startConversation': jsonStringify({'id': 'CONV'})}, \
+        'documentInputValue': {'ollama-chat-prompt': 'Hello'}}
+    ollamaChatTestSameEffect(sendFn, systemPartial(ollamaChatConversationOnPrompt, args), startData)
+    ollamaChatTestSameEffect( \
+        systemPartial(keyupFn, 13), \
+        systemPartial(ollamaChatConversationOnPrompt, args), \
+        startData \
+    )
+endfunction
+unittestRunTest('testOllamaChatConversationPromptButtonBinding')
+
+
+async function testOllamaChatConversationStopButtonBinding():
+    systemGlobalSet('vId', 'C1')
+    conv = {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'exchanges': [{'user': 'u', 'model': 'r'}]}
+    args = argsParse(ollamaChatArguments)
+
+    # Capture the live stop-button callback (generating -> stop replaces send)
+    unittestMockAll({})
+    els = ollamaChatConversationFloatingElements(args, conv, true)
+    unittestMockEnd()
+    stopFn = objectGet(objectGet(arrayGet(objectGet(arrayGet(els, 2), 'elem'), 3), 'callback'), 'click')
+
+    # The stop button must call the stopConversation API then re-render in place
+    ollamaChatTestSameEffect( \
+        stopFn, \
+        systemPartial(ollamaChatConversationOnClick, args, 'stopConversation', null, false), \
+        {'systemFetch': objectNew('getConversation?id=C1', jsonStringify({'conversation': conv})), \
+            'documentInputValue': {'ollama-chat-prompt': ''}} \
+    )
+
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationStopButtonBinding')
+
+
+async function testOllamaChatConversationPageBottomButtonBinding():
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': false, \
+        'exchanges': [{'user': 'u1', 'model': 'r1'}]}}
+    render = systemPartial(ollamaChatConversationPage, args)
+    data = {'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv)), \
+        'documentInputValue': {'ollama-chat-prompt': ''}}
+
+    # The page-bottom exchange buttons must each call OnClick with their own API
+    ollamaChatTestVerifyClick(render, 'Delete', \
+        systemPartial(ollamaChatConversationOnClick, args, 'deleteConversationExchange'), data)
+    ollamaChatTestVerifyClick(render, 'Regenerate', \
+        systemPartial(ollamaChatConversationOnClick, args, 'regenerateConversationExchange'), data)
+
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationPageBottomButtonBinding')
+
+
+async function testOllamaChatConversationTitleEditButtonBinding():
+    systemGlobalSet('vId', 'C1')
+    systemGlobalSet('vAction', 'title')
+    args = argsParse(ollamaChatArguments)
+    conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': false, \
+        'exchanges': [{'user': 'u1', 'model': 'r1'}]}}
+    render = systemPartial(ollamaChatConversationPage, args)
+    data = {'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv)), \
+        'documentInputValue': {'ollama-chat-title': 'New', 'ollama-chat-prompt': ''}}
+
+    # The Update button saves the title; Cancel navigates back without saving
+    ollamaChatTestVerifyClick(render, 'Update', systemPartial(ollamaChatConversationOnTitleUpdate, args), data)
+    ollamaChatTestVerifyClick(render, 'Cancel', \
+        systemPartial(ollamaChatConversationOnClick, args, null, argsURL(ollamaChatArguments)), data)
+
+    systemGlobalSet('vId', null)
+    systemGlobalSet('vAction', null)
+endfunction
+unittestRunTest('testOllamaChatConversationTitleEditButtonBinding')
