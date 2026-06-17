@@ -545,6 +545,10 @@ def get_models(ctx, unused_req):
 
 
 def _parse_parameter_size(ctx, parameter_size):
+    # MLX models report an empty parameter size - return 0 without warning
+    if parameter_size == '':
+        return 0
+
     try:
         value = float(parameter_size[:-1])
         unit = parameter_size[-1]

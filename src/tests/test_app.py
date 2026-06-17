@@ -2441,6 +2441,60 @@ class TestAPI(unittest.TestCase):
                 self.assertEqual(json.load(config_fh), original_config)
 
 
+    def test_get_models_parameter_size_invalid(self):
+        original_config = {'model': 'llm', 'conversations': []}
+        test_files = [
+                ('ollama-chat.json', json.dumps(original_config))
+             ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Create a mock Response object for the list request (parameter size fails to parse)
+            mock_list_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_list_response.status = 200
+            mock_list_response.json.return_value = {
+                'models': [
+                    {
+                        'model': 'llm:7b',
+                        'details': {'parameter_size': 'abcB'},
+                        'size': 1000,
+                        'modified_at': '2023-10-01T12:00:00+00:00'
+                    }
+                ]
+            }
+
+            # Configure the mock PoolManager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_list_response
+
+            environ = {'wsgi.errors': StringIO()}
+            status, headers, content_bytes = app.request('GET', '/getModels', environ=environ)
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {
+                'models': [
+                    {'id': 'llm:7b', 'name': 'llm', 'parameters': 0, 'size': 1000, 'modified': '2023-10-01T12:00:00+00:00'}
+                ],
+                'downloading': [],
+                'model': 'llm'
+            })
+            mock_list_response.close.assert_called_once_with()
+            logs = environ['wsgi.errors'].getvalue()
+            logs = re.sub(r'\[.*?\]', '[X / Y]', logs)
+            self.assertEqual(logs, 'WARNING [X / Y] Invalid parameter size "abcB"\n')
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
+
     def test_get_models_parameter_size_empty(self):
         original_config = {'model': 'llm', 'conversations': []}
         test_files = [
@@ -2482,9 +2536,9 @@ class TestAPI(unittest.TestCase):
                 'model': 'llm'
             })
             mock_list_response.close.assert_called_once_with()
+            # An empty parameter size (MLX models) is a known case - no warning is logged
             logs = environ['wsgi.errors'].getvalue()
-            logs = re.sub(r'\[.*?\]', '[X / Y]', logs)
-            self.assertEqual(logs, 'WARNING [X / Y] Invalid parameter size ""\n')
+            self.assertEqual(logs, '')
 
             # Verify the app config
             with app.config() as config:
