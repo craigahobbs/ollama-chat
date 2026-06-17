@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.1 (2026-06-17)
+
+- [80d0776](https://github.com/craigahobbs/ollama-chat/commit/80d0776) - remove parameter_size empty string warning
+
+- [2d9f09e](https://github.com/craigahobbs/ollama-chat/commit/2d9f09e) - reduce models page renders with downloading models
+
+- [9bdd066](https://github.com/craigahobbs/ollama-chat/commit/9bdd066) - reduce index page renders with generating conversions
+
+- [f54c2e9](https://github.com/craigahobbs/ollama-chat/commit/f54c2e9) - better handle getSystemInfo failures on models page
+
 ## 1.0.0 (2026-06-17)
 
 - [9c36ebc](https://github.com/craigahobbs/ollama-chat/commit/9c36ebc) - fix error with ollama cloud models
