@@ -280,6 +280,134 @@ class TestChatManager(unittest.TestCase):
                 self.assertEqual(json.load(config_fh), expected_config)
 
 
+    def test_chat_fn_cloud_chunking(self):
+        test_files = [
+            ('ollama-chat.json', json.dumps({
+                'conversations': [
+                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+                ]
+            }))
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('threading.Thread'), \
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
+
+            # Create a mock show response
+            mock_show_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_show_response.status = 200
+            mock_show_response.json.return_value = {'capabilities': ['thinking']}
+
+            # A cloud-proxied stream packs multiple newline-delimited JSON objects into a single
+            # HTTP chunk and may split an object across chunks. Build the NDJSON stream, then
+            # re-split it at byte boundaries that do not align with the JSON object lines.
+            ndjson = ''.join(
+                json.dumps(obj) + '\n' for obj in [
+                    {'message': {'thinking': 'The user '}},
+                    {'message': {'thinking': 'said hello'}},
+                    {'message': {'content': 'Hi '}},
+                    {'message': {'content': 'there!'}}
+                ]
+            ).encode('utf-8')
+            split = ndjson.index(b'there')
+
+            # Create a mock chat response with cloud-style chunk boundaries
+            mock_chat_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_chat_response.status = 200
+            mock_chat_response.read_chunked.return_value = [ndjson[:split], ndjson[split:]]
+
+            # Configure the mock pool manager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.side_effect = [mock_show_response, mock_chat_response]
+
+            # Create and run the ChatManager
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+            chat_manager = ChatManager(app, 'conv1', ['Hello'])
+            app.chats['conv1'] = chat_manager
+            ChatManager.chat_thread_fn(chat_manager)
+            self.assertDictEqual(app.chats, {})
+            mock_chat_response.close.assert_called_once_with()
+
+            # Verify the full streamed response was reassembled from the misaligned chunks
+            expected_config = {
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [
+                            {
+                                'user': 'Hello',
+                                'model': 'Hi there!',
+                                'thinking': 'The user said hello'
+                            }
+                        ]
+                    }
+                ]
+            }
+            with app.config() as config:
+                self.assertDictEqual(config, expected_config)
+
+
+    def test_chat_fn_truncated_stream(self):
+        test_files = [
+            ('ollama-chat.json', json.dumps({
+                'conversations': [
+                    {'id': 'conv1', 'model': 'llm', 'title': 'Conversation 1', 'exchanges': []}
+                ]
+            }))
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('threading.Thread'), \
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
+
+            # Create a mock show response
+            mock_show_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_show_response.status = 200
+            mock_show_response.json.return_value = {'capabilities': []}
+
+            # A complete object followed by a truncated object (the stream ended mid-object)
+            truncated = b'{"message": {"content": "the'
+            mock_chat_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_chat_response.status = 200
+            mock_chat_response.read_chunked.return_value = [
+                json.dumps({'message': {'content': 'Hi '}}).encode('utf-8') + b'\n',
+                truncated
+            ]
+
+            # Configure the mock pool manager instance
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.side_effect = [mock_show_response, mock_chat_response]
+
+            # Create and run the ChatManager
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+            chat_manager = ChatManager(app, 'conv1', ['Hello'])
+            app.chats['conv1'] = chat_manager
+            ChatManager.chat_thread_fn(chat_manager)
+            self.assertDictEqual(app.chats, {})
+            mock_chat_response.close.assert_called_once_with()
+
+            # Verify the partial content was kept and the truncation surfaced as an error
+            expected_config = {
+                'conversations': [
+                    {
+                        'id': 'conv1',
+                        'model': 'llm',
+                        'title': 'Conversation 1',
+                        'exchanges': [
+                            {
+                                'user': 'Hello',
+                                'model': f'Hi \n**ERROR:** Invalid streamed response: {truncated.decode("utf-8")!r}'
+                            }
+                        ]
+                    }
+                ]
+            }
+            with app.config() as config:
+                self.assertDictEqual(config, expected_config)
+
+
     def test_chat_fn_error_show(self):
         test_files = [
             ('ollama-chat.json', json.dumps({

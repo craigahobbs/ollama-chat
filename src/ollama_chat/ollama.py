@@ -1,6 +1,7 @@
 # Licensed under the MIT License
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
+import codecs
 import datetime
 import json
 import os
@@ -12,6 +13,33 @@ import urllib3
 def _get_ollama_url(path):
     ollama_host = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
     return f'{ollama_host}{path}'
+
+
+# Decode a streamed, newline-delimited JSON (NDJSON) response into individual JSON objects. The
+# Ollama API streams one JSON object per line, but HTTP chunk boundaries do not align with those
+# lines - a single chunk may carry multiple objects (common with cloud models) or a partial object
+# split across chunks. Buffer the decoded text and yield each complete JSON object as it arrives.
+def _iter_ndjson(response):
+    decoder = json.JSONDecoder()
+    text_decoder = codecs.getincrementaldecoder('utf-8')()
+    buffer = ''
+    for data in response.read_chunked():
+        buffer += text_decoder.decode(data)
+        while True:
+            buffer = buffer.lstrip()
+            if not buffer:
+                break
+            try:
+                chunk, index = decoder.raw_decode(buffer)
+            except json.JSONDecodeError:
+                # Incomplete object - wait for the next chunk to complete it
+                break
+            buffer = buffer[index:]
+            yield chunk
+
+    # The stream ended mid-object - the response was truncated or malformed
+    if buffer.strip():
+        raise urllib3.exceptions.HTTPError(f'Invalid streamed response: {buffer.strip()!r}')
 
 
 # Call the Ollama chat API and yield each streamed JSON response chunk
@@ -37,7 +65,7 @@ def ollama_chat(pool_manager, model, messages):
             raise urllib3.exceptions.HTTPError(f'Unknown model "{model}" ({response_chat.status})')
 
         # Respond with each streamed JSON chunk
-        for chunk in (json.loads(line.decode('utf-8')) for line in response_chat.read_chunked()):
+        for chunk in _iter_ndjson(response_chat):
             if 'error' in chunk:
                 raise urllib3.exceptions.HTTPError(chunk['error'])
             yield chunk
@@ -87,6 +115,6 @@ def ollama_pull(pool_manager, model):
             raise urllib3.exceptions.HTTPError(f'Unknown model "{model}" ({response_pull.status})')
 
         # Respond with each streamed JSON chunk
-        yield from (json.loads(line.decode('utf-8')) for line in response_pull.read_chunked())
+        yield from _iter_ndjson(response_pull)
     finally:
         response_pull.close()
