@@ -413,10 +413,70 @@ async function testOllamaChatIndexGenerating():
         ]], \
         ['markdownPrint', ['','## Templates']], \
         ['markdownPrint', ['','\u00a0\u00a0\u00a0\u00a0' + '*No templates*']], \
+        ['sessionStorageSet', ['ollama-chat-index-state', \
+            jsonStringify({'model': 'm:1', 'conversations': [conv], 'templates': []})]], \
         ['windowSetTimeout', ['<function>',2000]] \
     ])
 endfunction
 unittestRunTest('testOllamaChatIndexGenerating')
+
+
+async function testOllamaChatIndexOnTimeoutUnchanged():
+    args = argsParse(ollamaChatArguments)
+    conv = {'id': 'C1', 'model': 'm:1', 'title': 'Chat', 'generating': true}
+    response = jsonStringify({'model': 'm:1', 'conversations': [conv], 'templates': []})
+    unittestMockAll({'systemFetch': {'getConversations': response}})
+
+    # Seed the stored display state equal to the fetched state
+    sessionStorageSet('ollama-chat-index-state', response)
+
+    ollamaChatIndexOnTimeout(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['sessionStorageSet', ['ollama-chat-index-state', response]], \
+        ['systemFetch', ['getConversations']], \
+        ['windowSetTimeout', ['<function>',2000]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexOnTimeoutUnchanged')
+
+
+async function testOllamaChatIndexOnTimeoutRerender():
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({'systemFetch': {'getConversations': jsonStringify({'model': 'm:1', 'conversations': [], 'templates': []})}})
+
+    # Stored state differs from the fetched state -> full re-render. The handler must pass the
+    # conversations it already fetched to ollamaChatIndexPage, so getConversations is fetched only once.
+    sessionStorageSet('ollama-chat-index-state', jsonStringify({'model': 'm:0', 'conversations': [], 'templates': []}))
+
+    ollamaChatIndexOnTimeout(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['sessionStorageSet', ['ollama-chat-index-state', jsonStringify({'model': 'm:0', 'conversations': [], 'templates': []})]], \
+        ['systemFetch', ['getConversations']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['# Ollama Chat']], \
+        ['markdownPrint', ['**Current Model:** m:1']], \
+        ['elementModelRender', [testOllamaChatIndexMenuElements]], \
+        ['markdownPrint', ['','## Conversations']], \
+        ['markdownPrint', ['','\u00a0\u00a0\u00a0\u00a0' + '*No conversations*']], \
+        ['markdownPrint', ['','## Templates']], \
+        ['markdownPrint', ['','\u00a0\u00a0\u00a0\u00a0' + '*No templates*']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexOnTimeoutRerender')
+
+
+async function testOllamaChatIndexOnTimeoutError():
+    args = argsParse(ollamaChatArguments)
+    # null getConversations -> error page
+    unittestMockAll({})
+    ollamaChatIndexOnTimeout(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversations']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Failed to get conversations']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatIndexOnTimeoutError')
 
 
 async function testOllamaChatIndexConversationSelected():

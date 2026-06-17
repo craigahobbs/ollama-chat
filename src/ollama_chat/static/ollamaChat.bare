@@ -31,16 +31,18 @@ endfunction
 
 
 # The Ollama Chat index page
-async function ollamaChatIndexPage(args):
+async function ollamaChatIndexPage(args, conversationsResponse):
     action = objectGet(args, 'action')
     actionID = objectGet(args, 'actionID')
 
-    # Get the conversations
-    conversationsResponse = systemFetch('getConversations')
-    conversationsResponse = if(conversationsResponse != null, jsonParse(conversationsResponse))
+    # Get the conversations (unless the caller already fetched them)
     if conversationsResponse == null:
-        ollamaChatErrorPage('Failed to get conversations')
-        return
+        conversationsResponseText = systemFetch('getConversations')
+        conversationsResponse = if(conversationsResponseText != null, jsonParse(conversationsResponseText))
+        if conversationsResponse == null:
+            ollamaChatErrorPage('Failed to get conversations')
+            return
+        endif
     endif
 
     # Render the title
@@ -165,13 +167,39 @@ async function ollamaChatIndexPage(args):
 
     # Refresh the page?
     if anyGenerating:
-        windowSetTimeout(systemPartial(ollamaChatIndexPage, args), ollamaChatIndexTimeoutMs)
+        sessionStorageSet(ollamaChatIndexStateKey, jsonStringify(conversationsResponse))
+        windowSetTimeout(systemPartial(ollamaChatIndexOnTimeout, args), ollamaChatIndexTimeoutMs)
     endif
+endfunction
+
+
+# Index page refresh timeout handler - re-render only when the display state changed
+async function ollamaChatIndexOnTimeout(args):
+    # Get the conversations
+    conversationsResponseText = systemFetch('getConversations')
+    conversationsResponse = if(conversationsResponseText != null, jsonParse(conversationsResponseText))
+    if conversationsResponse == null:
+        ollamaChatErrorPage('Failed to get conversations')
+        return
+    endif
+
+    # No display state changed? If so,just reschedule the refresh without re-rendering.
+    if jsonStringify(conversationsResponse) == sessionStorageGet(ollamaChatIndexStateKey):
+        windowSetTimeout(systemPartial(ollamaChatIndexOnTimeout, args), ollamaChatIndexTimeoutMs)
+        return
+    endif
+
+    # Re-render the full page (reusing the conversations we already fetched)
+    ollamaChatIndexPage(args, conversationsResponse)
 endfunction
 
 
 # The index conversation-generating refresh timeout
 ollamaChatIndexTimeoutMs = 2000
+
+
+# The index page display-state session storage key
+ollamaChatIndexStateKey = 'ollama-chat-index-state'
 
 
 # Add template on-click event handler
