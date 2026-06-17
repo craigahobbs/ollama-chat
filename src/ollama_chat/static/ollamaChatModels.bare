@@ -196,10 +196,17 @@ async function ollamaChatModelsDownloadPage(args):
     filterCompatible = objectGet(args, 'filterCompatible')
     sort = objectGet(args, 'sort')
 
-    # Get the system info
+    # Get the system info (a null response means the server is unreachable)
     systemInfo = systemFetch('getSystemInfo')
     systemInfo = if(systemInfo != null, jsonParse(systemInfo))
+    if systemInfo == null:
+        ollamaChatErrorPage('Failed to get system info')
+        return
+    endif
+
+    # A non-positive memory (e.g. -1) means the total memory is unknown - skip compatibility filtering
     totalMemory = objectGet(systemInfo, 'memory')
+    memoryKnown = totalMemory > 0
 
     # Get the downloaded and available models
     availableModels = systemFetch(ollamaChatModelsAvailableURL)
@@ -266,7 +273,7 @@ async function ollamaChatModelsDownloadPage(args):
         anyCompatible = false
         for variant in variants:
             variantParameters = objectGet(variant, 'parameters')
-            isCompatible = variantParameters <= totalMemory
+            isCompatible = !memoryKnown || variantParameters <= totalMemory
             anyCompatible = anyCompatible || isCompatible
             objectSet(variant, 'compatible', isCompatible)
             if !filterCompatible || isCompatible:

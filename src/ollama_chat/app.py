@@ -591,8 +591,10 @@ def get_system_info(unused_ctx, unused_req):
         ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(memory_status))
         total_memory = memory_status.ullTotalPhys
     else: # pragma: no cover
-        # pylint: disable-next=no-member, useless-suppression
-        total_memory = os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
+        phys_pages = os.sysconf("SC_PHYS_PAGES")
+        page_size = os.sysconf("SC_PAGE_SIZE")
+        # os.sysconf returns -1 for an indeterminate value; report -1 (memory unknown) in that case
+        total_memory = phys_pages * page_size if phys_pages > 0 and page_size > 0 else -1
 
     return {
         'memory': total_memory

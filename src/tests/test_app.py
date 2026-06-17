@@ -2881,3 +2881,17 @@ class TestAPI(unittest.TestCase):
 
             # Verify the config file
             self.assertFalse(os.path.exists(config_path))
+
+
+    def test_get_system_info_unknown_memory(self):
+        with create_test_files([]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # os.sysconf returns -1 when the total memory is indeterminate; the action reports memory as -1
+            with unittest.mock.patch('os.sysconf', return_value=-1):
+                status, headers, content_bytes = app.request('GET', '/getSystemInfo')
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'memory': -1})

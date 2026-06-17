@@ -721,6 +721,71 @@ endfunction
 unittestRunTest('testOllamaChatModelsMainDownloadError')
 
 
+async function testOllamaChatModelsMainDownloadSystemInfoError():
+    # getSystemInfo fails (server down or UnknownSystemMemory) -> error page, no available-models fetch
+    systemGlobalSet('vView', 'download')
+    unittestMockAll({})
+    ollamaChatMain()
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getSystemInfo']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Failed to get system info']] \
+    ])
+    systemGlobalSet('vView', null)
+endfunction
+unittestRunTest('testOllamaChatModelsMainDownloadSystemInfoError')
+
+
+async function testOllamaChatModelsDownloadPageUnknownMemory():
+    # getSystemInfo reported -1 (unknown memory) -> compatibility can't be determined, so show all models
+    systemGlobalSet('vFilterMonths', 0)
+    args = argsParse(ollamaChatArguments)
+    url = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+    model = {'name': 'big', 'description': 'Big', 'modified': '2024-01-15', 'downloads': 100, 'variants': [ \
+        {'id': 'big:70b', 'size': '70B', 'parameters': 70000000000} \
+    ]}
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': -1}), url: jsonStringify([model])}})
+    ollamaChatModelsDownloadPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getSystemInfo']], \
+        ['systemFetch', [url]], \
+        ['documentSetTitle', ['Ollama Chat - Download']], \
+        ['markdownPrint', ["[Back](#var.vView='models')",'','# Ollama Chat \- Download']], \
+        ['markdownPrint', [ \
+            '**Recent:** [1 month](#var.vFilterMonths=1)' + \
+                ' | ' + \
+                '[3 months](#var.vFilterMonths=3)' + \
+                ' | ' + \
+                '[6 month](#var=)' + \
+                ' | ' + \
+                'All', \
+            '', \
+            '**Show:** Compatible' + ' | ' + '[All](#var.vFilterCompatible=false&var.vFilterMonths=0)', \
+            '', \
+            "**Sort:** [Downloads](#var.vFilterMonths=0&var.vSort='Downloads')" + \
+                ' | ' + \
+                'Modified' + \
+                ' | ' + \
+                "[Name](#var.vFilterMonths=0&var.vSort='Name')" \
+        ]], \
+        ['markdownPrint', [ \
+            '## big', \
+            '', \
+            'Big', \
+            '', \
+            '**Parameters:** 70B \\', \
+            '**Downloads:** 0.1K \\', \
+            '**Modified:** 2024-01-15', \
+            '', \
+            "[Download](#var.vAction='model'&var.vActionID='big'&var.vFilterMonths=0)", \
+            ' | ' + '[Info](https://ollama.com/library/big)' \
+        ]] \
+    ])
+    systemGlobalSet('vFilterMonths', null)
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageUnknownMemory')
+
+
 #
 # Button callback binding verification (helpers in testOllamaChatHelpers.bare)
 #

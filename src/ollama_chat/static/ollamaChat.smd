@@ -478,7 +478,7 @@ action getSystemInfo
         GET
 
     output
-        # The total system memory
+        # The total system memory, or -1 if it could not be determined
         int memory
 
 
