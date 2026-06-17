@@ -407,12 +407,74 @@ async function testOllamaChatModelsPageDownloading():
                 } \
             ] \
         ]], \
+        ['sessionStorageSet', ['ollama-chat-models-state', \
+            jsonStringify(['m:1', [], [['big:1', '50% of 1.0KB', 'pulling']]])]], \
         ['windowSetTimeout', ['<function>',2000]], \
         ['markdownPrint', ['','## Models']], \
         ['markdownPrint', ['','There are no downloaded models.']] \
     ])
 endfunction
 unittestRunTest('testOllamaChatModelsPageDownloading')
+
+
+async function testOllamaChatModelsOnTimeoutUnchanged():
+    args = argsParse(ollamaChatArguments)
+    # The new fetch advanced the raw byte counter (500 -> 501) but the rounded percentage is
+    # unchanged, so the display state matches the stored state and the render is skipped.
+    dl = {'id': 'big:1', 'status': 'pulling', 'completed': 501, 'size': 1000}
+    unittestMockAll({'systemFetch': {'getModels': jsonStringify({'model': 'm:1', 'models': [], 'downloading': [dl]})}})
+    sessionStorageSet('ollama-chat-models-state', jsonStringify(['m:1', [], [['big:1', '50% of 1.0KB', 'pulling']]]))
+    ollamaChatModelsOnTimeout(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['sessionStorageSet', ['ollama-chat-models-state', jsonStringify(['m:1', [], [['big:1', '50% of 1.0KB', 'pulling']]])]], \
+        ['systemFetch', ['getModels']], \
+        ['windowSetTimeout', ['<function>',2000]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatModelsOnTimeoutUnchanged')
+
+
+async function testOllamaChatModelsOnTimeoutRerender():
+    args = argsParse(ollamaChatArguments)
+    # The stored state had a download in progress; the new fetch shows it completed (downloading
+    # empty), so the display state differs and the full page re-renders - reusing the response the
+    # handler already fetched, so getModels is fetched only once.
+    unittestMockAll({'systemFetch': {'getModels': jsonStringify({'model': 'm:1', 'models': [], 'downloading': []})}})
+    sessionStorageSet('ollama-chat-models-state', jsonStringify(['m:1', [], [['big:1', '50% of 1.0KB', 'pulling']]]))
+    ollamaChatModelsOnTimeout(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['sessionStorageSet', ['ollama-chat-models-state', jsonStringify(['m:1', [], [['big:1', '50% of 1.0KB', 'pulling']]])]], \
+        ['systemFetch', ['getModels']], \
+        ['documentSetTitle', ['Ollama Chat - Models']], \
+        ['markdownPrint', [ \
+            '[Back](#var=)', \
+            '', \
+            '# Ollama Chat \- Models', \
+            '', \
+            '**Current Model:** m:1', \
+            '', \
+            "[Download Models](#var.vView='download')" \
+        ]], \
+        ['markdownPrint', ['','## Models']], \
+        ['markdownPrint', ['','There are no downloaded models.']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatModelsOnTimeoutRerender')
+
+
+async function testOllamaChatModelsOnTimeoutError():
+    args = argsParse(ollamaChatArguments)
+    # null getModels -> error page
+    unittestMockAll({})
+    ollamaChatModelsOnTimeout(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getModels']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Failed to get models']], \
+        ['markdownPrint', ['','[Click here to install Ollama](https://ollama.com/download)']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatModelsOnTimeoutError')
 
 
 #

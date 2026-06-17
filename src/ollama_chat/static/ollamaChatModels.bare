@@ -15,18 +15,24 @@ ollamaChatModelsAvailableURL = 'https://craigahobbs.github.io/ollama-chat/models
 ollamaChatModelsDownloadTimeoutMs = 2000
 
 
+# The models page display-state session storage key
+ollamaChatModelsStateKey = 'ollama-chat-models-state'
+
+
 # The Ollama Chat models page
-async function ollamaChatModelsPage(args):
+async function ollamaChatModelsPage(args, modelsResponse):
     action = objectGet(args, 'action')
     actionID = objectGet(args, 'actionID')
 
-    # Get the models
-    modelsResponse = systemFetch('getModels')
-    modelsResponse = if(modelsResponse != null, jsonParse(modelsResponse))
+    # Get the models (unless the caller already fetched them)
     if modelsResponse == null:
-        ollamaChatErrorPage('Failed to get models')
-        markdownPrint('', '[Click here to install Ollama](https://ollama.com/download)')
-        return
+        modelsResponseText = systemFetch('getModels')
+        modelsResponse = if(modelsResponseText != null, jsonParse(modelsResponseText))
+        if modelsResponse == null:
+            ollamaChatErrorPage('Failed to get models')
+            markdownPrint('', '[Click here to install Ollama](https://ollama.com/download)')
+            return
+        endif
     endif
     currentModel = objectGet(modelsResponse, 'model')
     models = objectGet(modelsResponse, 'models')
@@ -63,9 +69,7 @@ async function ollamaChatModelsPage(args):
         for download in downloading:
             modelID = objectGet(download, 'id')
             status = objectGet(download, 'status')
-            completed = objectGet(download, 'completed')
-            size = objectGet(download, 'size')
-            progress = if(size == null, '0%', mathRound(100 * completed / size) + '% of ' + ollamaChatModelsFormatSize(size))
+            progress = ollamaChatModelsDownloadProgress(download)
             arrayPush(downloadTableRows, {'html': 'tr', 'elem': [ \
                 {'html': 'td', 'elem': {'text': modelID}}, \
                 {'html': 'td', 'elem': {'text': progress}}, \
@@ -75,8 +79,9 @@ async function ollamaChatModelsPage(args):
         endfor
         elementModelRender(downloadTable)
 
-        # Set the refresh timer
-        windowSetTimeout(systemPartial(ollamaChatModelsPage, args), ollamaChatModelsDownloadTimeoutMs)
+        # Record the rendered display state and set the refresh timer
+        sessionStorageSet(ollamaChatModelsStateKey, ollamaChatModelsDisplayState(modelsResponse))
+        windowSetTimeout(systemPartial(ollamaChatModelsOnTimeout, args), ollamaChatModelsDownloadTimeoutMs)
     endif
 
     # Render the model list
@@ -136,6 +141,52 @@ async function ollamaChatModelsPage(args):
         endfor
         elementModelRender(modelTable)
     endif
+endfunction
+
+
+# Helper to compute a download's displayed progress string
+function ollamaChatModelsDownloadProgress(download):
+    completed = objectGet(download, 'completed')
+    size = objectGet(download, 'size')
+    return if(size == null, '0%', mathRound(100 * completed / size) + '% of ' + ollamaChatModelsFormatSize(size))
+endfunction
+
+
+# Helper that returns the models page's display-state signature. Uses the displayed (rounded)
+# progress, not the raw "completed" byte counter, so a tick that does not change the visible
+# percentage/status does not force a re-render.
+function ollamaChatModelsDisplayState(modelsResponse):
+    downloads = []
+    for download in objectGet(modelsResponse, 'downloading'):
+        arrayPush(downloads, [ \
+            objectGet(download, 'id'), \
+            ollamaChatModelsDownloadProgress(download), \
+            objectGet(download, 'status') \
+        ])
+    endfor
+    return jsonStringify([objectGet(modelsResponse, 'model'), objectGet(modelsResponse, 'models'), downloads])
+endfunction
+
+
+# Models page refresh timeout handler - re-render only when the displayed download state changed
+async function ollamaChatModelsOnTimeout(args):
+    # Get the models
+    modelsResponseText = systemFetch('getModels')
+    modelsResponse = if(modelsResponseText != null, jsonParse(modelsResponseText))
+    if modelsResponse == null:
+        ollamaChatErrorPage('Failed to get models')
+        markdownPrint('', '[Click here to install Ollama](https://ollama.com/download)')
+        return
+    endif
+
+    # No display state changed? If so, just reschedule the refresh without re-rendering.
+    if ollamaChatModelsDisplayState(modelsResponse) == sessionStorageGet(ollamaChatModelsStateKey):
+        windowSetTimeout(systemPartial(ollamaChatModelsOnTimeout, args), ollamaChatModelsDownloadTimeoutMs)
+        return
+    endif
+
+    # Re-render the full page (reusing the models we already fetched)
+    ollamaChatModelsPage(args, modelsResponse)
 endfunction
 
 
