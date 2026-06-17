@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.0 (2026-06-17)
+
+- [9c36ebc](https://github.com/craigahobbs/ollama-chat/commit/9c36ebc) - fix error with ollama cloud models
+
+- [e148d11](https://github.com/craigahobbs/ollama-chat/commit/e148d11) - add conversation exchange prev/next links
+
+- [fba7f41](https://github.com/craigahobbs/ollama-chat/commit/fba7f41) - 100% frontend unit test coverage
+
+- [bd2f431](https://github.com/craigahobbs/ollama-chat/commit/bd2f431) - changes based on code review
+
 ## 0.9.85 (2026-06-03)
 
 - [738ae47](https://github.com/craigahobbs/ollama-chat/commit/738ae47) - fix for mlx models
