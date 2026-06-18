@@ -165,24 +165,29 @@ function testOllamaChatConversationFloatingConv():
 endfunction
 
 
-# Expected previous/next navigation <p> below a User heading (nextAnchor = the Next link's anchor suffix)
-function testOllamaChatConversationMessageNavElements(prevIx, nextAnchor):
+# Expected previous/next navigation <p> below a User heading (nextAnchor = the Next link's anchor suffix).
+# Returns null when there are no links - the first exchange (no Previous) while generating (no Next).
+function testOllamaChatConversationMessageNavElements(prevIx, nextAnchor, generating):
     links = []
     if prevIx != null:
         arrayPush(links, formsLinkElements('Previous', "#var.vId='C1'&chat-message-" + prevIx))
-        arrayPush(links, {'text': '\u00a0|\u00a0'})
     endif
-    arrayPush(links, formsLinkElements('Next', "#var.vId='C1'&" + nextAnchor))
-    return {'html': 'p', 'elem': links}
+    if nextAnchor != 'chat-bottom' || !generating:
+        if arrayLength(links):
+            arrayPush(links, {'text': '\u00a0|\u00a0'})
+        endif
+        arrayPush(links, formsLinkElements('Next', "#var.vId='C1'&" + nextAnchor))
+    endif
+    return if(arrayLength(links), {'html': 'p', 'elem': links})
 endfunction
 
 
 # Expected per-exchange element model: anchor + User heading + nav + user message + Model heading
-function testOllamaChatConversationMessage(ixMessage, prevIx, nextAnchor, user):
+function testOllamaChatConversationMessage(ixMessage, prevIx, nextAnchor, user, generating):
     return [ \
         {'html': 'div', 'attr': {'id': "var.vId='C1'&chat-message-" + ixMessage}}, \
         {'html': 'h2', 'elem': {'text': 'User:'}}, \
-        testOllamaChatConversationMessageNavElements(prevIx, nextAnchor), \
+        testOllamaChatConversationMessageNavElements(prevIx, nextAnchor, generating), \
         {'html': 'p', 'attr': {'style': 'white-space: pre-wrap;'}, 'elem': {'text': user}}, \
         {'html': 'h2', 'elem': {'text': 'Model:'}} \
     ]
@@ -235,7 +240,7 @@ function testOllamaChatConversationPage1ExchangeCalls():
         ['documentSetFocus', ['ollama-chat-prompt']], \
         ['documentSetTitle', ['Chat']], \
         ['markdownPrint', ['# Chat','','**Model:** m:1']], \
-        ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-bottom', 'u1')]], \
+        ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-bottom', 'u1', false)]], \
         ['elementModelRender', [testOllamaChatConversationResetDiv]], \
         ['markdownPrint', ['','r1']], \
         ['elementModelRender', [testOllamaChatConversationBottomMenu(0)]], \
@@ -302,11 +307,11 @@ async function testOllamaChatConversationPageWithExchanges():
         ['documentSetFocus', ['ollama-chat-prompt']], \
         ['documentSetTitle', ['Chat']], \
         ['markdownPrint', ['# Chat','','**Model:** m:1']], \
-        ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-message-1', 'u1')]], \
+        ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-message-1', 'u1', false)]], \
         ['markdownPrint', ['','r1']], \
-        ['elementModelRender', [testOllamaChatConversationMessage(1, 0, 'chat-message-2', 'u2')]], \
+        ['elementModelRender', [testOllamaChatConversationMessage(1, 0, 'chat-message-2', 'u2', false)]], \
         ['markdownPrint', ['','r2']], \
-        ['elementModelRender', [testOllamaChatConversationMessage(2, 1, 'chat-bottom', 'u3')]], \
+        ['elementModelRender', [testOllamaChatConversationMessage(2, 1, 'chat-bottom', 'u3', false)]], \
         ['elementModelRender', [testOllamaChatConversationResetDiv]], \
         ['markdownPrint', ['','r3']], \
         ['elementModelRender', [testOllamaChatConversationBottomMenu(2)]], \
@@ -370,7 +375,7 @@ async function testOllamaChatConversationPageTitleEdit():
             ] \
         ]], \
         ['documentSetFocus', ['ollama-chat-title']], \
-        ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-bottom', 'u1')]], \
+        ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-bottom', 'u1', false)]], \
         ['elementModelRender', [testOllamaChatConversationResetDiv]], \
         ['markdownPrint', ['','r1']], \
         ['elementModelRender', [testOllamaChatConversationBottomMenu(0)]], \
@@ -446,7 +451,7 @@ async function testOllamaChatConversationOnTimeoutChanged():
         ['documentSetFocus', ['ollama-chat-prompt']], \
         ['documentSetTitle', ['Chat']], \
         ['markdownPrint', ['# Chat','','**Model:** m:1']], \
-        ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-bottom', 'u1')]], \
+        ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-bottom', 'u1', true)]], \
         ['elementModelRender', [testOllamaChatConversationResetDiv]], \
         ['markdownPrint', ['','r1']], \
         ['elementModelRender', [ \

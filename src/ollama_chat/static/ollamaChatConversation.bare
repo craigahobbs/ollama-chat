@@ -67,7 +67,7 @@ async function ollamaChatConversationPage(args):
         elementModelRender([ \
             {'html': 'div', 'attr': {'id': messageElementID}}, \
             {'html': 'h2', 'elem': {'text': 'User:'}}, \
-            ollamaChatConversationMessageNavElements(ixExchange, ixExchangeLast), \
+            ollamaChatConversationMessageNavElements(ixExchange, ixExchangeLast, generating), \
             { \
                 'html': 'p', \
                 'attr': {'style': 'white-space: pre-wrap;'}, \
@@ -186,7 +186,7 @@ endfunction
 
 
 # Helper that returns a message's previous/next navigation paragraph (rendered below its User heading)
-function ollamaChatConversationMessageNavElements(ixExchange, ixExchangeLast):
+function ollamaChatConversationMessageNavElements(ixExchange, ixExchangeLast, generating):
     # Link to the previous message (except the first)
     links = []
     if ixExchange != 0:
@@ -194,14 +194,19 @@ function ollamaChatConversationMessageNavElements(ixExchange, ixExchangeLast):
             argsURL(ollamaChatArguments, null, false, ollamaChatConversationMessageID + '-' + (ixExchange - 1))))
     endif
 
-    # Link to the next message, or to the conversation bottom for the last message
-    if arrayLength(links):
-        arrayPush(links, {'text': '\u00a0|\u00a0'})
+    # Link to the next message, or to the conversation bottom for the last message. While generating, the
+    # last message's bottom menu (with its "Previous" counterpart) is hidden, so omit its "Next" link.
+    isLast = ixExchange == ixExchangeLast
+    if !isLast || !generating:
+        if arrayLength(links):
+            arrayPush(links, {'text': '\u00a0|\u00a0'})
+        endif
+        nextAnchor = if(!isLast, ollamaChatConversationMessageID + '-' + (ixExchange + 1), ollamaChatConversationBottomID)
+        arrayPush(links, formsLinkElements('Next', argsURL(ollamaChatArguments, null, false, nextAnchor)))
     endif
-    nextAnchor = if(ixExchange != ixExchangeLast, ollamaChatConversationMessageID + '-' + (ixExchange + 1), ollamaChatConversationBottomID)
-    arrayPush(links, formsLinkElements('Next', argsURL(ollamaChatArguments, null, false, nextAnchor)))
 
-    return {'html': 'p', 'elem': links}
+    # No links (the first exchange while generating)? Render nothing
+    return if(arrayLength(links), {'html': 'p', 'elem': links})
 endfunction
 
 
