@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2 (2026-06-18)
+
+- [f4254fd](https://github.com/craigahobbs/ollama-chat/commit/f4254fd) - improve conversation previous and next links
+
+- [8d0b744](https://github.com/craigahobbs/ollama-chat/commit/8d0b744) - fix conversation thinking close rendering with incomplete thinking code blocks
+
 ## 1.0.1 (2026-06-17)
 
 - [80d0776](https://github.com/craigahobbs/ollama-chat/commit/80d0776) - remove parameter_size empty string warning
