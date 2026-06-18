@@ -859,7 +859,9 @@ function testOllamaChatConversationResponseBottomThinkingShown():
     unittestMockAll({})
     ollamaChatConversationResponseRenderBottom(args, {'user': 'u', 'model': 'resp', 'thinking': 'thoughts'}, 0)
     unittestDeepEqual(unittestMockEnd(), [ \
-        ['markdownPrint', ['','**<think>**','','thoughts','','**</think>**','','-----']], \
+        ['markdownPrint', ['','**<think>**','','thoughts']], \
+        ['elementModelRender', [{'html': 'p', 'elem': {'html': 'strong', 'elem': {'text': '</think>'}}}]], \
+        ['markdownPrint', ['','-----']], \
         ['markdownPrint', ['','resp']] \
     ])
     systemGlobalSet('vThink', null)

@@ -173,7 +173,11 @@ function ollamaChatConversationResponseRenderBottom(args, exchange, ixExchange):
     # Thinking response?
     thinking = objectGet(exchange, 'thinking')
     if thinking && ixExchange == objectGet(args, 'think'):
-        markdownPrint('', '**<think>**', '', thinking, '', '**</think>**', '', '-----')
+        # Render the "</think>" marker as an element model so an unterminated code block in the
+        # thinking markdown doesn't swallow it (and the separator below) into the code block
+        markdownPrint('', '**<think>**', '', thinking)
+        elementModelRender({'html': 'p', 'elem': {'html': 'strong', 'elem': {'text': '</think>'}}})
+        markdownPrint('', '-----')
     endif
 
     # Render the response
