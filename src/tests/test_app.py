@@ -2942,8 +2942,10 @@ class TestAPI(unittest.TestCase):
             config_path = os.path.join(temp_dir, 'ollama-chat.json')
             app = OllamaChat(config_path)
 
-            # os.sysconf returns -1 when the total memory is indeterminate; the action reports memory as -1
-            with unittest.mock.patch('os.sysconf', return_value=-1):
+            # os.sysconf returns -1 when the total memory is indeterminate; the action reports memory as -1.
+            # Force the non-Windows branch and create os.sysconf (absent on Windows) so the test runs cross-platform.
+            with unittest.mock.patch('platform.system', return_value='Linux'), \
+                    unittest.mock.patch('os.sysconf', return_value=-1, create=True):
                 status, headers, content_bytes = app.request('GET', '/getSystemInfo')
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
