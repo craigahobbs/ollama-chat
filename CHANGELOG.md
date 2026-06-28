@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4 (2026-06-28)
+
+- [9e01d19](https://github.com/craigahobbs/ollama-chat/commit/9e01d19) - fix prompt submission svg button click issue
+
 ## 1.0.3 (2026-06-28)
 
 - [b592447](https://github.com/craigahobbs/ollama-chat/commit/b592447) - fix parameter size parsing warnings
