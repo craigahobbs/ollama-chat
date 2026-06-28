@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 (2026-06-28)
+
+- [b592447](https://github.com/craigahobbs/ollama-chat/commit/b592447) - fix parameter size parsing warnings
+
 ## 1.0.2 (2026-06-18)
 
 - [f4254fd](https://github.com/craigahobbs/ollama-chat/commit/f4254fd) - improve conversation previous and next links
