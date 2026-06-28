@@ -2308,6 +2308,18 @@ class TestAPI(unittest.TestCase):
                         'details': {'parameter_size': '3K'},
                         'size': 1800,
                         'modified_at': '2023-10-02T12:00:00+00:00'
+                    },
+                    {
+                        'model': 'big:1t',
+                        'details': {'parameter_size': '1t'},
+                        'size': 5000000000,
+                        'modified_at': '2023-10-03T12:00:00+00:00'
+                    },
+                    {
+                        'model': 'big:756b',
+                        'details': {'parameter_size': '756b'},
+                        'size': 4000000000,
+                        'modified_at': '2023-10-03T12:00:00+00:00'
                     }
                 ]
             }
@@ -2322,6 +2334,14 @@ class TestAPI(unittest.TestCase):
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertDictEqual(response, {
                 'models': [
+                    {
+                        'id': 'big:1t', 'name': 'big', 'parameters': 1000000000000, 'size': 5000000000,
+                        'modified': '2023-10-03T12:00:00+00:00'
+                    },
+                    {
+                        'id': 'big:756b', 'name': 'big', 'parameters': 756000000000, 'size': 4000000000,
+                        'modified': '2023-10-03T12:00:00+00:00'
+                    },
                     {'id': 'llm:7b', 'name': 'llm', 'parameters': 7000000000, 'size': 4100000000, 'modified': '2023-10-01T12:00:00+00:00'},
                     {'id': 'other2:tag', 'modified': '2023-10-02T12:00:00+00:00', 'name': 'other2', 'parameters': 3000, 'size': 1800},
                     {'id': 'other:tag', 'name': 'other', 'parameters': 3000000, 'size': 1800000, 'modified': '2023-10-02T12:00:00+00:00'}

@@ -551,8 +551,10 @@ def _parse_parameter_size(ctx, parameter_size):
 
     try:
         value = float(parameter_size[:-1])
-        unit = parameter_size[-1]
-        if unit == 'B':
+        unit = parameter_size[-1].upper()
+        if unit == 'T':
+            return int(value * 1000000000000)
+        elif unit == 'B':
             return int(value * 1000000000)
         elif unit == 'M':
             return int(value * 1000000)
