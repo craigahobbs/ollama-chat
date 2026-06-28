@@ -39,7 +39,7 @@ async function ollamaChatConversationPage(args):
     if conversation != null && objectGet(args, 'action') == 'title':
         markdownPrint('', '**Title:**')
         titleClickFn = systemPartial(ollamaChatConversationOnTitleUpdate, args)
-        cancelClickFn = systemPartial(ollamaChatConversationOnClick, args, null, argsURL(ollamaChatArguments))
+        cancelClickFn = systemPartial(ollamaChatConversationOnClick, args, null, argsURL(ollamaChatArguments), false)
         elementModelRender([ \
             {'html': 'p', 'elem': formsTextElements(ollamaChatConversationTitleID, title, 50, titleClickFn)}, \
             {'html': 'p', 'elem': [ \
@@ -106,8 +106,8 @@ function ollamaChatConversationPageBottom(args, conversation, generating):
         ollamaChatConversationResponseRenderBottom(args, lastExchange, ixLastExchange)
 
         # Compute button on-click functions
-        deleteExchangeFn = systemPartial(ollamaChatConversationOnClick, args, 'deleteConversationExchange')
-        regenerateExchangeFn = systemPartial(ollamaChatConversationOnClick, args, 'regenerateConversationExchange')
+        deleteExchangeFn = systemPartial(ollamaChatConversationOnClick, args, 'deleteConversationExchange', null, false)
+        regenerateExchangeFn = systemPartial(ollamaChatConversationOnClick, args, 'regenerateConversationExchange', null, false)
 
         # Render the bottom menu: a Previous link to the top of the last message plus the delete and regenerate links
         if !generating:
@@ -347,11 +347,11 @@ endfunction
 
 
 # Prompt on-enter/on-click event handler
-async function ollamaChatConversationOnPrompt(args, message):
+async function ollamaChatConversationOnPrompt(args):
     id = objectGet(args, 'id')
 
     # Get the prompt text
-    prompt = if(message != null, message, stringTrim(documentInputValue(ollamaChatConversationPromptID)))
+    prompt = stringTrim(documentInputValue(ollamaChatConversationPromptID))
     if prompt == '':
         return
     endif
@@ -411,12 +411,12 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
     multilineURL = argsURL(ollamaChatArguments, {'multiline': !multiline})
 
     # Compute button on-click functions
-    menuClickFn = systemPartial(ollamaChatConversationOnClick, args, null, menuURL)
-    titleClickFn = systemPartial(ollamaChatConversationOnClick, args, null, titleURL)
-    markdownClickFn = systemPartial(ollamaChatConversationOnClick, args, null, markdownURL)
+    menuClickFn = systemPartial(ollamaChatConversationOnClick, args, null, menuURL, false)
+    titleClickFn = systemPartial(ollamaChatConversationOnClick, args, null, titleURL, false)
+    markdownClickFn = systemPartial(ollamaChatConversationOnClick, args, null, markdownURL, false)
     deleteClickFn = systemPartial(ollamaChatConversationOnClick, args, 'deleteConversation', indexURL, true)
     templateClickFn = systemPartial(ollamaChatConversationOnTemplate, conversation)
-    multilineFn = systemPartial(ollamaChatConversationOnClick, args, null, multilineURL)
+    multilineFn = systemPartial(ollamaChatConversationOnClick, args, null, multilineURL, false)
 
     # Generate the download URL, if necessary
     markdownDownloadURL = null

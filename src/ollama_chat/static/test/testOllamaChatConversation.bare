@@ -425,8 +425,10 @@ async function testOllamaChatConversationOnTimeoutDone():
     args = argsParse(ollamaChatArguments)
     conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': false, \
         'exchanges': [{'user': 'u1', 'model': 'r1'}]}}
-    unittestMockAll({'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv)), \
-        'documentInputValue': {'ollama-chat-prompt': ''}})
+    unittestMockAll({ \
+        'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv)), \
+        'documentInputValue': {'ollama-chat-prompt': ''} \
+    })
     ollamaChatConversationOnTimeout(args, 1, false)
     expected = [['systemFetch', ['getConversation?id=C1']], ['documentInputValue', ['ollama-chat-prompt']]]
     arrayExtend(expected, testOllamaChatConversationPage1ExchangeCalls())
@@ -515,8 +517,10 @@ async function testOllamaChatConversationOnClickRerender():
     args = argsParse(ollamaChatArguments)
     conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': false, \
         'exchanges': [{'user': 'u1', 'model': 'r1'}]}}
-    unittestMockAll({'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv)), \
-        'documentInputValue': {'ollama-chat-prompt': ''}})
+    unittestMockAll({ \
+        'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv)), \
+        'documentInputValue': {'ollama-chat-prompt': ''} \
+    })
     ollamaChatConversationOnClick(args, 'deleteConversationExchange', null, null)
     expected = [ \
         ['systemFetch', [ \
@@ -540,9 +544,13 @@ async function testOllamaChatConversationOnPromptReply():
     args = argsParse(ollamaChatArguments)
     conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': false, \
         'exchanges': [{'user': 'u1', 'model': 'r1'}]}}
-    unittestMockAll({'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv))})
-    ollamaChatConversationOnPrompt(args, 'hello')
+    unittestMockAll({ \
+        'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv)), \
+        'documentInputValue': {'ollama-chat-prompt': 'hello'} \
+    })
+    ollamaChatConversationOnPrompt(args)
     expected = [ \
+        ['documentInputValue', ['ollama-chat-prompt']], \
         ['systemFetch', [ \
             { \
                 'url': 'replyConversation', \
@@ -1016,9 +1024,13 @@ unittestRunTest('testOllamaChatConversationOnTemplateNull')
 
 async function testOllamaChatConversationOnPromptStart():
     # No conversation id - start a new conversation and navigate to it
-    unittestMockAll({'systemFetch': {'startConversation': jsonStringify({'id': 'CONV'})}})
-    ollamaChatConversationOnPrompt({'id': null}, 'Hello')
+    unittestMockAll({ \
+        'systemFetch': {'startConversation': jsonStringify({'id': 'CONV'})}, \
+        'documentInputValue': {'ollama-chat-prompt': 'Hello'} \
+    })
+    ollamaChatConversationOnPrompt({'id': null})
     unittestDeepEqual(unittestMockEnd(), [ \
+        ['documentInputValue', ['ollama-chat-prompt']], \
         ['systemFetch', [ \
             { \
                 'url': 'startConversation', \
@@ -1033,18 +1045,19 @@ unittestRunTest('testOllamaChatConversationOnPromptStart')
 
 async function testOllamaChatConversationOnPromptEmpty():
     # Empty prompt - no action
-    unittestMockAll({})
-    ollamaChatConversationOnPrompt({'id': null}, '')
-    unittestDeepEqual(unittestMockEnd(), [])
+    unittestMockAll({'documentInputValue': {'ollama-chat-prompt': ''}})
+    ollamaChatConversationOnPrompt({'id': null})
+    unittestDeepEqual(unittestMockEnd(), [['documentInputValue', ['ollama-chat-prompt']]])
 endfunction
 unittestRunTest('testOllamaChatConversationOnPromptEmpty')
 
 
 async function testOllamaChatConversationOnPromptStartNull():
     # Start fails - no navigation
-    unittestMockAll({})
-    ollamaChatConversationOnPrompt({'id': null}, 'Hello')
+    unittestMockAll({'documentInputValue': {'ollama-chat-prompt': 'Hello'}})
+    ollamaChatConversationOnPrompt({'id': null})
     unittestDeepEqual(unittestMockEnd(), [ \
+        ['documentInputValue', ['ollama-chat-prompt']], \
         ['systemFetch', [ \
             { \
                 'url': 'startConversation', \
@@ -1150,17 +1163,25 @@ async function testOllamaChatConversationPromptButtonBinding():
     keyupFn = objectGet(objectGet(arrayGet(promptElem, 1), 'callback'), 'keyup')
     sendFn = objectGet(objectGet(arrayGet(promptElem, 2), 'callback'), 'click')
 
-    # The hamburger button toggles multiline mode
+    # The hamburger button toggles multiline mode. In the browser MarkdownUp passes SVG-element
+    # click handlers the click coordinates (x, y, width, height), so the callback must ignore
+    # them rather than treat the x-coordinate as the noSave flag.
     ollamaChatTestSameEffect( \
-        multilineFn, \
+        systemPartial(multilineFn, 14, 7, 30, 30), \
         systemPartial(ollamaChatConversationOnClick, args, null, argsURL(ollamaChatArguments, {'multiline': true})), \
         {'documentInputValue': {'ollama-chat-prompt': ''}} \
     )
 
-    # The send button and the prompt's Enter key both submit the prompt
+    # The send button and the prompt's Enter key both submit the prompt. The send button is an
+    # SVG element too, so its click handler must likewise ignore the click coordinates rather
+    # than treat the x-coordinate as the prompt text (user=14).
     startData = {'systemFetch': {'startConversation': jsonStringify({'id': 'CONV'})}, \
         'documentInputValue': {'ollama-chat-prompt': 'Hello'}}
-    ollamaChatTestSameEffect(sendFn, systemPartial(ollamaChatConversationOnPrompt, args), startData)
+    ollamaChatTestSameEffect( \
+        systemPartial(sendFn, 14, 7, 30, 30), \
+        systemPartial(ollamaChatConversationOnPrompt, args), \
+        startData \
+    )
     ollamaChatTestSameEffect( \
         systemPartial(keyupFn, 13), \
         systemPartial(ollamaChatConversationOnPrompt, args), \
@@ -1181,9 +1202,10 @@ async function testOllamaChatConversationStopButtonBinding():
     unittestMockEnd()
     stopFn = objectGet(objectGet(arrayGet(objectGet(arrayGet(els, 2), 'elem'), 3), 'callback'), 'click')
 
-    # The stop button must call the stopConversation API then re-render in place
+    # The stop button must call the stopConversation API then re-render in place. It is an SVG
+    # element, so its click handler must ignore the click coordinates MarkdownUp passes.
     ollamaChatTestSameEffect( \
-        stopFn, \
+        systemPartial(stopFn, 14, 7, 30, 30), \
         systemPartial(ollamaChatConversationOnClick, args, 'stopConversation', null, false), \
         {'systemFetch': objectNew('getConversation?id=C1', jsonStringify({'conversation': conv})), \
             'documentInputValue': {'ollama-chat-prompt': ''}} \

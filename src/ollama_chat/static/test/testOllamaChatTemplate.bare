@@ -775,7 +775,10 @@ unittestRunTest('testOllamaChatTemplateOnPromptMoveNoop')
 
 
 async function testOllamaChatTemplateVariablesOnSubmit():
-    unittestMockAll({'documentInputValue': {'variable-city': 'Seattle'}, 'systemFetch': {'startTemplate': jsonStringify({'id': 'CONV'})}})
+    unittestMockAll({ \
+        'documentInputValue': {'variable-city': 'Seattle'}, \
+        'systemFetch': {'startTemplate': jsonStringify({'id': 'CONV'})} \
+    })
     ollamaChatTemplateVariablesOnSubmit('T1', [{'name': 'city', 'label': 'City'}])
     unittestDeepEqual(unittestMockEnd(), [ \
         ['documentInputValue', ['variable-city']], \

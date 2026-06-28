@@ -163,7 +163,7 @@ async function ollamaChatTemplatePage(args):
                         {'text': spacer}, \
                         formsLinkButtonElements('Remove', systemPartial(ollamaChatTemplateOnVariableRemove, template, ixVariable)), \
                         {'text': spacer}, \
-                        formsLinkButtonElements('Up', systemPartial(ollamaChatTemplateOnVariableMove, template, ixVariable)), \
+                        formsLinkButtonElements('Up', systemPartial(ollamaChatTemplateOnVariableMove, template, ixVariable, false)), \
                         {'text': spacer}, \
                         formsLinkButtonElements('Down', systemPartial(ollamaChatTemplateOnVariableMove, template, ixVariable, true)) \
                     ]} \
@@ -221,7 +221,7 @@ async function ollamaChatTemplatePage(args):
                         {'text': spacer}, \
                         formsLinkButtonElements('Remove', systemPartial(ollamaChatTemplateOnPromptRemove, template, ixPrompt)), \
                         {'text': spacer}, \
-                        formsLinkButtonElements('Up', systemPartial(ollamaChatTemplateOnPromptMove, template, ixPrompt)), \
+                        formsLinkButtonElements('Up', systemPartial(ollamaChatTemplateOnPromptMove, template, ixPrompt, false)), \
                         {'text': spacer}, \
                         formsLinkButtonElements('Down', systemPartial(ollamaChatTemplateOnPromptMove, template, ixPrompt, true)) \
                     ]} \
