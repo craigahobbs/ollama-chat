@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.5 (2026-07-13)
+
+- [ad6e309](https://github.com/craigahobbs/ollama-chat/commit/ad6e309) - chisel 2.1
+
 ## 1.0.4 (2026-06-28)
 
 - [9e01d19](https://github.com/craigahobbs/ollama-chat/commit/9e01d19) - fix prompt submission svg button click issue
