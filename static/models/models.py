@@ -1,9 +1,12 @@
 import datetime
 from html.parser import HTMLParser
+import http.client
 import json
 import os
 import re
 import sys
+import time
+import urllib.error
 import urllib.request
 
 import schema_markdown
@@ -102,10 +105,6 @@ _regex_about = re.compile(r'^about\s+an?\s+(hour|minute)\s+ago$')
 
 
 def _parse_count(count, model_name):
-    # Handle common, invalid cases
-    if count.endswith('cloud'):
-        return 1
-
     try:
         # Mixture of experts?
         multiplier = 1
@@ -125,25 +124,71 @@ def _parse_count(count, model_name):
         return multiplier * int(count.replace(',', ''))
     except:
         print(f'Info: "{model_name}" has invalid size "{count}"', file=sys.stderr)
-        return 1
+        return 0
 
 _regex_count_moe = re.compile(r'^(?P<mult>[1-9]\d*)x')
 
 
-# Table of non-numeric model sizes
-_MODEL_SIZES = {
-    'gemma3n': ['e2b', 'e4b'],
-    'kimi-k2': ['cloud'],
-    'kimi-k2-thinking': ['cloud'],
-    'minimax-m2': ['cloud']
-}
+# Fetch a URL's text, retrying transient failures with exponential backoff (the many sequential
+# fetches can be throttled). Returns None if the page no longer exists. A persistent failure
+# raises, failing the run - stale-but-complete model data beats publishing incomplete data.
+def _fetch(url):
+    attempt = 0
+    while True:
+        try:
+            request = urllib.request.Request(url)
+            with urllib.request.urlopen(request) as response:
+                return response.read().decode('utf-8')
+        except urllib.error.HTTPError as exc:
+            if exc.code in (404, 410):
+                return None
+            if attempt == _FETCH_ATTEMPTS - 1:
+                raise
+        except (OSError, http.client.HTTPException):
+            if attempt == _FETCH_ATTEMPTS - 1:
+                raise
+        time.sleep(_FETCH_RETRY_SECONDS * 2 ** attempt)
+        attempt += 1
+
+_FETCH_ATTEMPTS = 5
+_FETCH_RETRY_SECONDS = 5
+
+
+# Scrape a model's tags web page for its cloud and MLX variant tags (e.g. "cloud", "31b-cloud", "12b-mlx").
+# Quantization tags (e.g. "12b-mlx-bf16", "12b-it-q4_K_M") are not variants and are excluded.
+# Returns None if the model's tags page no longer exists.
+def _scrape_variant_tags(model_name):
+    html = _fetch(f'https://ollama.com/library/{model_name}/tags')
+    if html is None:
+        return None
+    tags = dict.fromkeys(re.findall(rf'href="/library/{re.escape(model_name)}:([^"]+)"', html))
+    cloud_tags = [tag for tag in tags if tag == 'cloud' or tag.endswith('-cloud')]
+    mlx_tags = [tag for tag in tags if tag == 'mlx' or tag.endswith('-mlx')]
+
+    # Drop the bare alias tag when sized tags exist (e.g. "cloud" alongside "31b-cloud")
+    if 'cloud' in cloud_tags and len(cloud_tags) > 1:
+        cloud_tags.remove('cloud')
+    if 'mlx' in mlx_tags and len(mlx_tags) > 1:
+        mlx_tags.remove('mlx')
+
+    return cloud_tags, mlx_tags
+
+
+# Is the size a cloud/MLX variant tag? The model's tags page is the source of truth for those.
+def _is_cloud_mlx_size(size):
+    return size in ('cloud', 'mlx') or size.endswith('-cloud') or size.endswith('-mlx')
+
+
+# Parse the parameter count from a cloud/MLX variant tag (e.g. "31b-cloud" -> 31e9).
+# A bare "cloud"/"mlx" tag has an unknown parameter count, zero.
+def _parse_tag_count(tag, kind, model_name):
+    size = tag[:-len(kind) - 1] if tag.endswith(f'-{kind}') else ''
+    return _parse_count(size, model_name) if size else 0
 
 
 def main():
     # Fetch HTML
-    request = urllib.request.Request('https://ollama.com/library')
-    with urllib.request.urlopen(request) as response:
-        html = response.read().decode('utf-8')
+    html = _fetch('https://ollama.com/library')
 
     # Parse HTML and extract descriptions
     parser = OllamaModelParser()
@@ -153,27 +198,43 @@ def main():
     # Parse scraped model info values
     models = []
     for model_name, raw_model in raw_models.items():
-        # No model sizes?
-        if not raw_model['sizes']:
-            if model_name in _MODEL_SIZES:
-                raw_model['sizes'].extend(_MODEL_SIZES[model_name])
-            else:
-                print(f'Warning: "{model_name}" has no sizes', file=sys.stderr)
-                continue
+        # Scrape the model's cloud and MLX variant tags
+        variant_tags = _scrape_variant_tags(model_name)
+        if variant_tags is None:
+            print(f'Warning: "{model_name}" no longer exists', file=sys.stderr)
+            continue
+        cloud_tags, mlx_tags = variant_tags
+
+        # No model variants?
+        local_sizes = [size for size in raw_model['sizes'] if not _is_cloud_mlx_size(size)]
+        if not local_sizes and not cloud_tags and not mlx_tags:
+            print(f'Warning: "{model_name}" has no sizes', file=sys.stderr)
+            continue
+
+        # Create the model variants - local sizes, then MLX, then cloud
+        variants = [
+            {
+                'id': f'{model_name}:{size}',
+                'size': size,
+                'parameters': _parse_count(size, model_name)
+            }
+            for size in local_sizes
+        ]
+        for kind, kind_tags in (('mlx', mlx_tags), ('cloud', cloud_tags)):
+            for tag in kind_tags:
+                variants.append({
+                    'id': f'{model_name}:{tag}',
+                    'size': tag,
+                    'parameters': _parse_tag_count(tag, kind, model_name),
+                    kind: True
+                })
 
         models.append({
             'name': model_name,
             'description': raw_model.get('description', 'No model description provided.'),
             'modified': _parse_modified(raw_model['modified']).isoformat(),
             'downloads': _parse_count(raw_model['downloads'], model_name),
-            'variants': [
-                {
-                    'id': f'{model_name}:{size}',
-                    'size': size,
-                    'parameters': _parse_count(size, model_name)
-                }
-                for size in raw_model['sizes']
-            ]
+            'variants': variants
         })
 
     # Validate the model JSON

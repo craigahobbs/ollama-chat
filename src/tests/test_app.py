@@ -2946,7 +2946,9 @@ class TestAPI(unittest.TestCase):
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             self.assertTrue(response['memory'] > 0)
+            self.assertIsInstance(response['mlx'], bool)
             del response['memory']
+            del response['mlx']
             self.assertDictEqual(response, {})
 
             # Verify the app config
@@ -2970,4 +2972,20 @@ class TestAPI(unittest.TestCase):
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
             response = json.loads(content_bytes.decode('utf-8'))
-            self.assertDictEqual(response, {'memory': -1})
+            self.assertDictEqual(response, {'memory': -1, 'mlx': False})
+
+
+    def test_get_system_info_mlx(self):
+        with create_test_files([]) as temp_dir:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Force the Apple Silicon platform (and the non-Windows memory branch) so the test runs cross-platform
+            with unittest.mock.patch('platform.system', return_value='Darwin'), \
+                    unittest.mock.patch('platform.machine', return_value='arm64'), \
+                    unittest.mock.patch('os.sysconf', return_value=65536, create=True):
+                status, headers, content_bytes = app.request('GET', '/getSystemInfo')
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertDictEqual(response, {'memory': 65536 * 65536, 'mlx': True})

@@ -13,4 +13,6 @@ available API (static resource). Unfortunately, no such API exists at the time o
 ## Implementation
 
 The script, `models.py`, downloads the Ollama models web page and scrapes it for model names,
-parameter counts, downloads, and last modified dates. If this sounds fragile to you, you are right.
+parameter counts, downloads, and last modified dates. It then downloads each model's tags web page
+and scrapes it for cloud (e.g. "cloud", "31b-cloud") and MLX (e.g. "12b-mlx") variant tags. If this
+sounds fragile to you, you are right.

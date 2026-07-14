@@ -491,7 +491,7 @@ async function testOllamaChatModelsDownloadPageAll():
         {'id': 'gemma:2b', 'size': '2B', 'parameters': 2000000000}, \
         {'id': 'gemma:70b', 'size': '70B', 'parameters': 70000000000} \
     ]}
-    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000}), url: jsonStringify([model])}})
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000, 'mlx': false}), url: jsonStringify([model])}})
     ollamaChatModelsDownloadPage(args)
     unittestDeepEqual(unittestMockEnd(), [ \
         ['systemFetch', ['getSystemInfo']], \
@@ -509,6 +509,14 @@ async function testOllamaChatModelsDownloadPageAll():
             '', \
             '**Show:** [Compatible](#var.vFilterMonths=0)' + '\u00a0|\u00a0' + 'All', \
             '', \
+            '**Type:** All' + \
+                '\u00a0|\u00a0' + \
+                "[Local](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='Local')" + \
+                '\u00a0|\u00a0' + \
+                "[Cloud](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='Cloud')" + \
+                '\u00a0|\u00a0' + \
+                "[MLX](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='MLX')", \
+            '', \
             "**Sort:** [Downloads](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vSort='Downloads')" + \
                 '\u00a0|\u00a0' + \
                 'Modified' + \
@@ -520,7 +528,7 @@ async function testOllamaChatModelsDownloadPageAll():
             '', \
             'A model', \
             '', \
-            '**Parameters:** 2B, 70B \\', \
+            '**Variants:** 2B, 70B \\', \
             '**Downloads:** 1.5M \\', \
             '**Modified:** 2024-01-15', \
             '', \
@@ -545,7 +553,7 @@ async function testOllamaChatModelsDownloadPageSelected():
         {'id': 'gemma:2b', 'size': '2B', 'parameters': 2000000000}, \
         {'id': 'gemma:70b', 'size': '70B', 'parameters': 70000000000} \
     ]}
-    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000}), url: jsonStringify([model])}})
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000, 'mlx': false}), url: jsonStringify([model])}})
     ollamaChatModelsDownloadPage(args)
     unittestDeepEqual(unittestMockEnd(), [ \
         ['systemFetch', ['getSystemInfo']], \
@@ -563,6 +571,14 @@ async function testOllamaChatModelsDownloadPageSelected():
             '', \
             '**Show:** [Compatible](#var.vFilterMonths=0)' + '\u00a0|\u00a0' + 'All', \
             '', \
+            '**Type:** All' + \
+                '\u00a0|\u00a0' + \
+                "[Local](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='Local')" + \
+                '\u00a0|\u00a0' + \
+                "[Cloud](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='Cloud')" + \
+                '\u00a0|\u00a0' + \
+                "[MLX](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='MLX')", \
+            '', \
             "**Sort:** [Downloads](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vSort='Downloads')" + \
                 '\u00a0|\u00a0' + \
                 'Modified' + \
@@ -574,7 +590,7 @@ async function testOllamaChatModelsDownloadPageSelected():
             '', \
             'A model', \
             '', \
-            '**Parameters:** 2B, 70B \\', \
+            '**Variants:** 2B, 70B \\', \
             '**Downloads:** 1.5M \\', \
             '**Modified:** 2024-01-15', \
             '', \
@@ -611,7 +627,7 @@ async function testOllamaChatModelsDownloadPageSortDownloads():
     model = {'name': 'gemma', 'description': 'A model', 'modified': '2024-01-15', 'downloads': 1500000, 'variants': [ \
         {'id': 'gemma:2b', 'size': '2B', 'parameters': 2000000000} \
     ]}
-    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000}), url: jsonStringify([model])}})
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000, 'mlx': false}), url: jsonStringify([model])}})
     ollamaChatModelsDownloadPage(args)
     unittestDeepEqual(unittestMockEnd(), [ \
         ['systemFetch', ['getSystemInfo']], \
@@ -629,6 +645,14 @@ async function testOllamaChatModelsDownloadPageSortDownloads():
             '', \
             "**Show:** [Compatible](#var.vFilterMonths=0&var.vSort='Downloads')" + '\u00a0|\u00a0' + 'All', \
             '', \
+            '**Type:** All' + \
+                '\u00a0|\u00a0' + \
+                "[Local](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='Local'&var.vSort='Downloads')" + \
+                '\u00a0|\u00a0' + \
+                "[Cloud](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='Cloud'&var.vSort='Downloads')" + \
+                '\u00a0|\u00a0' + \
+                "[MLX](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='MLX'&var.vSort='Downloads')", \
+            '', \
             '**Sort:** Downloads' + \
                 '\u00a0|\u00a0' + \
                 '[Modified](#var.vFilterCompatible=false&var.vFilterMonths=0)' + \
@@ -640,7 +664,7 @@ async function testOllamaChatModelsDownloadPageSortDownloads():
             '', \
             'A model', \
             '', \
-            '**Parameters:** 2B \\', \
+            '**Variants:** 2B \\', \
             '**Downloads:** 1.5M \\', \
             '**Modified:** 2024-01-15', \
             '', \
@@ -665,7 +689,7 @@ async function testOllamaChatModelsDownloadPageSortName():
     model = {'name': 'gemma', 'description': 'A model', 'modified': '2024-01-15', 'downloads': 1500000, 'variants': [ \
         {'id': 'gemma:2b', 'size': '2B', 'parameters': 2000000000} \
     ]}
-    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000}), url: jsonStringify([model])}})
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000, 'mlx': false}), url: jsonStringify([model])}})
     ollamaChatModelsDownloadPage(args)
     unittestDeepEqual(unittestMockEnd(), [ \
         ['systemFetch', ['getSystemInfo']], \
@@ -683,6 +707,14 @@ async function testOllamaChatModelsDownloadPageSortName():
             '', \
             "**Show:** [Compatible](#var.vFilterMonths=0&var.vSort='Name')" + '\u00a0|\u00a0' + 'All', \
             '', \
+            '**Type:** All' + \
+                '\u00a0|\u00a0' + \
+                "[Local](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='Local'&var.vSort='Name')" + \
+                '\u00a0|\u00a0' + \
+                "[Cloud](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='Cloud'&var.vSort='Name')" + \
+                '\u00a0|\u00a0' + \
+                "[MLX](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='MLX'&var.vSort='Name')", \
+            '', \
             "**Sort:** [Downloads](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vSort='Downloads')" + \
                 '\u00a0|\u00a0' + \
                 '[Modified](#var.vFilterCompatible=false&var.vFilterMonths=0)' + \
@@ -694,7 +726,7 @@ async function testOllamaChatModelsDownloadPageSortName():
             '', \
             'A model', \
             '', \
-            '**Parameters:** 2B \\', \
+            '**Variants:** 2B \\', \
             '**Downloads:** 1.5M \\', \
             '**Modified:** 2024-01-15', \
             '', \
@@ -717,7 +749,7 @@ async function testOllamaChatModelsDownloadPageFilteredOut():
     model = {'name': 'big', 'description': 'Big', 'modified': '2024-01-15', 'downloads': 100, 'variants': [ \
         {'id': 'big:70b', 'size': '70B', 'parameters': 70000000000} \
     ]}
-    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000}), url: jsonStringify([model])}})
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000, 'mlx': false}), url: jsonStringify([model])}})
     ollamaChatModelsDownloadPage(args)
     unittestDeepEqual(unittestMockEnd(), [ \
         ['systemFetch', ['getSystemInfo']], \
@@ -734,6 +766,14 @@ async function testOllamaChatModelsDownloadPageFilteredOut():
                 'All', \
             '', \
             '**Show:** Compatible' + '\u00a0|\u00a0' + '[All](#var.vFilterCompatible=false&var.vFilterMonths=0)', \
+            '', \
+            '**Type:** All' + \
+                '\u00a0|\u00a0' + \
+                "[Local](#var.vFilterMonths=0&var.vFilterType='Local')" + \
+                '\u00a0|\u00a0' + \
+                "[Cloud](#var.vFilterMonths=0&var.vFilterType='Cloud')" + \
+                '\u00a0|\u00a0' + \
+                "[MLX](#var.vFilterMonths=0&var.vFilterType='MLX')", \
             '', \
             "**Sort:** [Downloads](#var.vFilterMonths=0&var.vSort='Downloads')" + \
                 '\u00a0|\u00a0' + \
@@ -770,7 +810,7 @@ unittestRunTest('testOllamaChatModelsMainError')
 async function testOllamaChatModelsMainDownloadError():
     # getSystemInfo succeeds but the available-models fetch fails -> error page
     systemGlobalSet('vView', 'download')
-    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000})}})
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000, 'mlx': false})}})
     ollamaChatMain()
     unittestDeepEqual(unittestMockEnd(), [ \
         ['systemFetch', ['getSystemInfo']], \
@@ -806,7 +846,7 @@ async function testOllamaChatModelsDownloadPageUnknownMemory():
     model = {'name': 'big', 'description': 'Big', 'modified': '2024-01-15', 'downloads': 100, 'variants': [ \
         {'id': 'big:70b', 'size': '70B', 'parameters': 70000000000} \
     ]}
-    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': -1}), url: jsonStringify([model])}})
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': -1, 'mlx': false}), url: jsonStringify([model])}})
     ollamaChatModelsDownloadPage(args)
     unittestDeepEqual(unittestMockEnd(), [ \
         ['systemFetch', ['getSystemInfo']], \
@@ -824,6 +864,14 @@ async function testOllamaChatModelsDownloadPageUnknownMemory():
             '', \
             '**Show:** Compatible' + ' | ' + '[All](#var.vFilterCompatible=false&var.vFilterMonths=0)', \
             '', \
+            '**Type:** All' + \
+                ' | ' + \
+                "[Local](#var.vFilterMonths=0&var.vFilterType='Local')" + \
+                ' | ' + \
+                "[Cloud](#var.vFilterMonths=0&var.vFilterType='Cloud')" + \
+                ' | ' + \
+                "[MLX](#var.vFilterMonths=0&var.vFilterType='MLX')", \
+            '', \
             "**Sort:** [Downloads](#var.vFilterMonths=0&var.vSort='Downloads')" + \
                 ' | ' + \
                 'Modified' + \
@@ -835,7 +883,7 @@ async function testOllamaChatModelsDownloadPageUnknownMemory():
             '', \
             'Big', \
             '', \
-            '**Parameters:** 70B \\', \
+            '**Variants:** 70B \\', \
             '**Downloads:** 0.1K \\', \
             '**Modified:** 2024-01-15', \
             '', \
@@ -846,6 +894,412 @@ async function testOllamaChatModelsDownloadPageUnknownMemory():
     systemGlobalSet('vFilterMonths', null)
 endfunction
 unittestRunTest('testOllamaChatModelsDownloadPageUnknownMemory')
+
+
+async function testOllamaChatModelsDownloadPageCloud():
+    # Cloud variants are always compatible - the incompatible local variant is hidden but the cloud variant shows
+    systemGlobalSet('vFilterMonths', 0)
+    systemGlobalSet('vAction', 'model')
+    systemGlobalSet('vActionID', 'big')
+    args = argsParse(ollamaChatArguments)
+    url = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+    model = {'name': 'big', 'description': 'Big', 'modified': '2024-01-15', 'downloads': 100, 'variants': [ \
+        {'id': 'big:70b', 'size': '70b', 'parameters': 70000000000}, \
+        {'id': 'big:cloud', 'size': 'cloud', 'parameters': 0, 'cloud': true} \
+    ]}
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000, 'mlx': false}), url: jsonStringify([model])}})
+    ollamaChatModelsDownloadPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getSystemInfo']], \
+        ['systemFetch', [url]], \
+        ['documentSetTitle', ['Ollama Chat - Download']], \
+        ['markdownPrint', ["[Back](#var.vView='models')",'','# Ollama Chat \- Download']], \
+        ['markdownPrint', [ \
+            '**Recent:** [1 month](#var.vFilterMonths=1)' + \
+                ' | ' + \
+                '[3 months](#var.vFilterMonths=3)' + \
+                ' | ' + \
+                '[6 month](#var=)' + \
+                ' | ' + \
+                'All', \
+            '', \
+            '**Show:** Compatible' + ' | ' + '[All](#var.vFilterCompatible=false&var.vFilterMonths=0)', \
+            '', \
+            '**Type:** All' + \
+                ' | ' + \
+                "[Local](#var.vFilterMonths=0&var.vFilterType='Local')" + \
+                ' | ' + \
+                "[Cloud](#var.vFilterMonths=0&var.vFilterType='Cloud')" + \
+                ' | ' + \
+                "[MLX](#var.vFilterMonths=0&var.vFilterType='MLX')", \
+            '', \
+            "**Sort:** [Downloads](#var.vFilterMonths=0&var.vSort='Downloads')" + \
+                ' | ' + \
+                'Modified' + \
+                ' | ' + \
+                "[Name](#var.vFilterMonths=0&var.vSort='Name')" \
+        ]], \
+        ['markdownPrint', [ \
+            '## big', \
+            '', \
+            'Big', \
+            '', \
+            '**Variants:** cloud \\', \
+            '**Downloads:** 0.1K \\', \
+            '**Modified:** 2024-01-15', \
+            '', \
+            '[Cancel](#var.vFilterMonths=0)', \
+            null \
+        ]], \
+        ['elementModelRender', [ \
+            [ \
+                { \
+                    'html': 'p', \
+                    'elem': [{'text': '    '}, formsLinkButtonElements('big:cloud', '<function>')] \
+                } \
+            ] \
+        ]] \
+    ])
+    systemGlobalSet('vFilterMonths', null)
+    systemGlobalSet('vAction', null)
+    systemGlobalSet('vActionID', null)
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageCloud')
+
+
+async function testOllamaChatModelsDownloadPageMLX():
+    # MLX variants are compatible on Apple Silicon (subject to the memory check)
+    systemGlobalSet('vFilterMonths', 0)
+    args = argsParse(ollamaChatArguments)
+    url = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+    model = {'name': 'llm', 'description': 'A model', 'modified': '2024-01-15', 'downloads': 100, 'variants': [ \
+        {'id': 'llm:7b', 'size': '7b', 'parameters': 7000000000}, \
+        {'id': 'llm:7b-mlx', 'size': '7b-mlx', 'parameters': 7000000000, 'mlx': true}, \
+        {'id': 'llm:70b-mlx', 'size': '70b-mlx', 'parameters': 70000000000, 'mlx': true} \
+    ]}
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000, 'mlx': true}), url: jsonStringify([model])}})
+    ollamaChatModelsDownloadPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getSystemInfo']], \
+        ['systemFetch', [url]], \
+        ['documentSetTitle', ['Ollama Chat - Download']], \
+        ['markdownPrint', ["[Back](#var.vView='models')",'','# Ollama Chat \- Download']], \
+        ['markdownPrint', [ \
+            '**Recent:** [1 month](#var.vFilterMonths=1)' + \
+                ' | ' + \
+                '[3 months](#var.vFilterMonths=3)' + \
+                ' | ' + \
+                '[6 month](#var=)' + \
+                ' | ' + \
+                'All', \
+            '', \
+            '**Show:** Compatible' + ' | ' + '[All](#var.vFilterCompatible=false&var.vFilterMonths=0)', \
+            '', \
+            '**Type:** All' + \
+                ' | ' + \
+                "[Local](#var.vFilterMonths=0&var.vFilterType='Local')" + \
+                ' | ' + \
+                "[Cloud](#var.vFilterMonths=0&var.vFilterType='Cloud')" + \
+                ' | ' + \
+                "[MLX](#var.vFilterMonths=0&var.vFilterType='MLX')", \
+            '', \
+            "**Sort:** [Downloads](#var.vFilterMonths=0&var.vSort='Downloads')" + \
+                ' | ' + \
+                'Modified' + \
+                ' | ' + \
+                "[Name](#var.vFilterMonths=0&var.vSort='Name')" \
+        ]], \
+        ['markdownPrint', [ \
+            '## llm', \
+            '', \
+            'A model', \
+            '', \
+            '**Variants:** 7b, 7b-mlx \\', \
+            '**Downloads:** 0.1K \\', \
+            '**Modified:** 2024-01-15', \
+            '', \
+            "[Download](#var.vAction='model'&var.vActionID='llm'&var.vFilterMonths=0)", \
+            ' | ' + '[Info](https://ollama.com/library/llm)' \
+        ]] \
+    ])
+    systemGlobalSet('vFilterMonths', null)
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageMLX')
+
+
+async function testOllamaChatModelsDownloadPageMLXUnsupported():
+    # MLX variants are incompatible without Apple Silicon
+    systemGlobalSet('vFilterMonths', 0)
+    args = argsParse(ollamaChatArguments)
+    url = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+    model = {'name': 'llm', 'description': 'A model', 'modified': '2024-01-15', 'downloads': 100, 'variants': [ \
+        {'id': 'llm:7b', 'size': '7b', 'parameters': 7000000000}, \
+        {'id': 'llm:7b-mlx', 'size': '7b-mlx', 'parameters': 7000000000, 'mlx': true} \
+    ]}
+    unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000, 'mlx': false}), url: jsonStringify([model])}})
+    ollamaChatModelsDownloadPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getSystemInfo']], \
+        ['systemFetch', [url]], \
+        ['documentSetTitle', ['Ollama Chat - Download']], \
+        ['markdownPrint', ["[Back](#var.vView='models')",'','# Ollama Chat \- Download']], \
+        ['markdownPrint', [ \
+            '**Recent:** [1 month](#var.vFilterMonths=1)' + \
+                ' | ' + \
+                '[3 months](#var.vFilterMonths=3)' + \
+                ' | ' + \
+                '[6 month](#var=)' + \
+                ' | ' + \
+                'All', \
+            '', \
+            '**Show:** Compatible' + ' | ' + '[All](#var.vFilterCompatible=false&var.vFilterMonths=0)', \
+            '', \
+            '**Type:** All' + \
+                ' | ' + \
+                "[Local](#var.vFilterMonths=0&var.vFilterType='Local')" + \
+                ' | ' + \
+                "[Cloud](#var.vFilterMonths=0&var.vFilterType='Cloud')" + \
+                ' | ' + \
+                "[MLX](#var.vFilterMonths=0&var.vFilterType='MLX')", \
+            '', \
+            "**Sort:** [Downloads](#var.vFilterMonths=0&var.vSort='Downloads')" + \
+                ' | ' + \
+                'Modified' + \
+                ' | ' + \
+                "[Name](#var.vFilterMonths=0&var.vSort='Name')" \
+        ]], \
+        ['markdownPrint', [ \
+            '## llm', \
+            '', \
+            'A model', \
+            '', \
+            '**Variants:** 7b \\', \
+            '**Downloads:** 0.1K \\', \
+            '**Modified:** 2024-01-15', \
+            '', \
+            "[Download](#var.vAction='model'&var.vActionID='llm'&var.vFilterMonths=0)", \
+            ' | ' + '[Info](https://ollama.com/library/llm)' \
+        ]] \
+    ])
+    systemGlobalSet('vFilterMonths', null)
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageMLXUnsupported')
+
+
+async function testOllamaChatModelsDownloadPageFilterLocal():
+    # Type filter Local - cloud and MLX variants are hidden; cloud-only models are hidden
+    systemGlobalSet('vFilterMonths', 0)
+    systemGlobalSet('vFilterType', 'Local')
+    args = argsParse(ollamaChatArguments)
+    url = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+    combo = {'name': 'combo', 'description': 'Combo', 'modified': '2024-01-15', 'downloads': 100, 'variants': [ \
+        {'id': 'combo:2b', 'size': '2b', 'parameters': 2000000000}, \
+        {'id': 'combo:2b-mlx', 'size': '2b-mlx', 'parameters': 2000000000, 'mlx': true}, \
+        {'id': 'combo:cloud', 'size': 'cloud', 'parameters': 0, 'cloud': true} \
+    ]}
+    cloudy = {'name': 'cloudy', 'description': 'Cloudy', 'modified': '2024-01-15', 'downloads': 200, 'variants': [ \
+        {'id': 'cloudy:cloud', 'size': 'cloud', 'parameters': 0, 'cloud': true} \
+    ]}
+    unittestMockAll({'systemFetch': { \
+        'getSystemInfo': jsonStringify({'memory': 8000000000, 'mlx': true}), \
+        url: jsonStringify([combo, cloudy]) \
+    }})
+    ollamaChatModelsDownloadPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getSystemInfo']], \
+        ['systemFetch', [url]], \
+        ['documentSetTitle', ['Ollama Chat - Download']], \
+        ['markdownPrint', ["[Back](#var.vView='models')",'','# Ollama Chat \- Download']], \
+        ['markdownPrint', [ \
+            "**Recent:** [1 month](#var.vFilterMonths=1&var.vFilterType='Local')" + \
+                '\u00a0|\u00a0' + \
+                "[3 months](#var.vFilterMonths=3&var.vFilterType='Local')" + \
+                '\u00a0|\u00a0' + \
+                "[6 month](#var.vFilterType='Local')" + \
+                '\u00a0|\u00a0' + \
+                'All', \
+            '', \
+            "**Show:** Compatible" + '\u00a0|\u00a0' + "[All](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='Local')", \
+            '', \
+            '**Type:** ' + "[All](#var.vFilterMonths=0)" + \
+                '\u00a0|\u00a0' + \
+                'Local' + \
+                '\u00a0|\u00a0' + \
+                "[Cloud](#var.vFilterMonths=0&var.vFilterType='Cloud')" + \
+                '\u00a0|\u00a0' + \
+                "[MLX](#var.vFilterMonths=0&var.vFilterType='MLX')", \
+            '', \
+            "**Sort:** [Downloads](#var.vFilterMonths=0&var.vFilterType='Local'&var.vSort='Downloads')" + \
+                '\u00a0|\u00a0' + \
+                'Modified' + \
+                '\u00a0|\u00a0' + \
+                "[Name](#var.vFilterMonths=0&var.vFilterType='Local'&var.vSort='Name')" \
+        ]], \
+        ['markdownPrint', [ \
+            '## combo', \
+            '', \
+            'Combo', \
+            '', \
+            '**Variants:** 2b \\', \
+            '**Downloads:** 0.1K \\', \
+            '**Modified:** 2024-01-15', \
+            '', \
+            "[Download](#var.vAction='model'&var.vActionID='combo'&var.vFilterMonths=0&var.vFilterType='Local')", \
+            '\u00a0|\u00a0' + '[Info](https://ollama.com/library/combo)' \
+        ]] \
+    ])
+    systemGlobalSet('vFilterMonths', null)
+    systemGlobalSet('vFilterType', null)
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageFilterLocal')
+
+
+async function testOllamaChatModelsDownloadPageFilterCloud():
+    # Type filter Cloud - only cloud variants and models with them show
+    systemGlobalSet('vFilterMonths', 0)
+    systemGlobalSet('vFilterType', 'Cloud')
+    args = argsParse(ollamaChatArguments)
+    url = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+    combo = {'name': 'combo', 'description': 'Combo', 'modified': '2024-01-15', 'downloads': 100, 'variants': [ \
+        {'id': 'combo:2b', 'size': '2b', 'parameters': 2000000000}, \
+        {'id': 'combo:2b-mlx', 'size': '2b-mlx', 'parameters': 2000000000, 'mlx': true}, \
+        {'id': 'combo:cloud', 'size': 'cloud', 'parameters': 0, 'cloud': true} \
+    ]}
+    cloudy = {'name': 'cloudy', 'description': 'Cloudy', 'modified': '2024-01-15', 'downloads': 200, 'variants': [ \
+        {'id': 'cloudy:cloud', 'size': 'cloud', 'parameters': 0, 'cloud': true} \
+    ]}
+    unittestMockAll({'systemFetch': { \
+        'getSystemInfo': jsonStringify({'memory': 8000000000, 'mlx': true}), \
+        url: jsonStringify([combo, cloudy]) \
+    }})
+    ollamaChatModelsDownloadPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getSystemInfo']], \
+        ['systemFetch', [url]], \
+        ['documentSetTitle', ['Ollama Chat - Download']], \
+        ['markdownPrint', ["[Back](#var.vView='models')",'','# Ollama Chat \- Download']], \
+        ['markdownPrint', [ \
+            "**Recent:** [1 month](#var.vFilterMonths=1&var.vFilterType='Cloud')" + \
+                '\u00a0|\u00a0' + \
+                "[3 months](#var.vFilterMonths=3&var.vFilterType='Cloud')" + \
+                '\u00a0|\u00a0' + \
+                "[6 month](#var.vFilterType='Cloud')" + \
+                '\u00a0|\u00a0' + \
+                'All', \
+            '', \
+            "**Show:** Compatible" + '\u00a0|\u00a0' + "[All](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='Cloud')", \
+            '', \
+            '**Type:** ' + "[All](#var.vFilterMonths=0)" + \
+                '\u00a0|\u00a0' + \
+                "[Local](#var.vFilterMonths=0&var.vFilterType='Local')" + \
+                '\u00a0|\u00a0' + \
+                'Cloud' + \
+                '\u00a0|\u00a0' + \
+                "[MLX](#var.vFilterMonths=0&var.vFilterType='MLX')", \
+            '', \
+            "**Sort:** [Downloads](#var.vFilterMonths=0&var.vFilterType='Cloud'&var.vSort='Downloads')" + \
+                '\u00a0|\u00a0' + \
+                'Modified' + \
+                '\u00a0|\u00a0' + \
+                "[Name](#var.vFilterMonths=0&var.vFilterType='Cloud'&var.vSort='Name')" \
+        ]], \
+        ['markdownPrint', [ \
+            '## cloudy', \
+            '', \
+            'Cloudy', \
+            '', \
+            '**Variants:** cloud \\', \
+            '**Downloads:** 0.2K \\', \
+            '**Modified:** 2024-01-15', \
+            '', \
+            "[Download](#var.vAction='model'&var.vActionID='cloudy'&var.vFilterMonths=0&var.vFilterType='Cloud')", \
+            '\u00a0|\u00a0' + '[Info](https://ollama.com/library/cloudy)' \
+        ]], \
+        ['markdownPrint', [ \
+            '## combo', \
+            '', \
+            'Combo', \
+            '', \
+            '**Variants:** cloud \\', \
+            '**Downloads:** 0.1K \\', \
+            '**Modified:** 2024-01-15', \
+            '', \
+            "[Download](#var.vAction='model'&var.vActionID='combo'&var.vFilterMonths=0&var.vFilterType='Cloud')", \
+            '\u00a0|\u00a0' + '[Info](https://ollama.com/library/combo)' \
+        ]] \
+    ])
+    systemGlobalSet('vFilterMonths', null)
+    systemGlobalSet('vFilterType', null)
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageFilterCloud')
+
+
+async function testOllamaChatModelsDownloadPageFilterMLX():
+    # Type filter MLX - only MLX variants and models with them show
+    systemGlobalSet('vFilterMonths', 0)
+    systemGlobalSet('vFilterType', 'MLX')
+    args = argsParse(ollamaChatArguments)
+    url = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+    combo = {'name': 'combo', 'description': 'Combo', 'modified': '2024-01-15', 'downloads': 100, 'variants': [ \
+        {'id': 'combo:2b', 'size': '2b', 'parameters': 2000000000}, \
+        {'id': 'combo:2b-mlx', 'size': '2b-mlx', 'parameters': 2000000000, 'mlx': true}, \
+        {'id': 'combo:cloud', 'size': 'cloud', 'parameters': 0, 'cloud': true} \
+    ]}
+    cloudy = {'name': 'cloudy', 'description': 'Cloudy', 'modified': '2024-01-15', 'downloads': 200, 'variants': [ \
+        {'id': 'cloudy:cloud', 'size': 'cloud', 'parameters': 0, 'cloud': true} \
+    ]}
+    unittestMockAll({'systemFetch': { \
+        'getSystemInfo': jsonStringify({'memory': 8000000000, 'mlx': true}), \
+        url: jsonStringify([combo, cloudy]) \
+    }})
+    ollamaChatModelsDownloadPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getSystemInfo']], \
+        ['systemFetch', [url]], \
+        ['documentSetTitle', ['Ollama Chat - Download']], \
+        ['markdownPrint', ["[Back](#var.vView='models')",'','# Ollama Chat \- Download']], \
+        ['markdownPrint', [ \
+            "**Recent:** [1 month](#var.vFilterMonths=1&var.vFilterType='MLX')" + \
+                '\u00a0|\u00a0' + \
+                "[3 months](#var.vFilterMonths=3&var.vFilterType='MLX')" + \
+                '\u00a0|\u00a0' + \
+                "[6 month](#var.vFilterType='MLX')" + \
+                '\u00a0|\u00a0' + \
+                'All', \
+            '', \
+            "**Show:** Compatible" + '\u00a0|\u00a0' + "[All](#var.vFilterCompatible=false&var.vFilterMonths=0&var.vFilterType='MLX')", \
+            '', \
+            '**Type:** ' + "[All](#var.vFilterMonths=0)" + \
+                '\u00a0|\u00a0' + \
+                "[Local](#var.vFilterMonths=0&var.vFilterType='Local')" + \
+                '\u00a0|\u00a0' + \
+                "[Cloud](#var.vFilterMonths=0&var.vFilterType='Cloud')" + \
+                '\u00a0|\u00a0' + \
+                'MLX', \
+            '', \
+            "**Sort:** [Downloads](#var.vFilterMonths=0&var.vFilterType='MLX'&var.vSort='Downloads')" + \
+                '\u00a0|\u00a0' + \
+                'Modified' + \
+                '\u00a0|\u00a0' + \
+                "[Name](#var.vFilterMonths=0&var.vFilterType='MLX'&var.vSort='Name')" \
+        ]], \
+        ['markdownPrint', [ \
+            '## combo', \
+            '', \
+            'Combo', \
+            '', \
+            '**Variants:** 2b-mlx \\', \
+            '**Downloads:** 0.1K \\', \
+            '**Modified:** 2024-01-15', \
+            '', \
+            "[Download](#var.vAction='model'&var.vActionID='combo'&var.vFilterMonths=0&var.vFilterType='MLX')", \
+            '\u00a0|\u00a0' + '[Info](https://ollama.com/library/combo)' \
+        ]] \
+    ])
+    systemGlobalSet('vFilterMonths', null)
+    systemGlobalSet('vFilterType', null)
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageFilterMLX')
 
 
 #
@@ -893,7 +1347,7 @@ async function testOllamaChatModelsDownloadPageButtonBinding():
         {'id': 'gemma:70b', 'size': '70B', 'parameters': 70000000000} \
     ]}
     render = systemPartial(ollamaChatModelsDownloadPage, args)
-    data = {'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000}), url: jsonStringify([model])}}
+    data = {'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000, 'mlx': false}), url: jsonStringify([model])}}
 
     # Each variant's download button must be bound to its own model id
     ollamaChatTestVerifyClick(render, 'gemma:2b', systemPartial(ollamaChatModelsOnDownload, 'gemma:2b'), data)

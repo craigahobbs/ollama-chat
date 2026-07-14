@@ -245,6 +245,7 @@ async function ollamaChatModelsDownloadPage(args):
     actionID = objectGet(args, 'actionID')
     filterMonths = objectGet(args, 'filterMonths')
     filterCompatible = objectGet(args, 'filterCompatible')
+    filterType = objectGet(args, 'filterType')
     sort = objectGet(args, 'sort')
 
     # Get the system info (a null response means the server is unreachable)
@@ -258,6 +259,7 @@ async function ollamaChatModelsDownloadPage(args):
     # A non-positive memory (e.g. -1) means the total memory is unknown - skip compatibility filtering
     totalMemory = objectGet(systemInfo, 'memory')
     memoryKnown = totalMemory > 0
+    mlxSupported = objectGet(systemInfo, 'mlx')
 
     # Get the downloaded and available models
     availableModels = systemFetch(ollamaChatModelsAvailableURL)
@@ -289,6 +291,12 @@ async function ollamaChatModelsDownloadPage(args):
             ollamaChatModelsFilterLink('Compatible', true, 'filterCompatible', filterCompatible) + filterSpacer + \
             ollamaChatModelsFilterLink('All', false, 'filterCompatible', filterCompatible), \
         '', \
+        '**Type:** ' + \
+            ollamaChatModelsFilterLink('All', 'All', 'filterType', filterType) + filterSpacer + \
+            ollamaChatModelsFilterLink('Local', 'Local', 'filterType', filterType) + filterSpacer + \
+            ollamaChatModelsFilterLink('Cloud', 'Cloud', 'filterType', filterType) + filterSpacer + \
+            ollamaChatModelsFilterLink('MLX', 'MLX', 'filterType', filterType), \
+        '', \
         '**Sort:** ' + \
             ollamaChatModelsFilterLink('Downloads', 'Downloads', 'sort', sort) + filterSpacer + \
             ollamaChatModelsFilterLink('Modified', 'Modified', 'sort', sort) + filterSpacer + \
@@ -319,22 +327,39 @@ async function ollamaChatModelsDownloadPage(args):
         variants = objectGet(model, 'variants')
         selected = action == 'model' && actionID == name
 
-        # Create the parameter sizes text and compute compatibility
-        parameterSizes = []
-        anyCompatible = false
+        # Filter the variants by type
+        typeVariants = []
         for variant in variants:
+            if filterType == 'All' || ollamaChatModelsVariantType(variant) == filterType:
+                arrayPush(typeVariants, variant)
+            endif
+        endfor
+
+        # Create the variant sizes text and compute compatibility
+        variantSizes = []
+        anyCompatible = false
+        for variant in typeVariants:
             variantParameters = objectGet(variant, 'parameters')
-            isCompatible = !memoryKnown || variantParameters <= totalMemory
+            memoryCompatible = !memoryKnown || variantParameters <= totalMemory
+            if objectGet(variant, 'cloud'):
+                # Cloud variants run in the Ollama cloud - no local memory needed
+                isCompatible = true
+            elif objectGet(variant, 'mlx'):
+                # MLX variants require Apple Silicon
+                isCompatible = mlxSupported && memoryCompatible
+            else:
+                isCompatible = memoryCompatible
+            endif
             anyCompatible = anyCompatible || isCompatible
             objectSet(variant, 'compatible', isCompatible)
             if !filterCompatible || isCompatible:
-                arrayPush(parameterSizes, objectGet(variant, 'size'))
+                arrayPush(variantSizes, objectGet(variant, 'size'))
             endif
         endfor
-        parametersText = arrayJoin(parameterSizes, ', ')
+        variantsText = arrayJoin(variantSizes, ', ')
 
         # Filter models
-        if (minModified && modified < minModified) || (filterCompatible && !anyCompatible):
+        if !typeVariants || (minModified && modified < minModified) || (filterCompatible && !anyCompatible):
             continue
         endif
 
@@ -344,7 +369,7 @@ async function ollamaChatModelsDownloadPage(args):
             '', \
             markdownEscape(description), \
             '', \
-            '**Parameters:** ' + parametersText + ' \\', \
+            '**Variants:** ' + variantsText + ' \\', \
             '**Downloads:** ' + ollamaChatModelsFormatCount(downloads) + ' \\', \
             '**Modified:** ' + modifiedText, \
             '', \
@@ -356,7 +381,7 @@ async function ollamaChatModelsDownloadPage(args):
         )
         if selected:
             downloadLinks = []
-            for variant, ixVariant in variants:
+            for variant, ixVariant in typeVariants:
                 modelID = objectGet(variant, 'id')
                 if !filterCompatible || objectGet(variant, 'compatible'):
                     arrayPush(downloadLinks, {'html': 'p', 'elem': [ \
@@ -376,6 +401,17 @@ function ollamaChatModelsFilterLink(text, value, argName, argValue):
         return markdownEscape(text)
     endif
     return argsLink(ollamaChatArguments, text, {argName: value})
+endfunction
+
+
+# Helper to compute a model variant's type
+function ollamaChatModelsVariantType(variant):
+    if objectGet(variant, 'cloud'):
+        return 'Cloud'
+    elif objectGet(variant, 'mlx'):
+        return 'MLX'
+    endif
+    return 'Local'
 endfunction
 
 

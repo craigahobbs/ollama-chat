@@ -603,7 +603,8 @@ def get_system_info(unused_ctx, unused_req):
         total_memory = phys_pages * page_size if phys_pages > 0 and page_size > 0 else -1
 
     return {
-        'memory': total_memory
+        'memory': total_memory,
+        'mlx': platform.system() == 'Darwin' and platform.machine() == 'arm64'
     }
 
 
