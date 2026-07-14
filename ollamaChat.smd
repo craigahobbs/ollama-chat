@@ -177,8 +177,14 @@ struct OllamaChatModelVariant
     # The variant's tag
     string size
 
-    # The variant's parameter count
+    # The variant's parameter count (0 if unknown)
     int parameters
+
+    # If true, the variant runs in the Ollama cloud
+    optional bool cloud
+
+    # If true, the variant requires the MLX engine (Apple Silicon)
+    optional bool mlx
 
 
 group "Ollama Chat API"
@@ -480,6 +486,9 @@ action getSystemInfo
     output
         # The total system memory, or -1 if it could not be determined
         int memory
+
+        # If true, the system supports MLX models (Apple Silicon)
+        bool mlx
 
 
 # Download a model
