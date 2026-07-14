@@ -65,7 +65,7 @@
         "name": "aya-expanse",
         "description": "Cohere For AI's language models trained to perform well across 23 different languages.",
         "modified": "2025-07-14",
-        "downloads": 963700,
+        "downloads": 963800,
         "variants": [
             {
                 "id": "aya-expanse:8b",
@@ -83,7 +83,7 @@
         "name": "bakllava",
         "description": "BakLLaVA is a multimodal model consisting of the Mistral 7B base model augmented with the LLaVA  architecture.",
         "modified": "2024-07-14",
-        "downloads": 862500,
+        "downloads": 862600,
         "variants": [
             {
                 "id": "bakllava:7b",
@@ -566,6 +566,54 @@
                 "id": "deepseek-v3.1:671b",
                 "size": "671b",
                 "parameters": 671000000000
+            },
+            {
+                "id": "deepseek-v3.1:671b-cloud",
+                "size": "671b-cloud",
+                "parameters": 671000000000,
+                "cloud": true
+            }
+        ]
+    },
+    {
+        "name": "deepseek-v3.2",
+        "description": "DeepSeek-V3.2, a model that harmonizes high computational efficiency with superior reasoning and agent performance.",
+        "modified": "2026-01-15",
+        "downloads": 2200000,
+        "variants": [
+            {
+                "id": "deepseek-v3.2:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
+            }
+        ]
+    },
+    {
+        "name": "deepseek-v4-flash",
+        "description": "DeepSeek-V4-Flash is a preview of the DeepSeek-V4 series, a Mixture-of-Experts model with 284B total parameters and 13B activated, built for efficient reasoning across a 1M-token context window.",
+        "modified": "2026-05-15",
+        "downloads": 231800,
+        "variants": [
+            {
+                "id": "deepseek-v4-flash:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
+            }
+        ]
+    },
+    {
+        "name": "deepseek-v4-pro",
+        "description": "DeepSeek-V4-Pro is a frontier Mixture-of-Experts model with a large context window and three reasoning modes.",
+        "modified": "2026-05-15",
+        "downloads": 229600,
+        "variants": [
+            {
+                "id": "deepseek-v4-pro:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
             }
         ]
     },
@@ -592,6 +640,12 @@
                 "id": "devstral-2:123b",
                 "size": "123b",
                 "parameters": 123000000000
+            },
+            {
+                "id": "devstral-2:123b-cloud",
+                "size": "123b-cloud",
+                "parameters": 123000000000,
+                "cloud": true
             }
         ]
     },
@@ -605,6 +659,12 @@
                 "id": "devstral-small-2:24b",
                 "size": "24b",
                 "parameters": 24000000000
+            },
+            {
+                "id": "devstral-small-2:24b-cloud",
+                "size": "24b-cloud",
+                "parameters": 24000000000,
+                "cloud": true
             }
         ]
     },
@@ -877,6 +937,20 @@
         ]
     },
     {
+        "name": "gemini-3-flash-preview",
+        "description": "Gemini 3 Flash offers frontier intelligence built for speed at a fraction of the cost.",
+        "modified": "2026-01-15",
+        "downloads": 2300000,
+        "variants": [
+            {
+                "id": "gemini-3-flash-preview:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
+            }
+        ]
+    },
+    {
         "name": "gemma",
         "description": "Gemma is a family of lightweight, state-of-the-art open models built by Google DeepMind. Updated to version 1.1",
         "modified": "2024-07-14",
@@ -947,6 +1021,24 @@
                 "id": "gemma3:27b",
                 "size": "27b",
                 "parameters": 27000000000
+            },
+            {
+                "id": "gemma3:4b-cloud",
+                "size": "4b-cloud",
+                "parameters": 4000000000,
+                "cloud": true
+            },
+            {
+                "id": "gemma3:12b-cloud",
+                "size": "12b-cloud",
+                "parameters": 12000000000,
+                "cloud": true
+            },
+            {
+                "id": "gemma3:27b-cloud",
+                "size": "27b-cloud",
+                "parameters": 27000000000,
+                "cloud": true
             }
         ]
     },
@@ -959,12 +1051,12 @@
             {
                 "id": "gemma3n:e2b",
                 "size": "e2b",
-                "parameters": 1
+                "parameters": 0
             },
             {
                 "id": "gemma3n:e4b",
                 "size": "e4b",
-                "parameters": 1
+                "parameters": 0
             }
         ]
     },
@@ -977,12 +1069,12 @@
             {
                 "id": "gemma4:e2b",
                 "size": "e2b",
-                "parameters": 1
+                "parameters": 0
             },
             {
                 "id": "gemma4:e4b",
                 "size": "e4b",
-                "parameters": 1
+                "parameters": 0
             },
             {
                 "id": "gemma4:12b",
@@ -998,6 +1090,98 @@
                 "id": "gemma4:31b",
                 "size": "31b",
                 "parameters": 31000000000
+            },
+            {
+                "id": "gemma4:e2b-mlx",
+                "size": "e2b-mlx",
+                "parameters": 0,
+                "mlx": true
+            },
+            {
+                "id": "gemma4:e4b-mlx",
+                "size": "e4b-mlx",
+                "parameters": 0,
+                "mlx": true
+            },
+            {
+                "id": "gemma4:12b-mlx",
+                "size": "12b-mlx",
+                "parameters": 12000000000,
+                "mlx": true
+            },
+            {
+                "id": "gemma4:26b-mlx",
+                "size": "26b-mlx",
+                "parameters": 26000000000,
+                "mlx": true
+            },
+            {
+                "id": "gemma4:31b-mlx",
+                "size": "31b-mlx",
+                "parameters": 31000000000,
+                "mlx": true
+            },
+            {
+                "id": "gemma4:31b-cloud",
+                "size": "31b-cloud",
+                "parameters": 31000000000,
+                "cloud": true
+            }
+        ]
+    },
+    {
+        "name": "glm-4.7",
+        "description": "Advancing the Coding Capability",
+        "modified": "2026-01-15",
+        "downloads": 2200000,
+        "variants": [
+            {
+                "id": "glm-4.7:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
+            }
+        ]
+    },
+    {
+        "name": "glm-5",
+        "description": "A strong reasoning and agentic model from Z.ai with 744B total parameters (40B active), built for complex systems engineering and long-horizon tasks.",
+        "modified": "2026-02-14",
+        "downloads": 2300000,
+        "variants": [
+            {
+                "id": "glm-5:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
+            }
+        ]
+    },
+    {
+        "name": "glm-5.1",
+        "description": "GLM-5.1 is our next-generation flagship model for agentic engineering, with significantly stronger coding capabilities than its predecessor. It achieves state-of-the-art performance on SWE-Bench Pro and leads GLM-5 by a wide margin.",
+        "modified": "2026-04-15",
+        "downloads": 2300000,
+        "variants": [
+            {
+                "id": "glm-5.1:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
+            }
+        ]
+    },
+    {
+        "name": "glm-5.2",
+        "description": "GLM-5.2 is Z.ai\u2019s flagship model for the era of long-horizon tasks.",
+        "modified": "2026-06-16",
+        "downloads": 214700,
+        "variants": [
+            {
+                "id": "glm-5.2:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
             }
         ]
     },
@@ -1029,6 +1213,18 @@
                 "id": "gpt-oss:120b",
                 "size": "120b",
                 "parameters": 120000000000
+            },
+            {
+                "id": "gpt-oss:20b-cloud",
+                "size": "20b-cloud",
+                "parameters": 20000000000,
+                "cloud": true
+            },
+            {
+                "id": "gpt-oss:120b-cloud",
+                "size": "120b-cloud",
+                "parameters": 120000000000,
+                "cloud": true
             }
         ]
     },
@@ -1262,7 +1458,7 @@
         "name": "granite4.1",
         "description": "IBM Granite Models are a family of enterprise-ready, open foundation models that support multilingual capabilities, coding, retrieval-augmented generation (RAG), tool use, and structured JSON output. Released under Apache 2.0 license.",
         "modified": "2026-06-14",
-        "downloads": 247400,
+        "downloads": 247500,
         "variants": [
             {
                 "id": "granite4.1:3b",
@@ -1285,7 +1481,7 @@
         "name": "granite4.1-guardian",
         "description": "Granite Guardian 4.1 is a specialized safety and judging model from IBM Research that evaluates whether LLM prompts and responses meet specified harm criteria.",
         "modified": "2026-06-14",
-        "downloads": 3891,
+        "downloads": 3893,
         "variants": [
             {
                 "id": "granite4.1-guardian:8b",
@@ -1347,6 +1543,48 @@
                 "id": "internlm2:20b",
                 "size": "20b",
                 "parameters": 20000000000
+            }
+        ]
+    },
+    {
+        "name": "kimi-k2.5",
+        "description": "Kimi K2.5 is an open-source, native multimodal agentic model that seamlessly integrates vision and language understanding with advanced agentic capabilities, instant and thinking modes, as well as conversational and agentic paradigms.",
+        "modified": "2026-02-14",
+        "downloads": 357200,
+        "variants": [
+            {
+                "id": "kimi-k2.5:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
+            }
+        ]
+    },
+    {
+        "name": "kimi-k2.6",
+        "description": "Kimi K2.6 is an open-source, native multimodal agentic model that advances practical capabilities in long-horizon coding, coding-driven design, proactive autonomous execution, and swarm-based task orchestration.",
+        "modified": "2026-05-15",
+        "downloads": 376200,
+        "variants": [
+            {
+                "id": "kimi-k2.6:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
+            }
+        ]
+    },
+    {
+        "name": "kimi-k2.7-code",
+        "description": "Kimi K2.7 Code is Moonshot AI's coding-focused agentic model built upon Kimi K2.6, with substantial improvements on real-world long-horizon coding tasks and roughly 30% lower thinking-token usage.",
+        "modified": "2026-06-14",
+        "downloads": 124400,
+        "variants": [
+            {
+                "id": "kimi-k2.7-code:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
             }
         ]
     },
@@ -1733,7 +1971,7 @@
         "name": "medgemma",
         "description": "MedGemma is a collection of Gemma 3 variants that are trained for performance on medical text and image comprehension.",
         "modified": "2026-05-15",
-        "downloads": 163000,
+        "downloads": 163100,
         "variants": [
             {
                 "id": "medgemma:4b",
@@ -1751,7 +1989,7 @@
         "name": "medgemma1.5",
         "description": "MedGemma 1.5 4B is an updated version of the MedGemma 4B model.",
         "modified": "2026-05-15",
-        "downloads": 77500,
+        "downloads": 77600,
         "variants": [
             {
                 "id": "medgemma1.5:4b",
@@ -1844,6 +2082,62 @@
         ]
     },
     {
+        "name": "minimax-m2.1",
+        "description": "Exceptional multilingual capabilities to elevate code engineering",
+        "modified": "2026-01-15",
+        "downloads": 2100000,
+        "variants": [
+            {
+                "id": "minimax-m2.1:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
+            }
+        ]
+    },
+    {
+        "name": "minimax-m2.5",
+        "description": "MiniMax-M2.5 is a state-of-the-art large language model designed for real-world productivity and coding tasks.",
+        "modified": "2026-02-14",
+        "downloads": 2300000,
+        "variants": [
+            {
+                "id": "minimax-m2.5:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
+            }
+        ]
+    },
+    {
+        "name": "minimax-m2.7",
+        "description": "MiniMax's M2-series model for coding, agentic workflows, and professional productivity.",
+        "modified": "2026-04-15",
+        "downloads": 2300000,
+        "variants": [
+            {
+                "id": "minimax-m2.7:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
+            }
+        ]
+    },
+    {
+        "name": "minimax-m3",
+        "description": "MiniMax M3: Coding & Agentic Frontier. 1M context window. Native Multimodality.",
+        "modified": "2026-06-14",
+        "downloads": 241200,
+        "variants": [
+            {
+                "id": "minimax-m3:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
+            }
+        ]
+    },
+    {
         "name": "ministral-3",
         "description": "The Ministral 3 family is designed for edge deployment, capable of running on a wide range of hardware.",
         "modified": "2025-12-16",
@@ -1863,6 +2157,24 @@
                 "id": "ministral-3:14b",
                 "size": "14b",
                 "parameters": 14000000000
+            },
+            {
+                "id": "ministral-3:3b-cloud",
+                "size": "3b-cloud",
+                "parameters": 3000000000,
+                "cloud": true
+            },
+            {
+                "id": "ministral-3:8b-cloud",
+                "size": "8b-cloud",
+                "parameters": 8000000000,
+                "cloud": true
+            },
+            {
+                "id": "ministral-3:14b-cloud",
+                "size": "14b-cloud",
+                "parameters": 14000000000,
+                "cloud": true
             }
         ]
     },
@@ -1889,6 +2201,20 @@
                 "id": "mistral-large:123b",
                 "size": "123b",
                 "parameters": 123000000000
+            }
+        ]
+    },
+    {
+        "name": "mistral-large-3",
+        "description": "A general-purpose multimodal mixture-of-experts model for production-grade tasks and enterprise workloads.",
+        "modified": "2025-12-16",
+        "downloads": 74300,
+        "variants": [
+            {
+                "id": "mistral-large-3:675b-cloud",
+                "size": "675b-cloud",
+                "parameters": 675000000000,
+                "cloud": true
             }
         ]
     },
@@ -2049,7 +2375,7 @@
         "name": "nemotron-3-nano",
         "description": "Nemotron-3-Nano is a new Standard for Efficient, Open, and Intelligent Agentic Models, now updated with a 4B parameter count model.",
         "modified": "2026-03-16",
-        "downloads": 584800,
+        "downloads": 584900,
         "variants": [
             {
                 "id": "nemotron-3-nano:4b",
@@ -2060,6 +2386,12 @@
                 "id": "nemotron-3-nano:30b",
                 "size": "30b",
                 "parameters": 30000000000
+            },
+            {
+                "id": "nemotron-3-nano:30b-cloud",
+                "size": "30b-cloud",
+                "parameters": 30000000000,
+                "cloud": true
             }
         ]
     },
@@ -2073,6 +2405,26 @@
                 "id": "nemotron-3-super:120b",
                 "size": "120b",
                 "parameters": 120000000000
+            },
+            {
+                "id": "nemotron-3-super:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
+            }
+        ]
+    },
+    {
+        "name": "nemotron-3-ultra",
+        "description": "NVIDIA Nemotron 3 Ultra is built for high-throughput reasoning and long-running agent workflows.",
+        "modified": "2026-06-14",
+        "downloads": 24400,
+        "variants": [
+            {
+                "id": "nemotron-3-ultra:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
             }
         ]
     },
@@ -2797,6 +3149,26 @@
                 "id": "qwen3-coder:480b",
                 "size": "480b",
                 "parameters": 480000000000
+            },
+            {
+                "id": "qwen3-coder:480b-cloud",
+                "size": "480b-cloud",
+                "parameters": 480000000000,
+                "cloud": true
+            }
+        ]
+    },
+    {
+        "name": "qwen3-coder-next",
+        "description": "Qwen3-Coder-Next is a coding-focused language model from Alibaba's Qwen team, optimized for agentic coding workflows and local development.",
+        "modified": "2026-02-14",
+        "downloads": 1800000,
+        "variants": [
+            {
+                "id": "qwen3-coder-next:cloud",
+                "size": "cloud",
+                "parameters": 0,
+                "cloud": true
             }
         ]
     },
@@ -2914,6 +3286,48 @@
                 "id": "qwen3.5:122b",
                 "size": "122b",
                 "parameters": 122000000000
+            },
+            {
+                "id": "qwen3.5:0.8b-mlx",
+                "size": "0.8b-mlx",
+                "parameters": 800000000,
+                "mlx": true
+            },
+            {
+                "id": "qwen3.5:2b-mlx",
+                "size": "2b-mlx",
+                "parameters": 2000000000,
+                "mlx": true
+            },
+            {
+                "id": "qwen3.5:4b-mlx",
+                "size": "4b-mlx",
+                "parameters": 4000000000,
+                "mlx": true
+            },
+            {
+                "id": "qwen3.5:9b-mlx",
+                "size": "9b-mlx",
+                "parameters": 9000000000,
+                "mlx": true
+            },
+            {
+                "id": "qwen3.5:27b-mlx",
+                "size": "27b-mlx",
+                "parameters": 27000000000,
+                "mlx": true
+            },
+            {
+                "id": "qwen3.5:35b-mlx",
+                "size": "35b-mlx",
+                "parameters": 35000000000,
+                "mlx": true
+            },
+            {
+                "id": "qwen3.5:397b-cloud",
+                "size": "397b-cloud",
+                "parameters": 397000000000,
+                "cloud": true
             }
         ]
     },
@@ -2932,6 +3346,18 @@
                 "id": "qwen3.6:35b",
                 "size": "35b",
                 "parameters": 35000000000
+            },
+            {
+                "id": "qwen3.6:27b-mlx",
+                "size": "27b-mlx",
+                "parameters": 27000000000,
+                "mlx": true
+            },
+            {
+                "id": "qwen3.6:35b-mlx",
+                "size": "35b-mlx",
+                "parameters": 35000000000,
+                "mlx": true
             }
         ]
     },
