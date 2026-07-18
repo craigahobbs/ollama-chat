@@ -43,6 +43,10 @@ clean:
 	rm -rf Makefile.base pylintrc
 
 
+lint:
+	$(DEFAULT_VENV_PYTHON) -m pylint $(PYLINT_ARGS) static/models/models.py
+
+
 doc:
 	rm -rf $(GHPAGES_SRC)
 	mkdir -p $(GHPAGES_SRC)
