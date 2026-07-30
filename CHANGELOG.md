@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0 (2026-07-29)
+
+- [c0faee7](https://github.com/craigahobbs/ollama-chat/commit/c0faee7) - chisel 2.2
+
 ## 1.1.0 (2026-07-14)
 
 - [9c0de50](https://github.com/craigahobbs/ollama-chat/commit/9c0de50) - add cloud and mlx models to the downloads page
