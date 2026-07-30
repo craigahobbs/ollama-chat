@@ -2,6 +2,7 @@
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
 include <args.bare>
+include <markdown.bare>
 
 
 # The application title

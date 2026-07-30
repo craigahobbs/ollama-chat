@@ -3,6 +3,8 @@
 
 include <args.bare>
 include <forms.bare>
+include <markdown.bare>
+include <url.bare>
 
 include 'ollamaChatUtil.bare'
 
