@@ -17,9 +17,9 @@ import re
 import threading
 import uuid
 
+from bare_script.include import schema_parse, schema_validate
 import chisel
 import urllib3
-import schema_markdown
 
 from .chat import ChatManager, config_conversation, config_template_prompts
 from .ollama import ollama_delete, ollama_list, ollama_pull
@@ -111,7 +111,7 @@ class ConfigManager:
         # Ensure the config file exists with default config if it doesn't exist
         if os.path.isfile(self.config_path):
             with open(self.config_path, 'r', encoding='utf-8') as fh_config:
-                self.config = schema_markdown.validate_type(OLLAMA_CHAT_TYPES, 'OllamaChatConfig', json.loads(fh_config.read()))
+                self.config = schema_validate(OLLAMA_CHAT_TYPES, 'OllamaChatConfig', json.loads(fh_config.read()))
         else:
             self.config = {'conversations': []}
 
@@ -177,7 +177,7 @@ class DownloadManager():
 
 # The Ollama Chat API type model
 with importlib.resources.files('ollama_chat.static').joinpath('ollamaChat.smd').open('r') as cm_smd:
-    OLLAMA_CHAT_TYPES = schema_markdown.parse_schema_markdown(cm_smd.read())
+    OLLAMA_CHAT_TYPES = schema_parse(cm_smd.read())
 
 
 @chisel.action(name='getConversations', types=OLLAMA_CHAT_TYPES)

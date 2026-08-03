@@ -8,8 +8,8 @@ import re
 import unittest
 import unittest.mock
 
+from bare_script.include import url_encode_query_string
 import urllib3
-from schema_markdown import encode_query_string
 from ollama_chat.app import DownloadManager, OllamaChat
 
 from .util import create_test_files
@@ -813,7 +813,7 @@ class TestAPI(unittest.TestCase):
 
             # Get template 'tmpl1'
             status, headers, content_bytes = app.request(
-                'GET', '/getTemplate', query_string=encode_query_string({'id': 'tmpl1'})
+                'GET', '/getTemplate', query_string=url_encode_query_string({'id': 'tmpl1'})
             )
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertEqual(status, '200 OK')
@@ -848,7 +848,7 @@ class TestAPI(unittest.TestCase):
 
             # Try to get non-existent template 'tmpl2'
             status, headers, content_bytes = app.request(
-                'GET', '/getTemplate', query_string=encode_query_string({'id': 'tmpl2'})
+                'GET', '/getTemplate', query_string=url_encode_query_string({'id': 'tmpl2'})
             )
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertEqual(status, '400 Bad Request')
@@ -875,7 +875,7 @@ class TestAPI(unittest.TestCase):
 
             # Try to get template when no templates exist
             status, headers, content_bytes = app.request(
-                'GET', '/getTemplate', query_string=encode_query_string({'id': 'tmpl1'})
+                'GET', '/getTemplate', query_string=url_encode_query_string({'id': 'tmpl1'})
             )
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertEqual(status, '400 Bad Request')
@@ -1497,7 +1497,7 @@ class TestAPI(unittest.TestCase):
             app = OllamaChat(config_path)
 
             # Get conversation 'conv1'
-            status, headers, content_bytes = app.request('GET', '/getConversation', query_string=encode_query_string({'id': 'conv1'}))
+            status, headers, content_bytes = app.request('GET', '/getConversation', query_string=url_encode_query_string({'id': 'conv1'}))
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
@@ -1541,7 +1541,7 @@ class TestAPI(unittest.TestCase):
             app.chats['conv1'] = mock_chat
 
             # Get conversation 'conv1'
-            status, headers, content_bytes = app.request('GET', '/getConversation', query_string=encode_query_string({'id': 'conv1'}))
+            status, headers, content_bytes = app.request('GET', '/getConversation', query_string=url_encode_query_string({'id': 'conv1'}))
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertEqual(status, '200 OK')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
@@ -1581,7 +1581,7 @@ class TestAPI(unittest.TestCase):
             app = OllamaChat(config_path)
 
             # Try to get non-existent conversation 'conv2'
-            status, headers, content_bytes = app.request('GET', '/getConversation', query_string=encode_query_string({'id': 'conv2'}))
+            status, headers, content_bytes = app.request('GET', '/getConversation', query_string=url_encode_query_string({'id': 'conv2'}))
             response = json.loads(content_bytes.decode('utf-8'))
             self.assertEqual(status, '400 Bad Request')
             self.assertListEqual(headers, [('Content-Type', 'application/json')])
