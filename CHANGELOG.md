@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0 (2026-08-04)
+
+- [d3fc6da](https://github.com/craigahobbs/ollama-chat/commit/d3fc6da) - chisel 2.3
+
+- [dfdd965](https://github.com/craigahobbs/ollama-chat/commit/dfdd965) - cleanup barescript includes
+
 ## 1.2.0 (2026-07-29)
 
 - [c0faee7](https://github.com/craigahobbs/ollama-chat/commit/c0faee7) - chisel 2.2
