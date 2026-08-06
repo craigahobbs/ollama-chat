@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.1 (2026-08-06)
+
+- [a7d2af4](https://github.com/craigahobbs/ollama-chat/commit/a7d2af4) - migrate package metadata from setup.cfg to pyproject.toml
+
 ## 1.3.0 (2026-08-04)
 
 - [d3fc6da](https://github.com/craigahobbs/ollama-chat/commit/d3fc6da) - chisel 2.3
