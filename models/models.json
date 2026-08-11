@@ -2019,7 +2019,7 @@
         "name": "minimax-m3",
         "description": "MiniMax M3: Coding & Agentic Frontier. 1M context window. Native Multimodality.",
         "modified": "2026-06-01",
-        "downloads": 393900,
+        "downloads": 394000,
         "variants": [
             {
                 "id": "minimax-m3:cloud",
@@ -2223,7 +2223,7 @@
         "name": "muse-glimmer",
         "description": "Meta's latest open model built for always-on local agents. 30B parameters, licensed under Apache 2.0 and runs on a single GPU \u2014 tuned for tool use, long tasks, and failure recovery.",
         "modified": "2026-08-11",
-        "downloads": 16400,
+        "downloads": 16800,
         "variants": [
             {
                 "id": "muse-glimmer:30b",
@@ -2325,7 +2325,7 @@
         "name": "nemotron-3.5-lightning",
         "description": "NVIDIA Nemotron 3.5 Lightning is an open 30B mixture-of-experts (MoE) model with 3B active parameters built for always-on agents.",
         "modified": "2026-08-11",
-        "downloads": 498,
+        "downloads": 560,
         "variants": [
             {
                 "id": "nemotron-3.5-lightning:30b",
