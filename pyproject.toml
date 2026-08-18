@@ -28,7 +28,7 @@ classifiers = [
     "Topic :: Utilities"
 ]
 dependencies = [
-    "chisel >= 2.3.0, < 2.4.0",
+    "chisel >= 2.4.0, < 2.5.0",
     "urllib3 >= 2.5.0",
     "waitress >= 3.0.0"
 ]
