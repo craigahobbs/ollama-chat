@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Notes for coding agents working in this repository.
 
 ## Overview
 
@@ -9,23 +9,26 @@ a Python WSGI back-end serving a [BareScript](https://github.com/craigahobbs/bar
 client-rendered front-end. The browser loads `index.html`, which boots MarkdownUp and runs the
 `.bare` application code; the front-end talks to the back-end through the JSON API.
 
-## Commands
+## python-build
 
-The build uses [python-build](https://github.com/craigahobbs/python-build) via `Makefile.base`
-(downloaded automatically; not committed). All targets create/use a venv under `build/venv/`.
+This is a [python-build](https://github.com/craigahobbs/python-build#readme) package. Read the python-build skill before running tests, lint, coverage, or changing the Makefile: [`../python-build/SKILL.md`](../python-build/SKILL.md) if that file exists, otherwise [https://raw.githubusercontent.com/craigahobbs/python-build/main/SKILL.md](https://raw.githubusercontent.com/craigahobbs/python-build/main/SKILL.md).
 
-- `make test` — run Python unit tests (all supported Python versions when `USE_DOCKER=1`/`USE_PODMAN=1`, else system Python)
-- `make test TEST=tests.test_chat.TestChat.test_name` — run a single Python test (module path is relative to `src/`)
-- `make lint` — pylint over `src` (config in `pylintrc`, also downloaded)
-- `make cover` — coverage; **100% coverage is enforced** (`--fail-under 100`)
-- `make test-app` — run the front-end BareScript unit tests
-- `make test-app TEST='testNamePrefix'` — run matching BareScript tests only
-- `make run` — start the app locally (`make run ARGS="-m 'Why is the sky blue?'"` to pass CLI args)
-- `make commit` — runs test + lint + doc + cover (the full pre-commit gate)
-- `make clean` — remove downloaded `Makefile.base`/`pylintrc` and build artifacts
+Local Makefile overrides:
 
-Tests require an `ollama` package dependency available as `bare-script` (see `TESTS_REQUIRE`); the
-back-end never contacts a real Ollama server in tests — `urllib3` is mocked.
+- `GHPAGES_SRC` — `build/doc/`
+- `GHPAGES_RSYNC_ARGS` — `--exclude='models/models.json'`
+- `TESTS_REQUIRE` — `bare-script`
+- `PYLINT_ARGS` — also `static/models`; missing docstring checks disabled
+- no `SPHINX_DOC` — `doc` is a custom recipe (README, `static/*`, `ollamaChat.smd`)
+- `commit` also depends on `test-app`
+- `lint` also runs pylint on `static/models/models.py`
+
+Package-specific targets:
+
+- `make test-app` — BareScript unit tests for `src/ollama_chat/static/` (`TEST=` is an exact BareScript test name)
+- `make run ARGS='...'` — start the app from the default venv
+
+Tests require `bare-script`; the back-end never contacts a real Ollama server in tests — `urllib3` is mocked.
 
 ## Back-end architecture (`src/ollama_chat/`)
 
@@ -69,6 +72,6 @@ branch. `static/` (root) is published to GitHub Pages (`gh-pages`) via `make gh-
 
 ## Conventions
 
-- Python classes use `__slots__`; supports Python 3.10–3.14.
+- Python classes use `__slots__`.
 - The config dict is the single source of truth for conversations/templates/current model — there is no
   database. Mutations must go through `ConfigManager`.
