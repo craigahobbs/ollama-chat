@@ -27,7 +27,7 @@ from .ollama import ollama_delete, ollama_list, ollama_pull
 
 # The ollama-chat back-end API WSGI application class
 class OllamaChat(chisel.Application):
-    __slots__ = ('config', 'xorigin', 'chats', 'downloads', 'pool_manager')
+    __slots__ = ('config', 'xorigin', 'chats', 'downloads', 'download_error', 'pool_manager')
 
 
     def __init__(self, config_path, xorigin=False):
@@ -36,6 +36,7 @@ class OllamaChat(chisel.Application):
         self.xorigin = xorigin
         self.chats = {}
         self.downloads = {}
+        self.download_error = None
         self.pool_manager = urllib3.PoolManager(num_pools=10, maxsize=10)
 
         # Back-end documentation
@@ -155,6 +156,7 @@ class DownloadManager():
 
     @staticmethod
     def download_thread_fn(manager, pool_manager):
+        error = None
         try:
             for progress in ollama_pull(pool_manager, manager.model):
                 # Stopped?
@@ -166,13 +168,15 @@ class DownloadManager():
                 manager.completed = progress.get('completed', 0)
                 manager.total = progress.get('total')
 
-        except:
-            pass
+        except Exception as exc:
+            error = str(exc)
 
         # Delete the application's download entry (under the config lock, and only if it's still ours)
         with manager.app.config():
             if manager.app.downloads.get(manager.model) is manager:
                 del manager.app.downloads[manager.model]
+            if error:
+                manager.app.download_error = error
 
 
 # The Ollama Chat API type model
@@ -541,6 +545,9 @@ def get_models(ctx, unused_req):
         }
         if 'model' in config:
             response['model'] = config['model']
+        if ctx.app.download_error:
+            response['downloadError'] = ctx.app.download_error
+            ctx.app.download_error = None
         return response
 
 
