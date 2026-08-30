@@ -28,6 +28,8 @@ class TestApp(unittest.TestCase):
             with app.config() as config:
                 self.assertDictEqual(config, {'model': 'llm', 'conversations': []})
             self.assertDictEqual(app.chats, {})
+            self.assertDictEqual(app.downloads, {})
+            self.assertIsNone(app.download_error)
             self.assertListEqual(
                 sorted(request.name for request in app.requests.values() if request.doc_group.startswith('Ollama Chat ')),
                 [
@@ -139,6 +141,7 @@ class TestDownloadManager(unittest.TestCase):
             # Run the thread function
             DownloadManager.download_thread_fn(download_manager, mock_pool_manager_instance)
             self.assertDictEqual(app.downloads, {})
+            self.assertIsNone(app.download_error)
             self.assertEqual(download_manager.status, 'success')
             self.assertEqual(download_manager.completed, 1000)
             self.assertEqual(download_manager.total, 2000)
@@ -183,6 +186,7 @@ class TestDownloadManager(unittest.TestCase):
             # Run the thread function
             DownloadManager.download_thread_fn(download_manager, mock_pool_manager_instance)
             self.assertDictEqual(app.downloads, {})
+            self.assertIsNone(app.download_error)
             self.assertEqual(download_manager.status, '')
             self.assertEqual(download_manager.completed, 0)
             self.assertEqual(download_manager.total, 0)
@@ -224,9 +228,56 @@ class TestDownloadManager(unittest.TestCase):
             # Run the thread function
             DownloadManager.download_thread_fn(download_manager, mock_pool_manager_instance)
             self.assertDictEqual(app.downloads, {})
+            self.assertEqual(app.download_error, 'Unknown model "llm:7b" (500)')
             self.assertEqual(download_manager.status, '')
             self.assertEqual(download_manager.completed, 0)
             self.assertEqual(download_manager.total, 0)
+            mock_pull_response.close.assert_called_once_with()
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, {'conversations': []})
+
+            # Verify the config file
+            self.assertFalse(os.path.exists(config_path))
+
+
+    def test_download_fn_ollama_stream_error(self):
+        with create_test_files([]) as temp_dir, \
+             unittest.mock.patch('threading.Thread') as mock_thread, \
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+
+            # Out-of-date Ollama streams an error object after "pulling manifest"
+            mock_pull_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_pull_response.status = 200
+            mock_pull_response.read_chunked.return_value = [
+                json.dumps({'status': 'pulling manifest'}).encode('utf-8'),
+                json.dumps({
+                    'error': 'pull model manifest: 412: The model you are attempting to pull requires a newer version of Ollama.'
+                }).encode('utf-8'),
+            ]
+
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_pull_response
+
+            download_manager = DownloadManager(app, 'llm:7b')
+            app.downloads['llm:7b'] = download_manager
+            mock_thread.assert_called_once_with(
+                target=DownloadManager.download_thread_fn,
+                args=(download_manager, mock_pool_manager_instance)
+            )
+            mock_thread.return_value.start.assert_called_once_with()
+            self.assertTrue(mock_thread.return_value.daemon)
+
+            DownloadManager.download_thread_fn(download_manager, mock_pool_manager_instance)
+            self.assertDictEqual(app.downloads, {})
+            self.assertEqual(
+                app.download_error,
+                'pull model manifest: 412: The model you are attempting to pull requires a newer version of Ollama.'
+            )
+            self.assertEqual(download_manager.status, 'pulling manifest')
             mock_pull_response.close.assert_called_once_with()
 
             # Verify the app config
@@ -2650,6 +2701,58 @@ class TestAPI(unittest.TestCase):
                 'model': 'llm'
             })
             mock_list_response.close.assert_called_once_with()
+
+            # Verify the app config
+            with app.config() as config:
+                self.assertDictEqual(config, original_config)
+
+            # Verify the config file
+            with open(config_path, 'r', encoding='utf-8') as config_fh:
+                self.assertEqual(json.load(config_fh), original_config)
+
+
+    def test_get_models_download_error(self):
+        original_config = {'model': 'llm', 'conversations': []}
+        test_files = [
+            ('ollama-chat.json', json.dumps(original_config))
+        ]
+        with create_test_files(test_files) as temp_dir, \
+             unittest.mock.patch('urllib3.PoolManager') as mock_pool_manager:
+            config_path = os.path.join(temp_dir, 'ollama-chat.json')
+            app = OllamaChat(config_path)
+            app.download_error = 'pull model manifest: 412: requires a newer version of Ollama.'
+
+            mock_list_response = unittest.mock.Mock(spec=urllib3.response.HTTPResponse)
+            mock_list_response.status = 200
+            mock_list_response.json.return_value = {'models': []}
+
+            mock_pool_manager_instance = mock_pool_manager.return_value
+            mock_pool_manager_instance.request.return_value = mock_list_response
+
+            status, headers, content_bytes = app.request('GET', '/getModels')
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertListEqual(headers, [('Content-Type', 'application/json')])
+            self.assertDictEqual(response, {
+                'models': [],
+                'downloading': [],
+                'model': 'llm',
+                'downloadError': 'pull model manifest: 412: requires a newer version of Ollama.'
+            })
+            self.assertIsNone(app.download_error)
+            mock_list_response.close.assert_called_once_with()
+
+            # A subsequent getModels omits the consumed error
+            mock_list_response.json.return_value = {'models': []}
+            status, headers, content_bytes = app.request('GET', '/getModels')
+            response = json.loads(content_bytes.decode('utf-8'))
+            self.assertEqual(status, '200 OK')
+            self.assertDictEqual(response, {
+                'models': [],
+                'downloading': [],
+                'model': 'llm'
+            })
+            self.assertIsNone(app.download_error)
 
             # Verify the app config
             with app.config() as config:

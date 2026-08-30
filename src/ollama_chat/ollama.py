@@ -115,6 +115,9 @@ def ollama_pull(pool_manager, model):
             raise urllib3.exceptions.HTTPError(f'Unknown model "{model}" ({response_pull.status})')
 
         # Respond with each streamed JSON chunk
-        yield from _iter_ndjson(response_pull)
+        for chunk in _iter_ndjson(response_pull):
+            if 'error' in chunk:
+                raise urllib3.exceptions.HTTPError(chunk['error'])
+            yield chunk
     finally:
         response_pull.close()

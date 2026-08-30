@@ -36,6 +36,11 @@ async function ollamaChatModelsPage(args, modelsResponse):
             return
         endif
     endif
+    downloadError = objectGet(modelsResponse, 'downloadError')
+    if downloadError:
+        ollamaChatErrorPage(downloadError, systemPartial(ollamaChatModelsPage, args))
+        return
+    endif
     currentModel = objectGet(modelsResponse, 'model')
     models = objectGet(modelsResponse, 'models')
     downloading = objectGet(modelsResponse, 'downloading')
@@ -178,6 +183,11 @@ async function ollamaChatModelsOnTimeout(args):
     if modelsResponse == null:
         ollamaChatErrorPage('Failed to get models')
         markdownPrint('', '[Click here to install Ollama](https://ollama.com/download)')
+        return
+    endif
+    downloadError = objectGet(modelsResponse, 'downloadError')
+    if downloadError:
+        ollamaChatErrorPage(downloadError, systemPartial(ollamaChatModelsPage, args))
         return
     endif
 

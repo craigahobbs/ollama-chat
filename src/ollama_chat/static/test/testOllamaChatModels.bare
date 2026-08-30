@@ -480,6 +480,73 @@ unittestRunTest('testOllamaChatModelsOnTimeoutError')
 
 
 #
+# Download error page (getModels.downloadError)
+#
+
+
+async function testOllamaChatModelsPageDownloadError():
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll({'systemFetch': {'getModels': jsonStringify({ \
+        'model': 'm:1', \
+        'models': [], \
+        'downloading': [], \
+        'downloadError': 'pull model manifest: 412: The model you are attempting to pull requires a newer version of Ollama.' \
+    })}})
+    ollamaChatModelsPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getModels']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['elementModelRender', [ \
+            {'html': 'p', 'elem': formsLinkButtonElements('Back', '<function>')} \
+        ]], \
+        ['markdownPrint', [ \
+            null, \
+            '', \
+            '# Ollama Chat', \
+            '', \
+            '**ERROR:** pull model manifest: 412: The model you are attempting to pull requires a newer version of Ollama.' \
+        ]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatModelsPageDownloadError')
+
+
+async function testOllamaChatModelsOnTimeoutDownloadError():
+    args = argsParse(ollamaChatArguments)
+    # Display state would otherwise match (same download progress) - the error
+    # must still take the error-page path rather than rescheduling the refresh.
+    dl = {'id': 'big:1', 'status': 'pulling', 'completed': 500, 'size': 1000}
+    unittestMockAll({'systemFetch': {'getModels': jsonStringify({ \
+        'model': 'm:1', \
+        'models': [], \
+        'downloading': [dl], \
+        'downloadError': 'pull model manifest: 412: The model you are attempting to pull requires a newer version of Ollama.' \
+    })}})
+    sessionStorageSet('ollama-chat-models-state', jsonStringify(['m:1', [], [['big:1', '50% of 1.0KB', 'pulling']]]))
+    ollamaChatModelsOnTimeout(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['sessionStorageSet', [ \
+            'ollama-chat-models-state', \
+            jsonStringify(['m:1', [], [['big:1', '50% of 1.0KB', 'pulling']]]) \
+        ]], \
+        ['systemFetch', ['getModels']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['elementModelRender', [ \
+            {'html': 'p', 'elem': formsLinkButtonElements('Back', '<function>')} \
+        ]], \
+        ['markdownPrint', [ \
+            null, \
+            '', \
+            '# Ollama Chat', \
+            '', \
+            '**ERROR:** pull model manifest: 412: The model you are attempting to pull requires a newer version of Ollama.' \
+        ]] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatModelsOnTimeoutDownloadError')
+
+
+#
 # ollamaChatModelsDownloadPage - render branches
 #
 
@@ -1335,6 +1402,22 @@ async function testOllamaChatModelsPageButtonBinding():
     systemGlobalSet('vActionID', null)
 endfunction
 unittestRunTest('testOllamaChatModelsPageButtonBinding')
+
+
+async function testOllamaChatModelsPageDownloadErrorButtonBinding():
+    args = argsParse(ollamaChatArguments)
+    render = systemPartial(ollamaChatModelsPage, args)
+    data = {'systemFetch': {'getModels': jsonStringify({ \
+        'model': 'm:1', \
+        'models': [], \
+        'downloading': [], \
+        'downloadError': 'pull model manifest: 412: The model you are attempting to pull requires a newer version of Ollama.' \
+    })}}
+
+    # Back re-renders the models page (the download error is consumed server-side)
+    ollamaChatTestVerifyClick(render, 'Back', systemPartial(ollamaChatModelsPage, args), data)
+endfunction
+unittestRunTest('testOllamaChatModelsPageDownloadErrorButtonBinding')
 
 
 async function testOllamaChatModelsDownloadPageButtonBinding():

@@ -477,6 +477,9 @@ action getModels
         # The downloading models
         ModelDownloadInfo[] downloading
 
+        # The most recent model download error. Present once; a subsequent getModels call omits this member.
+        optional string downloadError
+
 
 # Get the system info
 action getSystemInfo

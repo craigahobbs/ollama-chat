@@ -2,6 +2,7 @@
 # https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
 
 include <args.bare>
+include <forms.bare>
 include <markdown.bare>
 
 
@@ -26,11 +27,15 @@ ollamaChatArguments = argsValidate([ \
 ])
 
 
-# The Ollama Chat error page
-function ollamaChatErrorPage(message):
+# The Ollama Chat error page. Optional backFn replaces the hash Back link with a
+# button (used when already on the destination view so a hash link would be a no-op).
+function ollamaChatErrorPage(message, backFn):
     documentSetTitle(ollamaChatTitle)
+    if backFn:
+        elementModelRender({'html': 'p', 'elem': formsLinkButtonElements('Back', backFn)})
+    endif
     markdownPrint( \
-        argsLink(ollamaChatArguments, 'Back', null, true), \
+        if(!backFn, argsLink(ollamaChatArguments, 'Back', null, true)), \
         '', \
         '# ' + markdownEscape(ollamaChatTitle), \
         '', \
