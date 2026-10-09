@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0 (2026-10-09)
+
+- [2e0d2ea](https://github.com/craigahobbs/ollama-chat/commit/2e0d2ea) - chisel 2.5
+
 ## 1.4.1 (2026-08-25)
 
 - [0b17fba](https://github.com/craigahobbs/ollama-chat/commit/0b17fba) - show model download errors instead of failing silently
