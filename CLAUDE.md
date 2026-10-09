@@ -1,4 +1,4 @@
-# AGENTS.md
+# CLAUDE.md
 
 Notes for coding agents working in this repository.
 
