@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.0 (2026-10-26)
+
+- [6bb5d4b](https://github.com/craigahobbs/ollama-chat/commit/6bb5d4b) - add picovox "Read Aloud" voice playback
+
 ## 1.5.0 (2026-10-09)
 
 - [2e0d2ea](https://github.com/craigahobbs/ollama-chat/commit/2e0d2ea) - chisel 2.5
