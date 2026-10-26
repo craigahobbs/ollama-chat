@@ -21,6 +21,7 @@ developers, or anyone wanting private, offline LLM chats.
 - Regenerate the most recent conversation response
 - Delete the most recent conversation exchange
 - View responses as Markdown or text
+- Read responses aloud with offline speech synthesis
 - Save conversations as Markdown text
 - Start a conversation or template from the command line
 - Platform independent - tested on macOS, Windows, and Linux
