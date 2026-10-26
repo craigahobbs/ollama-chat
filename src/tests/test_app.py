@@ -52,6 +52,9 @@ class TestApp(unittest.TestCase):
                     'ollamaChatModels.bare',
                     'ollamaChatTemplate.bare',
                     'ollamaChatUtil.bare',
+                    'ollamaChatVoice.bare',
+                    'ollamaChatVoice.js',
+                    'ollamaChatVoiceStub.bare',
                     'regenerateConversationExchange',
                     'replyConversation',
                     'setConversationTitle',
@@ -63,6 +66,45 @@ class TestApp(unittest.TestCase):
                     'updateTemplate'
                 ]
             )
+
+
+    def test_picovox_statics(self):
+        with create_test_files([]) as temp_dir:
+            app = OllamaChat(os.path.join(temp_dir, 'ollama-chat.json'))
+            self.assertListEqual(
+                sorted(request.name for request in app.requests.values() if request.doc_group == 'PicoVox Statics'),
+                [
+                    'picovox/lib/fft.js',
+                    'picovox/lib/g2p.js',
+                    'picovox/lib/index.js',
+                    'picovox/lib/lexicon.js',
+                    'picovox/lib/lf.js',
+                    'picovox/lib/model.js',
+                    'picovox/lib/models/g2pModel.js',
+                    'picovox/lib/models/voiceModel.js',
+                    'picovox/lib/package.js',
+                    'picovox/lib/params.js',
+                    'picovox/lib/phonemes.js',
+                    'picovox/lib/render.js',
+                    'picovox/lib/rng.js',
+                    'picovox/lib/sentences.js',
+                    'picovox/lib/style.js',
+                    'picovox/lib/synthesis.js',
+                    'picovox/lib/tokens.js',
+                    'picovox/lib/transforms.js',
+                    'picovox/lib/wav.js'
+                ]
+            )
+
+            status, headers, content_bytes = app.request('GET', '/picovox/lib/index.js')
+            self.assertEqual(status, '200 OK')
+            self.assertIn(('Content-Type', 'text/javascript; charset=utf-8'), headers)
+            self.assertIn(b'export function speak(', content_bytes)
+
+            status, headers, content_bytes = app.request('GET', '/ollamaChatVoice.js')
+            self.assertEqual(status, '200 OK')
+            self.assertIn(('Content-Type', 'text/javascript; charset=utf-8'), headers)
+            self.assertIn(b'export const voiceFunctions', content_bytes)
 
 
     def test_init_missing_config(self):
@@ -95,6 +137,9 @@ class TestApp(unittest.TestCase):
                     'ollamaChatModels.bare',
                     'ollamaChatTemplate.bare',
                     'ollamaChatUtil.bare',
+                    'ollamaChatVoice.bare',
+                    'ollamaChatVoice.js',
+                    'ollamaChatVoiceStub.bare',
                     'regenerateConversationExchange',
                     'replyConversation',
                     'setConversationTitle',

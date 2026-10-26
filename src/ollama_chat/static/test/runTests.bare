@@ -12,6 +12,7 @@ include 'testOllamaChat.bare'
 include 'testOllamaChatConversation.bare'
 include 'testOllamaChatModels.bare'
 include 'testOllamaChatTemplate.bare'
+include 'testOllamaChatVoice.bare'
 
 # Stop coverage
 unittestCoverageStop()

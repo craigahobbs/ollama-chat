@@ -1,0 +1,63 @@
+# Licensed under the MIT License
+# https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
+
+#
+# Stub implementations of the voice playback runtime functions. In the browser, the
+# voice playback functions are provided by the host (ollamaChatVoice.js); these stubs
+# are included otherwise (e.g. the BareScript CLI and the unit tests) - there is never
+# a voice playback.
+#
+
+
+function voiceClose():
+endfunction
+
+
+function voiceParagraphBack():
+endfunction
+
+
+function voiceParagraphForward():
+endfunction
+
+
+function voicePause():
+endfunction
+
+
+function voicePlay():
+endfunction
+
+
+function voiceRewind():
+endfunction
+
+
+function voiceSetChange():
+endfunction
+
+
+function voiceSetRate():
+endfunction
+
+
+function voiceSetText():
+endfunction
+
+
+function voiceSetVoice():
+endfunction
+
+
+function voiceSpeak():
+endfunction
+
+
+function voiceState():
+    return null
+endfunction
+
+
+function voiceVoices():
+    return [{'key': 'male', 'label': 'Male', 'sex': 'male', 'description': 'The default voice'}]
+endfunction

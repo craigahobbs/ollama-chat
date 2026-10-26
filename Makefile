@@ -36,7 +36,7 @@ GHPAGES_RSYNC_ARGS := --exclude='models/models.json'
 
 
 help:
-	@echo "            [run|test-app]"
+	@echo "            [picovox|run|test-app]"
 
 
 clean:
@@ -63,6 +63,16 @@ test-app: $(DEFAULT_VENV_BUILD)
 	$(DEFAULT_VENV_BIN)/bare -x -m src/ollama_chat/static/*.bare src/ollama_chat/static/test/test*.bare
 	$(DEFAULT_VENV_BIN)/bare -s -m src/ollama_chat/static/test/runTests.bare
 	$(DEFAULT_VENV_BIN)/bare -d -m src/ollama_chat/static/test/runTests.bare$(if $(TEST), -v vUnittestTest "'$(TEST)'")
+
+
+# Update the PicoVox package tarball
+PICOVOX_VERSION := 1.6.7
+.PHONY: picovox
+picovox:
+	cd src/ollama_chat/static && \
+		rm -f picovox.tgz picovox-$(PICOVOX_VERSION).tgz && \
+		$(call WGET_CMD, https://registry.npmjs.org/picovox/-/picovox-$(PICOVOX_VERSION).tgz) && \
+		mv picovox-$(PICOVOX_VERSION).tgz picovox.tgz
 
 
 .PHONY: run

@@ -1,0 +1,168 @@
+# Licensed under the MIT License
+# https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
+
+include <markdownParser.bare>
+
+
+# The voice playback runtime functions are provided by the browser host (ollamaChatVoice.js).
+# Otherwise (e.g. the BareScript CLI and the unit tests), include their stubs.
+if systemGlobalGet('voiceState') == null:
+    include 'ollamaChatVoiceStub.bare'
+endif
+
+
+# The default male and female voice keys
+ollamaChatVoiceDefaultMale = 'michael'
+ollamaChatVoiceDefaultFemale = 'sarah'
+
+
+# The voice label overrides - PicoVox's "male" and "female" voices are named as PicoShelf names them
+ollamaChatVoiceLabels = {'male': 'John', 'female': 'Mary'}
+
+
+# The voice playback speaking rates
+ollamaChatVoiceRates = [0.8, 1, 1.1, 1.2, 1.5]
+
+
+# The voice playback local storage keys
+ollamaChatVoiceStorageKey = 'ollama-chat-voice'
+ollamaChatVoiceRateStorageKey = 'ollama-chat-voice-rate'
+
+
+# Get the voices, male and female interleaved - the default male voice first (the default
+# voice), then the default female voice
+function ollamaChatVoiceVoices():
+    voices = voiceVoices()
+
+    # Split the voices by sex, each with its default voice first
+    males = []
+    females = []
+    for voice in voices:
+        key = objectGet(voice, 'key')
+        if key == ollamaChatVoiceDefaultMale:
+            arrayPush(males, voice)
+        elif key == ollamaChatVoiceDefaultFemale:
+            arrayPush(females, voice)
+        endif
+    endfor
+    for voice in voices:
+        key = objectGet(voice, 'key')
+        if key != ollamaChatVoiceDefaultMale && key != ollamaChatVoiceDefaultFemale:
+            arrayPush(if(objectGet(voice, 'sex') == 'female', females, males), voice)
+        endif
+    endfor
+
+    # Interleave the male and female voices
+    voicesInterleaved = []
+    ixVoice = 0
+    while ixVoice < arrayLength(males) || ixVoice < arrayLength(females):
+        if ixVoice < arrayLength(males):
+            arrayPush(voicesInterleaved, arrayGet(males, ixVoice))
+        endif
+        if ixVoice < arrayLength(females):
+            arrayPush(voicesInterleaved, arrayGet(females, ixVoice))
+        endif
+        ixVoice = ixVoice + 1
+    endwhile
+    return voicesInterleaved
+endfunction
+
+
+# Get the preferred voice key (default is the first voice)
+function ollamaChatVoiceGet():
+    voices = ollamaChatVoiceVoices()
+    voice = localStorageGet(ollamaChatVoiceStorageKey)
+    for voiceInfo in voices:
+        if objectGet(voiceInfo, 'key') == voice:
+            return voice
+        endif
+    endfor
+    return objectGet(arrayGet(voices, 0), 'key')
+endfunction
+
+
+# Get the preferred speaking rate (default is 1)
+function ollamaChatVoiceRateGet():
+    rateText = localStorageGet(ollamaChatVoiceRateStorageKey)
+    rate = if(rateText != null, numberParseFloat(rateText))
+    return if(arrayIndexOf(ollamaChatVoiceRates, rate) != -1, rate, 1)
+endfunction
+
+
+# Get a voice's label
+function ollamaChatVoiceLabel(voice):
+    for voiceInfo in voiceVoices():
+        if objectGet(voiceInfo, 'key') == voice:
+            return objectGet(ollamaChatVoiceLabels, voice, objectGet(voiceInfo, 'label'))
+        endif
+    endfor
+    return voice
+endfunction
+
+
+# Get the voice key after a voice (wraps to the first voice)
+function ollamaChatVoiceNext(voice):
+    voices = ollamaChatVoiceVoices()
+    ixNext = 0
+    for voiceInfo, ixVoice in voices:
+        if objectGet(voiceInfo, 'key') == voice:
+            ixNext = (ixVoice + 1) % arrayLength(voices)
+        endif
+    endfor
+    return objectGet(arrayGet(voices, ixNext), 'key')
+endfunction
+
+
+# Get the speaking rate after a rate (wraps to the first rate)
+function ollamaChatVoiceRateNext(rate):
+    ixNext = (arrayIndexOf(ollamaChatVoiceRates, rate) + 1) % arrayLength(ollamaChatVoiceRates)
+    return arrayGet(ollamaChatVoiceRates, ixNext)
+endfunction
+
+
+# Get a Markdown text's text to read aloud - its paragraphs (headings, list items, and
+# block quotes included) separated by blank lines. Code blocks and tables are skipped.
+function ollamaChatVoiceText(markdownText):
+    paragraphs = []
+    ollamaChatVoiceTextParts(objectGet(markdownParse(markdownText), 'parts'), paragraphs)
+    return arrayJoin(paragraphs, '\n\n')
+endfunction
+
+
+# Helper to add Markdown parts' paragraph texts to an array
+function ollamaChatVoiceTextParts(parts, paragraphs):
+    for part in parts:
+        if objectHas(part, 'paragraph'):
+            text = stringTrim(ollamaChatVoiceTextSpans(objectGet(objectGet(part, 'paragraph'), 'spans')))
+            if text != '':
+                arrayPush(paragraphs, text)
+            endif
+        elif objectHas(part, 'list'):
+            for item in objectGet(objectGet(part, 'list'), 'items'):
+                ollamaChatVoiceTextParts(objectGet(item, 'parts'), paragraphs)
+            endfor
+        elif objectHas(part, 'quote'):
+            ollamaChatVoiceTextParts(objectGet(objectGet(part, 'quote'), 'parts'), paragraphs)
+        endif
+    endfor
+endfunction
+
+
+# Helper to get Markdown spans' text (images are skipped)
+function ollamaChatVoiceTextSpans(spans):
+    parts = []
+    for span in spans:
+        if objectHas(span, 'link'):
+            arrayPush(parts, ollamaChatVoiceTextSpans(objectGet(objectGet(span, 'link'), 'spans')))
+        elif objectHas(span, 'style'):
+            arrayPush(parts, ollamaChatVoiceTextSpans(objectGet(objectGet(span, 'style'), 'spans')))
+        elif objectHas(span, 'code'):
+            arrayPush(parts, objectGet(span, 'code'))
+        elif objectHas(span, 'br'):
+            arrayPush(parts, ' ')
+        else:
+            arrayPush(parts, objectGet(span, 'text', ''))
+        endif
+    endfor
+    return arrayJoin(parts, '')
+endfunction

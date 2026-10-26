@@ -14,6 +14,12 @@ include 'ollamaChatUtil.bare'
 async function ollamaChatMain():
     args = argsParse(ollamaChatArguments)
     view = objectGet(args, 'view')
+
+    # Close the voice playback, if any, when leaving the conversation page
+    if view != 'chat':
+        voiceClose()
+    endif
+
     if view == 'chat':
         ollamaChatConversationPage(args)
     elif view == 'download':

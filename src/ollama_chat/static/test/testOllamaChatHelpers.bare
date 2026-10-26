@@ -17,6 +17,38 @@ include <unittestMock.bare>
 #
 
 
+# The test voices (the voiceVoices mock's return value) - in the app's order: michael, sarah, male, female, james
+ollamaChatTestVoices = [ \
+    {'key': 'male', 'label': 'Male', 'sex': 'male', 'description': 'The male voice'}, \
+    {'key': 'female', 'label': 'Female', 'sex': 'female', 'description': 'The female voice'}, \
+    {'key': 'sarah', 'label': 'Sarah', 'sex': 'female', 'description': 'The Sarah voice'}, \
+    {'key': 'james', 'label': 'James', 'sex': 'male', 'description': 'The James voice'}, \
+    {'key': 'michael', 'label': 'Michael', 'sex': 'male', 'description': 'The Michael voice'} \
+]
+
+
+# Start mocking with unittestMockAll(data). If data has a "voiceState" member, also mock the
+# voice playback runtime functions: voiceState returns the "voiceState" value and voiceVoices
+# returns the test voices (neither is recorded), and the other voice functions are recorded.
+function ollamaChatTestMockAll(data):
+    unittestMockAll(data)
+    if data != null && objectHas(data, 'voiceState'):
+        unittestMockOne('voiceState', systemPartial(ollamaChatTestMockValue, objectGet(data, 'voiceState')))
+        unittestMockOne('voiceVoices', systemPartial(ollamaChatTestMockValue, ollamaChatTestVoices))
+        for funcName in ['voiceClose', 'voiceParagraphBack', 'voiceParagraphForward', 'voicePause', 'voicePlay', 'voiceRewind', \
+            'voiceSetChange', 'voiceSetRate', 'voiceSetText', 'voiceSetVoice', 'voiceSpeak']:
+            unittestMockOneGeneric(funcName)
+        endfor
+    endif
+endfunction
+
+
+# Mock function that returns a value
+function ollamaChatTestMockValue(value):
+    return value
+endfunction
+
+
 # Recursively find a labeled button's real click callback in a rendered element
 # model. The call log / returned model holds the live function (not the
 # '<function>' deep-equal placeholder), so it can be invoked to verify binding.
@@ -66,10 +98,10 @@ endfunction
 # expectedFn (each under fresh mocks from data). Proves a captured button
 # callback is bound to the intended handler and arguments.
 async function ollamaChatTestSameEffect(actualFn, expectedFn, data):
-    unittestMockAll(data)
+    ollamaChatTestMockAll(data)
     expectedFn()
     expected = unittestMockEnd()
-    unittestMockAll(data)
+    ollamaChatTestMockAll(data)
     actualFn()
     unittestDeepEqual(unittestMockEnd(), expected)
 endfunction
@@ -79,7 +111,7 @@ endfunction
 # mutate captured state don't leak between checks), find the labeled button in
 # the recorded call log, then verify its binding with ollamaChatTestSameEffect.
 async function ollamaChatTestVerifyClick(renderFn, text, expectedFn, data):
-    unittestMockAll(data)
+    ollamaChatTestMockAll(data)
     renderFn()
     found = ollamaChatTestFindClick(unittestMockEnd(), text)
     ollamaChatTestSameEffect(found, expectedFn, data)
@@ -89,7 +121,7 @@ endfunction
 # Like ollamaChatTestVerifyClick but selects the ix-th button matching text (for
 # pages with repeated labels, e.g. the template page's two "Add" buttons).
 async function ollamaChatTestVerifyClickN(renderFn, text, ix, expectedFn, data):
-    unittestMockAll(data)
+    ollamaChatTestMockAll(data)
     renderFn()
     found = arrayGet(ollamaChatTestFindClicks(unittestMockEnd(), text, []), ix)
     ollamaChatTestSameEffect(found, expectedFn, data)

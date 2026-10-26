@@ -58,6 +58,14 @@ Tests require `bare-script`; the back-end never contacts a real Ollama server in
   `ollamaChatUtil.bare`. Routing is hash-based on the `vView` arg.
 - The front-end calls the back-end with `systemFetch('actionName')` and `jsonParse`. Use the
   **bare-script skill** when editing `.bare` files or front-end tests (`static/test/`).
+- **Voice playback** ("Read Aloud"): `ollamaChatVoice.js` implements the `voice*` BareScript functions
+  (`voiceSpeak`, `voiceSetText`, `voicePlay`/`voicePause`, `voiceRewind`/`voiceParagraphBack`/`voiceParagraphForward`,
+  `voiceSetVoice`/`voiceSetRate`, `voiceClose`, `voiceState`, `voiceVoices`, `voiceSetChange`) with [PicoVox](https://github.com/craigahobbs/picovox) speech
+  synthesis and Web Audio; `index.html` passes them to MarkdownUp as `globals`. Outside the browser (the `bare`
+  CLI, tests), `ollamaChatVoice.bare` includes the no-op `ollamaChatVoiceStub.bare` instead. Tests mock the voice
+  functions with `ollamaChatTestMockAll(data)` (`testOllamaChatHelpers.bare`) when `data` has a `voiceState` member.
+  PicoVox is vendored as the npm tarball `static/picovox.tgz` (served at `/picovox/lib/`); update it with
+  `make picovox` (`PICOVOX_VERSION`).
 - `ollamaChat.smd` is the [schema-markdown](https://github.com/craigahobbs/schema-markdown) type model.
   It defines both the API request/response types (validated server-side in `app.py`) and the
   `OllamaChatConfig` file format. Adding or changing an endpoint means editing the `.smd` and `app.py`

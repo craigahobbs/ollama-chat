@@ -1,0 +1,214 @@
+# Licensed under the MIT License
+# https://github.com/craigahobbs/ollama-chat/blob/main/LICENSE
+
+include <unittest.bare>
+include <unittestMock.bare>
+
+include '../ollamaChatVoice.bare'
+include 'testOllamaChatHelpers.bare'
+
+
+#
+# The voice playback runtime function stubs
+#
+
+
+function testOllamaChatVoiceStubs():
+    voiceSpeak({'id': 'C1', 'exchange': 0}, 'Hello.', true, 'male', 1)
+    voiceSetText('Hello.', true)
+    voiceSetVoice('male')
+    voiceSetRate(1)
+    voicePause()
+    voicePlay()
+    voiceRewind()
+    voiceParagraphBack()
+    voiceParagraphForward()
+    voiceSetChange(testOllamaChatVoiceStubs)
+    voiceClose()
+    unittestEqual(voiceState(), null)
+    unittestDeepEqual(voiceVoices(), [{'key': 'male', 'label': 'Male', 'sex': 'male', 'description': 'The default voice'}])
+endfunction
+unittestRunTest('testOllamaChatVoiceStubs')
+
+
+#
+# ollamaChatVoiceVoices - the voices, male and female interleaved
+#
+
+
+function testOllamaChatVoiceVoices():
+    ollamaChatTestMockAll({'voiceState': null})
+    voiceKeys = []
+    for voice in ollamaChatVoiceVoices():
+        arrayPush(voiceKeys, objectGet(voice, 'key'))
+    endfor
+    unittestDeepEqual(voiceKeys, ['michael', 'sarah', 'male', 'female', 'james'])
+    unittestDeepEqual(unittestMockEnd(), [])
+endfunction
+unittestRunTest('testOllamaChatVoiceVoices')
+
+
+function testOllamaChatVoiceVoicesNoDefaults():
+    # Without the default voices (the stub's voices), the voices are still interleaved
+    unittestDeepEqual(ollamaChatVoiceVoices(), voiceVoices())
+endfunction
+unittestRunTest('testOllamaChatVoiceVoicesNoDefaults')
+
+
+#
+# ollamaChatVoiceGet / ollamaChatVoiceRateGet - the preferred voice and speaking rate
+#
+
+
+function testOllamaChatVoiceGetDefault():
+    ollamaChatTestMockAll({'voiceState': null})
+    unittestEqual(ollamaChatVoiceGet(), 'michael')
+    unittestDeepEqual(unittestMockEnd(), [])
+endfunction
+unittestRunTest('testOllamaChatVoiceGetDefault')
+
+
+function testOllamaChatVoiceGetStored():
+    ollamaChatTestMockAll({'voiceState': null})
+    localStorageSet('ollama-chat-voice', 'sarah')
+    unittestEqual(ollamaChatVoiceGet(), 'sarah')
+    unittestDeepEqual(unittestMockEnd(), [['localStorageSet', ['ollama-chat-voice', 'sarah']]])
+endfunction
+unittestRunTest('testOllamaChatVoiceGetStored')
+
+
+function testOllamaChatVoiceGetUnknown():
+    ollamaChatTestMockAll({'voiceState': null})
+    localStorageSet('ollama-chat-voice', 'unknown')
+    unittestEqual(ollamaChatVoiceGet(), 'michael')
+    unittestDeepEqual(unittestMockEnd(), [['localStorageSet', ['ollama-chat-voice', 'unknown']]])
+endfunction
+unittestRunTest('testOllamaChatVoiceGetUnknown')
+
+
+function testOllamaChatVoiceRateGetDefault():
+    unittestMockAll()
+    unittestEqual(ollamaChatVoiceRateGet(), 1)
+    unittestDeepEqual(unittestMockEnd(), [])
+endfunction
+unittestRunTest('testOllamaChatVoiceRateGetDefault')
+
+
+function testOllamaChatVoiceRateGetStored():
+    unittestMockAll()
+    localStorageSet('ollama-chat-voice-rate', '1.2')
+    unittestEqual(ollamaChatVoiceRateGet(), 1.2)
+    unittestDeepEqual(unittestMockEnd(), [['localStorageSet', ['ollama-chat-voice-rate', '1.2']]])
+endfunction
+unittestRunTest('testOllamaChatVoiceRateGetStored')
+
+
+function testOllamaChatVoiceRateGetUnknown():
+    unittestMockAll()
+    localStorageSet('ollama-chat-voice-rate', '3')
+    unittestEqual(ollamaChatVoiceRateGet(), 1)
+    unittestDeepEqual(unittestMockEnd(), [['localStorageSet', ['ollama-chat-voice-rate', '3']]])
+endfunction
+unittestRunTest('testOllamaChatVoiceRateGetUnknown')
+
+
+#
+# ollamaChatVoiceLabel / ollamaChatVoiceNext / ollamaChatVoiceRateNext - the voice playback bar's cycles
+#
+
+
+function testOllamaChatVoiceLabel():
+    ollamaChatTestMockAll({'voiceState': null})
+    unittestEqual(ollamaChatVoiceLabel('male'), 'John')
+    unittestEqual(ollamaChatVoiceLabel('female'), 'Mary')
+    unittestEqual(ollamaChatVoiceLabel('sarah'), 'Sarah')
+    unittestEqual(ollamaChatVoiceLabel('unknown'), 'unknown')
+    unittestDeepEqual(unittestMockEnd(), [])
+endfunction
+unittestRunTest('testOllamaChatVoiceLabel')
+
+
+function testOllamaChatVoiceNext():
+    ollamaChatTestMockAll({'voiceState': null})
+    unittestEqual(ollamaChatVoiceNext('michael'), 'sarah')
+    unittestEqual(ollamaChatVoiceNext('sarah'), 'male')
+    unittestEqual(ollamaChatVoiceNext('male'), 'female')
+    unittestEqual(ollamaChatVoiceNext('female'), 'james')
+    unittestEqual(ollamaChatVoiceNext('james'), 'michael')
+    unittestEqual(ollamaChatVoiceNext('unknown'), 'michael')
+    unittestDeepEqual(unittestMockEnd(), [])
+endfunction
+unittestRunTest('testOllamaChatVoiceNext')
+
+
+function testOllamaChatVoiceRateNext():
+    unittestEqual(ollamaChatVoiceRateNext(0.8), 1)
+    unittestEqual(ollamaChatVoiceRateNext(1), 1.1)
+    unittestEqual(ollamaChatVoiceRateNext(1.1), 1.2)
+    unittestEqual(ollamaChatVoiceRateNext(1.2), 1.5)
+    unittestEqual(ollamaChatVoiceRateNext(1.5), 0.8)
+    unittestEqual(ollamaChatVoiceRateNext(2), 0.8)
+endfunction
+unittestRunTest('testOllamaChatVoiceRateNext')
+
+
+#
+# ollamaChatVoiceText - Markdown text to the text to read aloud
+#
+
+
+function testOllamaChatVoiceText():
+    markdownText = arrayJoin([ \
+        '# The **Title**', \
+        '', \
+        'Hello *there*, see [the docs](https://example.com) and `code` ![image](image.png)', \
+        'on two lines.  ', \
+        'After a break.', \
+        '', \
+        '- One', \
+        '- Two', \
+        '  1. Nested', \
+        '', \
+        '> Quoted.', \
+        '', \
+        '```python', \
+        'x = 1', \
+        '```', \
+        '', \
+        '| A | B |', \
+        '| - | - |', \
+        '| 1 | 2 |', \
+        '', \
+        '---', \
+        '', \
+        '**', \
+        '', \
+        'The end.' \
+    ], '\n')
+    unittestEqual(ollamaChatVoiceText(markdownText), arrayJoin([ \
+        'The Title', \
+        '', \
+        'Hello there, see the docs and code \non two lines. After a break.', \
+        '', \
+        'One', \
+        '', \
+        'Two', \
+        '', \
+        'Nested', \
+        '', \
+        'Quoted.', \
+        '', \
+        '**', \
+        '', \
+        'The end.' \
+    ], '\n'))
+endfunction
+unittestRunTest('testOllamaChatVoiceText')
+
+
+function testOllamaChatVoiceTextEmpty():
+    unittestEqual(ollamaChatVoiceText(''), '')
+    unittestEqual(ollamaChatVoiceText('```\ncode\n```'), '')
+    unittestEqual(ollamaChatVoiceText('![image](image.png)'), '')
+endfunction
+unittestRunTest('testOllamaChatVoiceTextEmpty')

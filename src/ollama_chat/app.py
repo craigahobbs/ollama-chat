@@ -14,6 +14,7 @@ from functools import partial
 import platform
 import importlib.resources
 import re
+import tarfile
 import threading
 import uuid
 
@@ -73,6 +74,22 @@ class OllamaChat(chisel.Application):
         self.add_static('ollamaChatModels.bare')
         self.add_static('ollamaChatTemplate.bare')
         self.add_static('ollamaChatUtil.bare')
+        self.add_static('ollamaChatVoice.bare')
+        self.add_static('ollamaChatVoice.js')
+        self.add_static('ollamaChatVoiceStub.bare')
+
+        # PicoVox speech synthesis statics (the npm package tarball's "lib" directory, hosted at "/picovox/lib/")
+        with importlib.resources.files('ollama_chat.static').joinpath('picovox.tgz').open('rb') as tgz:
+            with tarfile.open(fileobj=tgz, mode='r:gz') as tar:
+                for member in tar.getmembers():
+                    if member.isfile() and member.name.startswith('package/lib/'):
+                        name = 'picovox/' + member.name.removeprefix('package/')
+                        self.add_request(chisel.StaticRequest(
+                            name,
+                            tar.extractfile(member).read(),
+                            urls=(('GET', '/' + name),),
+                            doc_group='PicoVox Statics'
+                        ))
 
 
     def add_static(self, filename, urls=(('GET', None),), doc_group='Ollama Chat Statics'):

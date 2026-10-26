@@ -332,6 +332,20 @@ endfunction
 unittestRunTest('testOllamaChatMainIndexError')
 
 
+async function testOllamaChatMainVoiceClose():
+    # Views other than the conversation page close the voice playback
+    ollamaChatTestMockAll({'voiceState': null})
+    ollamaChatMain()
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['voiceClose', []], \
+        ['systemFetch', ['getConversations']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Failed to get conversations']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatMainVoiceClose')
+
+
 async function testOllamaChatIndexNoModel():
     args = argsParse(ollamaChatArguments)
     unittestMockAll({'systemFetch': {'getConversations': jsonStringify({'conversations': []})}})

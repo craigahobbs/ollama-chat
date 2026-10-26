@@ -10,7 +10,9 @@
     </head>
     <script type="module">
         import {MarkdownUp} from '/markdown-up/lib/appImports.js';
+        import {voiceFunctions} from '/ollamaChatVoice.js';
         const app = new MarkdownUp(window, {
+            'globals': voiceFunctions,
             'systemPrefix': '/markdown-up/include/',
             'markdownText': `\
 ~~~ markdown-script

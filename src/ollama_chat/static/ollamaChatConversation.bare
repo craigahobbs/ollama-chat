@@ -5,6 +5,7 @@ include <args.bare>
 include <forms.bare>
 
 include 'ollamaChatUtil.bare'
+include 'ollamaChatVoice.bare'
 
 
 # The Ollama Chat conversation page
@@ -29,6 +30,10 @@ async function ollamaChatConversationPage(args):
         model = null
         generating = false
     endif
+
+    # Sync the voice playback, if any, and re-render the page when its state changes on its own
+    ollamaChatConversationVoiceSync(args, conversation, generating)
+    voiceSetChange(systemPartial(ollamaChatConversationOnClick, args, null, null, false))
 
     # Render the floating controls
     elementModelRender(ollamaChatConversationFloatingElements(args, conversation, generating))
@@ -75,7 +80,7 @@ async function ollamaChatConversationPage(args):
             }, \
             {'html': 'h2', 'elem': {'text': 'Model:'}} \
         ])
-        ollamaChatConversationResponseRenderTop(args, exchange, ixExchange)
+        ollamaChatConversationResponseRenderTop(args, exchange, ixExchange, !generating || ixExchange != ixExchangeLast)
         if ixExchange != ixExchangeLast:
             ollamaChatConversationResponseRenderBottom(args, exchange, ixExchange)
         endif
@@ -124,9 +129,10 @@ function ollamaChatConversationPageBottom(args, conversation, generating):
         endif
     endif
 
-    # Render the bottom space
+    # Render the bottom space (more when the voice playback bar is shown)
     fontSizePx = documentFontSize()
-    bottomSpacePx = if(generating, mathFloor(0.67 * windowHeight() / fontSizePx), if(multiline, 12, 4)) * fontSizePx
+    bottomSpaceEm = if(generating, mathFloor(0.67 * windowHeight() / fontSizePx), if(multiline, 12, 4))
+    bottomSpacePx = (bottomSpaceEm + if(voiceState() != null, ollamaChatConversationVoiceSpaceEm, 0)) * fontSizePx
     bottomElementId = stringSlice(argsURL(ollamaChatArguments, null, false, ollamaChatConversationBottomID), 1)
     elementModelRender([ \
         {'html': 'div', 'attr': {'style': 'height: ' + numberToFixed(bottomSpacePx, ollamaChatConversationSVGPrecision) + 'px'}}, \
@@ -143,22 +149,23 @@ function ollamaChatConversationPageBottom(args, conversation, generating):
 endfunction
 
 
-# Helper to render the model response top part
-function ollamaChatConversationResponseRenderTop(args, exchange, ixExchange):
-    # Text view?
-    if objectGet(args, 'text'):
-        return
-    endif
+# Helper to render the model response top part - the Read Aloud link (final is true if the response is complete),
+# then the show/hide thinking link, if any
+function ollamaChatConversationResponseRenderTop(args, exchange, ixExchange, final):
+    readAloudFn = systemPartial(ollamaChatConversationOnReadAloud, args, ixExchange, objectGet(exchange, 'model'), final)
+    links = [formsLinkButtonElements('Read Aloud', readAloudFn)]
 
-    # Show/hide thinking link?
-    isThinking = objectHas(exchange, 'thinking')
-    if isThinking:
+    # Show/hide thinking link? (not in text view)
+    if !objectGet(args, 'text') && objectHas(exchange, 'thinking'):
+        arrayPush(links, {'text': '\u00a0|\u00a0'})
         if ixExchange == objectGet(args, 'think'):
-            markdownPrint('', argsLink(ollamaChatArguments, 'Hide Thinking', {'think': null}))
+            arrayPush(links, formsLinkElements('Hide Thinking', argsURL(ollamaChatArguments, {'think': null})))
         else:
-            markdownPrint('', argsLink(ollamaChatArguments, 'Show Thinking', {'think': ixExchange}))
+            arrayPush(links, formsLinkElements('Show Thinking', argsURL(ollamaChatArguments, {'think': ixExchange})))
         endif
     endif
+
+    elementModelRender({'html': 'p', 'elem': links})
 endfunction
 
 
@@ -241,7 +248,8 @@ async function ollamaChatConversationOnTimeout(args, originalExchangeCount, orig
         return
     endif
 
-    # Render the page bottom
+    # Sync the voice playback, if any, and render the page bottom
+    ollamaChatConversationVoiceSync(args, conversation, generating)
     documentSetReset(ollamaChatConversationResetID)
     ollamaChatConversationPageBottom(args, conversation, generating)
 endfunction
@@ -273,6 +281,10 @@ ollamaChatConversationBottomID = 'chat-bottom'
 
 # The conversation message element ID prefix (for previous/next navigation)
 ollamaChatConversationMessageID = 'chat-message'
+
+
+# The voice playback bar's additional bottom space, in em
+ollamaChatConversationVoiceSpaceEm = 4
 
 
 # The SVG numeric attribute precision
@@ -343,6 +355,60 @@ async function ollamaChatConversationOnTemplate(conversation):
     if templateID != null:
         windowSetLocation(argsURL(ollamaChatArguments, {'id': templateID, 'view': 'template'}))
     endif
+endfunction
+
+
+# Read Aloud on-click event handler
+async function ollamaChatConversationOnReadAloud(args, ixExchange, model, final):
+    key = {'id': objectGet(args, 'id'), 'exchange': ixExchange}
+    voiceSpeak(key, ollamaChatVoiceText(model), final, ollamaChatVoiceGet(), ollamaChatVoiceRateGet())
+    ollamaChatConversationSavePrompt()
+    ollamaChatConversationPage(args)
+endfunction
+
+
+# Voice playback bar on-click event handler
+async function ollamaChatConversationOnVoice(args, action, value):
+    if action == 'play':
+        voicePlay()
+    elif action == 'pause':
+        voicePause()
+    elif action == 'rewind':
+        voiceRewind()
+    elif action == 'back':
+        voiceParagraphBack()
+    elif action == 'forward':
+        voiceParagraphForward()
+    elif action == 'voice':
+        voiceSetVoice(value)
+        localStorageSet(ollamaChatVoiceStorageKey, value)
+    elif action == 'rate':
+        voiceSetRate(value)
+        localStorageSet(ollamaChatVoiceRateStorageKey, stringNew(value))
+    else:
+        voiceClose()
+    endif
+    ollamaChatConversationSavePrompt()
+    ollamaChatConversationPage(args)
+endfunction
+
+
+# Helper to sync the voice playback, if any, with the conversation - update the text of the
+# exchange being read aloud, or close the playback if the exchange isn't in the conversation
+function ollamaChatConversationVoiceSync(args, conversation, generating):
+    voice = voiceState()
+    if voice == null:
+        return
+    endif
+    key = objectGet(voice, 'key')
+    ixExchange = objectGet(key, 'exchange')
+    exchanges = if(conversation != null, objectGet(conversation, 'exchanges'), [])
+    if objectGet(key, 'id') != objectGet(args, 'id') || ixExchange >= arrayLength(exchanges):
+        voiceClose()
+        return
+    endif
+    final = !generating || ixExchange != arrayLength(exchanges) - 1
+    voiceSetText(ollamaChatVoiceText(objectGet(arrayGet(exchanges, ixExchange), 'model')), final)
 endfunction
 
 
@@ -434,6 +500,9 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
         markdownFilename = regexReplace(regexNew('^-'), markdownFilename, '')
         markdownFilename = regexReplace(regexNew('-$'), markdownFilename, '') + '.md'
     endif
+
+    # Get the voice playback, if any
+    voice = voiceState()
 
     # Get the saved session prompt, if any
     prompt = sessionStorageGet(ollamaChatConversationSessionKey)
@@ -547,11 +616,75 @@ function ollamaChatConversationFloatingElements(args, conversation, generating):
             if(generating, \
                 ollamaChatConversationSVGButton(buttonSize, buttonSize, 24, 'M8,8 H16 V16 H8 Z', true, true, \
                     systemPartial(ollamaChatConversationOnClick, args, 'stopConversation', null, false)) \
-            ) \
+            ), \
+            if(voice != null, ollamaChatConversationVoiceElements(args, voice)) \
         ] \
     })
 
     return elements
+endfunction
+
+
+# The voice playback bar element model - floats above the prompt controls, centered
+function ollamaChatConversationVoiceElements(args, voice):
+    playing = objectGet(voice, 'playing')
+    voiceKey = objectGet(voice, 'voice')
+    rate = objectGet(voice, 'rate')
+
+    # Compute spacing
+    fontSizePx = documentFontSize()
+    borderRadiusPx = 0.5 * fontSizePx
+    barPadPx = 0.5 * fontSizePx
+    barSpacePx = 0.5 * fontSizePx
+    buttonSize = 2 * fontSizePx
+    smallButtonSize = 0.75 * buttonSize
+
+    # Compute button on-click functions
+    rewindClickFn = systemPartial(ollamaChatConversationOnVoice, args, 'rewind', null)
+    backClickFn = systemPartial(ollamaChatConversationOnVoice, args, 'back', null)
+    playClickFn = systemPartial(ollamaChatConversationOnVoice, args, if(playing, 'pause', 'play'), null)
+    forwardClickFn = systemPartial(ollamaChatConversationOnVoice, args, 'forward', null)
+    voiceClickFn = systemPartial(ollamaChatConversationOnVoice, args, 'voice', ollamaChatVoiceNext(voiceKey))
+    rateClickFn = systemPartial(ollamaChatConversationOnVoice, args, 'rate', ollamaChatVoiceRateNext(rate))
+    closeClickFn = systemPartial(ollamaChatConversationOnVoice, args, 'close', null)
+
+    return { \
+        'html': 'div', \
+        'attr': { \
+            'style': arrayJoin([ \
+                'align-items: center', \
+                'background-color: var(--barescript-color-border)', \
+                'border-radius: ' + numberToFixed(borderRadiusPx, ollamaChatConversationSVGPrecision) + 'px', \
+                'bottom: calc(100% + ' + numberToFixed(barSpacePx, ollamaChatConversationSVGPrecision) + 'px)', \
+                'display: flex', \
+                'left: 50%', \
+                'padding: ' + numberToFixed(barPadPx, ollamaChatConversationSVGPrecision) + 'px', \
+                'position: absolute', \
+                'transform: translateX(-50%)', \
+                'white-space: nowrap' \
+            ], '; ') \
+        }, \
+        'elem': [ \
+            ollamaChatConversationSVGButton(smallButtonSize, smallButtonSize, 24, 'M5,6 H8 V18 H5 Z M19,6 L10,12 L19,18 Z', \
+                true, false, rewindClickFn), \
+            {'text': '\u00a0'}, \
+            ollamaChatConversationSVGButton(smallButtonSize, smallButtonSize, 24, 'M12,6 L3,12 L12,18 Z M21,6 L12,12 L21,18 Z', \
+                true, false, backClickFn), \
+            {'text': '\u00a0'}, \
+            ollamaChatConversationSVGButton(buttonSize, buttonSize, 24, \
+                if(playing, 'M8,6 H11 V18 H8 Z M13,6 H16 V18 H13 Z', 'M9,6 L18,12 L9,18 Z'), true, true, playClickFn), \
+            {'text': '\u00a0'}, \
+            ollamaChatConversationSVGButton(smallButtonSize, smallButtonSize, 24, 'M3,6 L12,12 L3,18 Z M12,6 L21,12 L12,18 Z', \
+                true, false, forwardClickFn), \
+            {'text': '\u00a0\u00a0'}, \
+            formsLinkButtonElements(ollamaChatVoiceLabel(voiceKey), voiceClickFn), \
+            {'text': '\u00a0|\u00a0'}, \
+            formsLinkButtonElements(rate + 'x', rateClickFn), \
+            {'text': '\u00a0\u00a0'}, \
+            ollamaChatConversationSVGButton(smallButtonSize, smallButtonSize, 24, 'M7,7 L17,17 M17,7 L7,17', false, false, \
+                closeClickFn) \
+        ] \
+    }
 endfunction
 
 

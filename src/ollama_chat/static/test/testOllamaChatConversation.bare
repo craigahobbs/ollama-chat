@@ -137,6 +137,7 @@ function testOllamaChatConversationFloatingNoConv():
                 testOllamaChatConversationHamburger(), \
                 testOllamaChatConversationPromptInput(null, {'keyup': '<function>'}), \
                 testOllamaChatConversationSendButton(), \
+                null, \
                 null \
             ] \
         } \
@@ -160,6 +161,7 @@ function testOllamaChatConversationFloatingConv():
                 testOllamaChatConversationHamburger(), \
                 testOllamaChatConversationPromptInput(null, {'keyup': '<function>'}), \
                 testOllamaChatConversationSendButton(), \
+                null, \
                 null \
             ] \
         } \
@@ -208,6 +210,10 @@ function testOllamaChatConversationBottomMenu(ixLast):
 endfunction
 
 
+# Expected response top <p> (above each response, below its Model heading) - the Read Aloud link (no thinking)
+testOllamaChatConversationReadAloud = {'html': 'p', 'elem': [formsLinkButtonElements('Read Aloud', '<function>')]}
+
+
 # The full floating-controls model for a generating conversation (stop button, no menu controls)
 function testOllamaChatConversationFloatingConvGenerating():
     return [ \
@@ -220,7 +226,8 @@ function testOllamaChatConversationFloatingConvGenerating():
                 testOllamaChatConversationHamburger(), \
                 testOllamaChatConversationPromptInput(null, null), \
                 null, \
-                testOllamaChatConversationStopButton() \
+                testOllamaChatConversationStopButton(), \
+                null \
             ] \
         } \
     ]
@@ -243,6 +250,7 @@ function testOllamaChatConversationPage1ExchangeCalls():
         ['documentSetTitle', ['Chat']], \
         ['markdownPrint', ['# Chat','','**Model:** m:1']], \
         ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-bottom', 'u1', false)]], \
+        ['elementModelRender', [testOllamaChatConversationReadAloud]], \
         ['elementModelRender', [testOllamaChatConversationResetDiv]], \
         ['markdownPrint', ['','r1']], \
         ['elementModelRender', [testOllamaChatConversationBottomMenu(0)]], \
@@ -310,10 +318,13 @@ async function testOllamaChatConversationPageWithExchanges():
         ['documentSetTitle', ['Chat']], \
         ['markdownPrint', ['# Chat','','**Model:** m:1']], \
         ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-message-1', 'u1', false)]], \
+        ['elementModelRender', [testOllamaChatConversationReadAloud]], \
         ['markdownPrint', ['','r1']], \
         ['elementModelRender', [testOllamaChatConversationMessage(1, 0, 'chat-message-2', 'u2', false)]], \
+        ['elementModelRender', [testOllamaChatConversationReadAloud]], \
         ['markdownPrint', ['','r2']], \
         ['elementModelRender', [testOllamaChatConversationMessage(2, 1, 'chat-bottom', 'u3', false)]], \
+        ['elementModelRender', [testOllamaChatConversationReadAloud]], \
         ['elementModelRender', [testOllamaChatConversationResetDiv]], \
         ['markdownPrint', ['','r3']], \
         ['elementModelRender', [testOllamaChatConversationBottomMenu(2)]], \
@@ -378,6 +389,7 @@ async function testOllamaChatConversationPageTitleEdit():
         ]], \
         ['documentSetFocus', ['ollama-chat-title']], \
         ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-bottom', 'u1', false)]], \
+        ['elementModelRender', [testOllamaChatConversationReadAloud]], \
         ['elementModelRender', [testOllamaChatConversationResetDiv]], \
         ['markdownPrint', ['','r1']], \
         ['elementModelRender', [testOllamaChatConversationBottomMenu(0)]], \
@@ -456,6 +468,7 @@ async function testOllamaChatConversationOnTimeoutChanged():
         ['documentSetTitle', ['Chat']], \
         ['markdownPrint', ['# Chat','','**Model:** m:1']], \
         ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-bottom', 'u1', true)]], \
+        ['elementModelRender', [testOllamaChatConversationReadAloud]], \
         ['elementModelRender', [testOllamaChatConversationResetDiv]], \
         ['markdownPrint', ['','r1']], \
         ['elementModelRender', [ \
@@ -584,7 +597,8 @@ function testOllamaChatConversationFloatingGenerating():
                 testOllamaChatConversationHamburger(), \
                 testOllamaChatConversationPromptInput(null, null), \
                 null, \
-                testOllamaChatConversationStopButton() \
+                testOllamaChatConversationStopButton(), \
+                null \
             ] \
         } \
     ])
@@ -613,6 +627,7 @@ function testOllamaChatConversationFloatingMultiline():
                 testOllamaChatConversationHamburger(), \
                 testOllamaChatConversationTextarea(), \
                 testOllamaChatConversationSendButton(), \
+                null, \
                 null \
             ] \
         } \
@@ -643,6 +658,7 @@ function testOllamaChatConversationFloatingSavedPrompt():
                 testOllamaChatConversationHamburger(), \
                 testOllamaChatConversationPromptInput('draft text', {'keyup': '<function>'}), \
                 testOllamaChatConversationSendButton(), \
+                null, \
                 null \
             ] \
         } \
@@ -693,6 +709,7 @@ function testOllamaChatConversationFloatingMenuOpen():
                 testOllamaChatConversationHamburger(), \
                 testOllamaChatConversationPromptInput(null, {'keyup': '<function>'}), \
                 testOllamaChatConversationSendButton(), \
+                null, \
                 null \
             ] \
         } \
@@ -802,11 +819,12 @@ unittestRunTest('testOllamaChatConversationSVGButtonFilled')
 
 
 function testOllamaChatConversationResponseTopTextView():
+    # Text view - the Read Aloud link, but no thinking link
     systemGlobalSet('vText', true)
     args = argsParse(ollamaChatArguments)
     unittestMockAll({})
-    ollamaChatConversationResponseRenderTop(args, {'user': 'u', 'model': 'resp', 'thinking': 't'}, 0)
-    unittestDeepEqual(unittestMockEnd(), [])
+    ollamaChatConversationResponseRenderTop(args, {'user': 'u', 'model': 'resp', 'thinking': 't'}, 0, true)
+    unittestDeepEqual(unittestMockEnd(), [['elementModelRender', [testOllamaChatConversationReadAloud]]])
     systemGlobalSet('vText', null)
 endfunction
 unittestRunTest('testOllamaChatConversationResponseTopTextView')
@@ -815,8 +833,8 @@ unittestRunTest('testOllamaChatConversationResponseTopTextView')
 function testOllamaChatConversationResponseTopNoThinking():
     args = argsParse(ollamaChatArguments)
     unittestMockAll({})
-    ollamaChatConversationResponseRenderTop(args, {'user': 'u', 'model': 'resp'}, 0)
-    unittestDeepEqual(unittestMockEnd(), [])
+    ollamaChatConversationResponseRenderTop(args, {'user': 'u', 'model': 'resp'}, 0, true)
+    unittestDeepEqual(unittestMockEnd(), [['elementModelRender', [testOllamaChatConversationReadAloud]]])
 endfunction
 unittestRunTest('testOllamaChatConversationResponseTopNoThinking')
 
@@ -824,8 +842,12 @@ unittestRunTest('testOllamaChatConversationResponseTopNoThinking')
 function testOllamaChatConversationResponseTopShow():
     args = argsParse(ollamaChatArguments)
     unittestMockAll({})
-    ollamaChatConversationResponseRenderTop(args, {'user': 'u', 'model': 'resp', 'thinking': 't'}, 0)
-    unittestDeepEqual(unittestMockEnd(), [['markdownPrint', ['','[Show Thinking](#var.vThink=0)']]])
+    ollamaChatConversationResponseRenderTop(args, {'user': 'u', 'model': 'resp', 'thinking': 't'}, 0, true)
+    unittestDeepEqual(unittestMockEnd(), [['elementModelRender', [{'html': 'p', 'elem': [ \
+        formsLinkButtonElements('Read Aloud', '<function>'), \
+        {'text': '\u00a0|\u00a0'}, \
+        formsLinkElements('Show Thinking', '#var.vThink=0') \
+    ]}]]])
 endfunction
 unittestRunTest('testOllamaChatConversationResponseTopShow')
 
@@ -834,8 +856,12 @@ function testOllamaChatConversationResponseTopHide():
     systemGlobalSet('vThink', 0)
     args = argsParse(ollamaChatArguments)
     unittestMockAll({})
-    ollamaChatConversationResponseRenderTop(args, {'user': 'u', 'model': 'resp', 'thinking': 't'}, 0)
-    unittestDeepEqual(unittestMockEnd(), [['markdownPrint', ['','[Hide Thinking](#var=)']]])
+    ollamaChatConversationResponseRenderTop(args, {'user': 'u', 'model': 'resp', 'thinking': 't'}, 0, true)
+    unittestDeepEqual(unittestMockEnd(), [['elementModelRender', [{'html': 'p', 'elem': [ \
+        formsLinkButtonElements('Read Aloud', '<function>'), \
+        {'text': '\u00a0|\u00a0'}, \
+        formsLinkElements('Hide Thinking', '#var=') \
+    ]}]]])
     systemGlobalSet('vThink', null)
 endfunction
 unittestRunTest('testOllamaChatConversationResponseTopHide')
@@ -1257,3 +1283,416 @@ async function testOllamaChatConversationTitleEditButtonBinding():
     systemGlobalSet('vAction', null)
 endfunction
 unittestRunTest('testOllamaChatConversationTitleEditButtonBinding')
+
+
+#
+# Voice playback - the Read Aloud links, the voice playback bar, and the voice playback sync
+#
+
+
+# The voice playback state fixture - reading exchange ixExchange of conversation C1
+function testOllamaChatConversationVoiceState(ixExchange, playing):
+    return {'key': {'id': 'C1', 'exchange': ixExchange}, 'playing': playing, 'voice': 'female', 'rate': 1}
+endfunction
+
+
+# Expected voice playback bar (floats above the prompt controls, centered)
+function testOllamaChatConversationVoiceBar(playing, voiceLabel, rateLabel):
+    return { \
+        'html': 'div', \
+        'attr': { \
+            'style': arrayJoin([ \
+                'align-items: center', \
+                'background-color: var(--barescript-color-border)', \
+                'border-radius: 8.000px', \
+                'bottom: calc(100% + 8.000px)', \
+                'display: flex', \
+                'left: 50%', \
+                'padding: 8.000px', \
+                'position: absolute', \
+                'transform: translateX(-50%)', \
+                'white-space: nowrap' \
+            ], '; ') \
+        }, \
+        'elem': [ \
+            ollamaChatConversationSVGButton(24, 24, 24, 'M5,6 H8 V18 H5 Z M19,6 L10,12 L19,18 Z', true, false, '<function>'), \
+            {'text': '\u00a0'}, \
+            ollamaChatConversationSVGButton(24, 24, 24, 'M12,6 L3,12 L12,18 Z M21,6 L12,12 L21,18 Z', true, false, '<function>'), \
+            {'text': '\u00a0'}, \
+            ollamaChatConversationSVGButton(32, 32, 24, \
+                if(playing, 'M8,6 H11 V18 H8 Z M13,6 H16 V18 H13 Z', 'M9,6 L18,12 L9,18 Z'), true, true, '<function>'), \
+            {'text': '\u00a0'}, \
+            ollamaChatConversationSVGButton(24, 24, 24, 'M3,6 L12,12 L3,18 Z M12,6 L21,12 L12,18 Z', true, false, '<function>'), \
+            {'text': '\u00a0\u00a0'}, \
+            formsLinkButtonElements(voiceLabel, '<function>'), \
+            {'text': '\u00a0|\u00a0'}, \
+            formsLinkButtonElements(rateLabel, '<function>'), \
+            {'text': '\u00a0\u00a0'}, \
+            ollamaChatConversationSVGButton(24, 24, 24, 'M7,7 L17,17 M17,7 L7,17', false, false, '<function>') \
+        ] \
+    }
+endfunction
+
+
+# The voice playback test conversation (two exchanges)
+testOllamaChatConversationVoiceConv = {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': false, 'exchanges': [ \
+    {'user': 'u1', 'model': '# Response 1'}, {'user': 'u2', 'model': 'Response **2**'} \
+]}
+
+
+function testOllamaChatConversationVoiceElementsPlaying():
+    args = argsParse(ollamaChatArguments)
+    ollamaChatTestMockAll({'voiceState': null})
+    unittestDeepEqual( \
+        ollamaChatConversationVoiceElements(args, testOllamaChatConversationVoiceState(0, true)), \
+        testOllamaChatConversationVoiceBar(true, 'Mary', '1x') \
+    )
+    unittestDeepEqual(unittestMockEnd(), [])
+endfunction
+unittestRunTest('testOllamaChatConversationVoiceElementsPlaying')
+
+
+function testOllamaChatConversationVoiceElementsPaused():
+    args = argsParse(ollamaChatArguments)
+    voice = {'key': {'id': 'C1', 'exchange': 0}, 'playing': false, 'voice': 'sarah', 'rate': 1.2}
+    ollamaChatTestMockAll({'voiceState': null})
+    unittestDeepEqual( \
+        ollamaChatConversationVoiceElements(args, voice), \
+        testOllamaChatConversationVoiceBar(false, 'Sarah', '1.2x') \
+    )
+    unittestDeepEqual(unittestMockEnd(), [])
+endfunction
+unittestRunTest('testOllamaChatConversationVoiceElementsPaused')
+
+
+function testOllamaChatConversationFloatingVoice():
+    conv = {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'exchanges': [{'user': 'u', 'model': 'r'}]}
+    args = argsParse(ollamaChatArguments)
+    ollamaChatTestMockAll({'voiceState': testOllamaChatConversationVoiceState(0, true)})
+    els = ollamaChatConversationFloatingElements(args, conv, true)
+    unittestMockEnd()
+    unittestDeepEqual(els, [ \
+        testOllamaChatConversationTopSpace, \
+        testOllamaChatConversationMenuDiv('#var=&_top', '#var=&chat-bottom', null), \
+        { \
+            'html': 'div', \
+            'attr': {'style': testOllamaChatConversationPromptDivStyle(false)}, \
+            'elem': [ \
+                testOllamaChatConversationHamburger(), \
+                testOllamaChatConversationPromptInput(null, null), \
+                null, \
+                testOllamaChatConversationStopButton(), \
+                testOllamaChatConversationVoiceBar(true, 'Mary', '1x') \
+            ] \
+        } \
+    ])
+endfunction
+unittestRunTest('testOllamaChatConversationFloatingVoice')
+
+
+async function testOllamaChatConversationPageVoice():
+    # Reading the first exchange aloud - sync its text, set the change callback, and render the voice bar
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    floating = testOllamaChatConversationFloatingConv()
+    arraySet(objectGet(arrayGet(floating, 2), 'elem'), 4, testOllamaChatConversationVoiceBar(true, 'Mary', '1x'))
+    ollamaChatTestMockAll({ \
+        'systemFetch': objectNew('getConversation?id=C1', jsonStringify({'conversation': testOllamaChatConversationVoiceConv})), \
+        'voiceState': testOllamaChatConversationVoiceState(0, true) \
+    })
+    ollamaChatConversationPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversation?id=C1']], \
+        ['voiceSetText', ['Response 1', true]], \
+        ['voiceSetChange', ['<function>']], \
+        ['elementModelRender', [floating]], \
+        ['documentSetFocus', ['ollama-chat-prompt']], \
+        ['documentSetTitle', ['Chat']], \
+        ['markdownPrint', ['# Chat','','**Model:** m:1']], \
+        ['elementModelRender', [testOllamaChatConversationMessage(0, null, 'chat-message-1', 'u1', false)]], \
+        ['elementModelRender', [testOllamaChatConversationReadAloud]], \
+        ['markdownPrint', ['','# Response 1']], \
+        ['elementModelRender', [testOllamaChatConversationMessage(1, 0, 'chat-bottom', 'u2', false)]], \
+        ['elementModelRender', [testOllamaChatConversationReadAloud]], \
+        ['elementModelRender', [testOllamaChatConversationResetDiv]], \
+        ['markdownPrint', ['','Response **2**']], \
+        ['elementModelRender', [testOllamaChatConversationBottomMenu(1)]], \
+        ['elementModelRender', [ \
+            [ \
+                {'html': 'div', 'attr': {'style': 'height: 128.000px'}}, \
+                {'html': 'div', 'attr': {'id': "var.vId='C1'&chat-bottom"}} \
+            ] \
+        ]] \
+    ])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationPageVoice')
+
+
+async function testOllamaChatConversationPageVoiceNewConv():
+    # The new conversation page closes the voice playback. (The voiceState mock still returns the
+    # playback after voiceClose, so the voice playback bar renders.)
+    args = argsParse(ollamaChatArguments)
+    floating = testOllamaChatConversationFloatingNoConv()
+    arraySet(objectGet(arrayGet(floating, 2), 'elem'), 4, testOllamaChatConversationVoiceBar(true, 'Mary', '1x'))
+    ollamaChatTestMockAll({'voiceState': testOllamaChatConversationVoiceState(0, true)})
+    ollamaChatConversationPage(args)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['voiceClose', []], \
+        ['voiceSetChange', ['<function>']], \
+        ['elementModelRender', [floating]], \
+        ['documentSetFocus', ['ollama-chat-prompt']], \
+        ['documentSetTitle', ['Ollama Chat']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatConversationPageVoiceNewConv')
+
+
+async function testOllamaChatConversationOnTimeoutVoice():
+    # Still generating, nothing changed -> sync the text of the generating response (not final)
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': true, \
+        'exchanges': [{'user': 'u1', 'model': 'r1'}]}}
+    ollamaChatTestMockAll({ \
+        'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv)), \
+        'voiceState': testOllamaChatConversationVoiceState(0, true) \
+    })
+    ollamaChatConversationOnTimeout(args, 1, false)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['getConversation?id=C1']], \
+        ['voiceSetText', ['r1', false]], \
+        ['documentSetReset', ['ollama-chat-document-reset-id']], \
+        ['markdownPrint', ['','r1']], \
+        ['elementModelRender', [ \
+            [ \
+                {'html': 'div', 'attr': {'style': 'height: 576.000px'}}, \
+                {'html': 'div', 'attr': {'id': "var.vId='C1'&chat-bottom"}} \
+            ] \
+        ]], \
+        ['windowSetTimeout', ['<function>',500]] \
+    ])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationOnTimeoutVoice')
+
+
+function testOllamaChatConversationVoiceSyncNone():
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    ollamaChatTestMockAll({'voiceState': null})
+    ollamaChatConversationVoiceSync(args, testOllamaChatConversationVoiceConv, false)
+    unittestDeepEqual(unittestMockEnd(), [])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationVoiceSyncNone')
+
+
+function testOllamaChatConversationVoiceSyncFinal():
+    # A response that isn't the last is final, even while generating
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    ollamaChatTestMockAll({'voiceState': testOllamaChatConversationVoiceState(0, true)})
+    ollamaChatConversationVoiceSync(args, testOllamaChatConversationVoiceConv, true)
+    unittestDeepEqual(unittestMockEnd(), [['voiceSetText', ['Response 1', true]]])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationVoiceSyncFinal')
+
+
+function testOllamaChatConversationVoiceSyncGenerating():
+    # The last response isn't final while generating
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    ollamaChatTestMockAll({'voiceState': testOllamaChatConversationVoiceState(1, false)})
+    ollamaChatConversationVoiceSync(args, testOllamaChatConversationVoiceConv, true)
+    unittestDeepEqual(unittestMockEnd(), [['voiceSetText', ['Response 2', false]]])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationVoiceSyncGenerating')
+
+
+function testOllamaChatConversationVoiceSyncOtherConv():
+    # Another conversation's playback is closed
+    systemGlobalSet('vId', 'C2')
+    args = argsParse(ollamaChatArguments)
+    ollamaChatTestMockAll({'voiceState': testOllamaChatConversationVoiceState(0, true)})
+    ollamaChatConversationVoiceSync(args, testOllamaChatConversationVoiceConv, false)
+    unittestDeepEqual(unittestMockEnd(), [['voiceClose', []]])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationVoiceSyncOtherConv')
+
+
+function testOllamaChatConversationVoiceSyncDeleted():
+    # A deleted exchange's playback is closed
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    ollamaChatTestMockAll({'voiceState': testOllamaChatConversationVoiceState(2, true)})
+    ollamaChatConversationVoiceSync(args, testOllamaChatConversationVoiceConv, false)
+    unittestDeepEqual(unittestMockEnd(), [['voiceClose', []]])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationVoiceSyncDeleted')
+
+
+# The voice playback handler test data
+testOllamaChatConversationVoiceData = { \
+    'systemFetch': objectNew('getConversation?id=C1', jsonStringify({'conversation': testOllamaChatConversationVoiceConv})), \
+    'documentInputValue': {'ollama-chat-prompt': ''}, \
+    'voiceState': testOllamaChatConversationVoiceState(0, true) \
+}
+
+
+# Helper to assert a voice playback handler's calls (handlerFn takes no arguments) - the expected
+# calls, then the page re-render's. The storage object's items are set in local storage first.
+async function testOllamaChatConversationVoiceHandler(args, handlerFn, storage, expectedCalls):
+    # The page re-render's calls
+    ollamaChatTestMockAll(testOllamaChatConversationVoiceData)
+    ollamaChatConversationOnClick(args, null, null, false)
+    rerenderCalls = unittestMockEnd()
+
+    # Call the handler
+    ollamaChatTestMockAll(testOllamaChatConversationVoiceData)
+    expected = []
+    for storageKey in objectKeys(storage):
+        localStorageSet(storageKey, objectGet(storage, storageKey))
+        arrayPush(expected, ['localStorageSet', [storageKey, objectGet(storage, storageKey)]])
+    endfor
+    handlerFn()
+    arrayExtend(expected, expectedCalls)
+    arrayExtend(expected, rerenderCalls)
+    unittestDeepEqual(unittestMockEnd(), expected)
+endfunction
+
+
+async function testOllamaChatConversationOnReadAloud():
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    testOllamaChatConversationVoiceHandler( \
+        args, \
+        systemPartial(ollamaChatConversationOnReadAloud, args, 1, 'Response **2**', true), \
+        {}, \
+        [['voiceSpeak', [{'id': 'C1', 'exchange': 1}, 'Response 2', true, 'michael', 1]]] \
+    )
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationOnReadAloud')
+
+
+async function testOllamaChatConversationOnReadAloudPreferences():
+    # The preferred voice and speaking rate, generating (not final)
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    testOllamaChatConversationVoiceHandler( \
+        args, \
+        systemPartial(ollamaChatConversationOnReadAloud, args, 1, 'Response **2**', false), \
+        {'ollama-chat-voice': 'sarah', 'ollama-chat-voice-rate': '1.5'}, \
+        [['voiceSpeak', [{'id': 'C1', 'exchange': 1}, 'Response 2', false, 'sarah', 1.5]]] \
+    )
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationOnReadAloudPreferences')
+
+
+async function testOllamaChatConversationOnVoice():
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    testOllamaChatConversationVoiceHandler(args, systemPartial(ollamaChatConversationOnVoice, args, 'play', null), {}, \
+        [['voicePlay', []]])
+    testOllamaChatConversationVoiceHandler(args, systemPartial(ollamaChatConversationOnVoice, args, 'pause', null), {}, \
+        [['voicePause', []]])
+    testOllamaChatConversationVoiceHandler(args, systemPartial(ollamaChatConversationOnVoice, args, 'rewind', null), {}, \
+        [['voiceRewind', []]])
+    testOllamaChatConversationVoiceHandler(args, systemPartial(ollamaChatConversationOnVoice, args, 'back', null), {}, \
+        [['voiceParagraphBack', []]])
+    testOllamaChatConversationVoiceHandler(args, systemPartial(ollamaChatConversationOnVoice, args, 'forward', null), {}, \
+        [['voiceParagraphForward', []]])
+    testOllamaChatConversationVoiceHandler(args, systemPartial(ollamaChatConversationOnVoice, args, 'voice', 'sarah'), {}, \
+        [['voiceSetVoice', ['sarah']], ['localStorageSet', ['ollama-chat-voice', 'sarah']]])
+    testOllamaChatConversationVoiceHandler(args, systemPartial(ollamaChatConversationOnVoice, args, 'rate', 1.2), {}, \
+        [['voiceSetRate', [1.2]], ['localStorageSet', ['ollama-chat-voice-rate', '1.2']]])
+    testOllamaChatConversationVoiceHandler(args, systemPartial(ollamaChatConversationOnVoice, args, 'close', null), {}, \
+        [['voiceClose', []]])
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationOnVoice')
+
+
+async function testOllamaChatConversationReadAloudBinding():
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    render = systemPartial(ollamaChatConversationPage, args)
+    data = testOllamaChatConversationVoiceData
+
+    # Each response's Read Aloud link reads its own response (final - not generating)
+    ollamaChatTestVerifyClickN(render, 'Read Aloud', 0, \
+        systemPartial(ollamaChatConversationOnReadAloud, args, 0, '# Response 1', true), data)
+    ollamaChatTestVerifyClickN(render, 'Read Aloud', 1, \
+        systemPartial(ollamaChatConversationOnReadAloud, args, 1, 'Response **2**', true), data)
+
+    # While generating, the last response's Read Aloud link reads it as it generates (not final)
+    conv = {'conversation': {'id': 'C1', 'title': 'Chat', 'model': 'm:1', 'generating': true, \
+        'exchanges': [{'user': 'u1', 'model': 'r1'}]}}
+    generatingData = {'systemFetch': objectNew('getConversation?id=C1', jsonStringify(conv)), \
+        'documentInputValue': {'ollama-chat-prompt': ''}, 'voiceState': null}
+    ollamaChatTestVerifyClick(render, 'Read Aloud', \
+        systemPartial(ollamaChatConversationOnReadAloud, args, 0, 'r1', false), generatingData)
+
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationReadAloudBinding')
+
+
+async function testOllamaChatConversationVoiceBarBinding():
+    systemGlobalSet('vId', 'C1')
+    args = argsParse(ollamaChatArguments)
+    render = systemPartial(ollamaChatConversationPage, args)
+    data = testOllamaChatConversationVoiceData
+
+    # The voice and speaking rate cycles set the next voice and speaking rate
+    ollamaChatTestVerifyClick(render, 'Mary', systemPartial(ollamaChatConversationOnVoice, args, 'voice', 'james'), data)
+    ollamaChatTestVerifyClick(render, '1x', systemPartial(ollamaChatConversationOnVoice, args, 'rate', 1.1), data)
+
+    # Capture the live SVG button callbacks and the voice playback change callback
+    ollamaChatTestMockAll(data)
+    render()
+    calls = unittestMockEnd()
+    changeFn = arrayGet(arrayGet(arrayGet(calls, 2), 1), 0)
+    voiceBarElem = objectGet(arrayGet(objectGet(arrayGet(arrayGet(arrayGet(arrayGet(calls, 3), 1), 0), 2), 'elem'), 4), 'elem')
+    rewindFn = objectGet(objectGet(arrayGet(voiceBarElem, 0), 'callback'), 'click')
+    backFn = objectGet(objectGet(arrayGet(voiceBarElem, 2), 'callback'), 'click')
+    pauseFn = objectGet(objectGet(arrayGet(voiceBarElem, 4), 'callback'), 'click')
+    forwardFn = objectGet(objectGet(arrayGet(voiceBarElem, 6), 'callback'), 'click')
+    closeFn = objectGet(objectGet(arrayGet(voiceBarElem, 12), 'callback'), 'click')
+
+    # The voice bar's buttons are SVG elements, so their click handlers must ignore the click
+    # coordinates MarkdownUp passes
+    ollamaChatTestSameEffect(systemPartial(rewindFn, 14, 7, 30, 30), \
+        systemPartial(ollamaChatConversationOnVoice, args, 'rewind', null), data)
+    ollamaChatTestSameEffect(systemPartial(backFn, 14, 7, 30, 30), \
+        systemPartial(ollamaChatConversationOnVoice, args, 'back', null), data)
+    ollamaChatTestSameEffect(systemPartial(pauseFn, 14, 7, 30, 30), \
+        systemPartial(ollamaChatConversationOnVoice, args, 'pause', null), data)
+    ollamaChatTestSameEffect(systemPartial(forwardFn, 14, 7, 30, 30), \
+        systemPartial(ollamaChatConversationOnVoice, args, 'forward', null), data)
+    ollamaChatTestSameEffect(systemPartial(closeFn, 14, 7, 30, 30), \
+        systemPartial(ollamaChatConversationOnVoice, args, 'close', null), data)
+
+    # The voice playback change callback re-renders the page
+    ollamaChatTestSameEffect(changeFn, systemPartial(ollamaChatConversationOnClick, args, null, null, false), data)
+
+    # When paused, the play/pause button plays
+    pausedData = objectCopy(data)
+    objectSet(pausedData, 'voiceState', testOllamaChatConversationVoiceState(0, false))
+    ollamaChatTestMockAll(pausedData)
+    render()
+    calls = unittestMockEnd()
+    voiceBarElem = objectGet(arrayGet(objectGet(arrayGet(arrayGet(arrayGet(arrayGet(calls, 3), 1), 0), 2), 'elem'), 4), 'elem')
+    playFn = objectGet(objectGet(arrayGet(voiceBarElem, 4), 'callback'), 'click')
+    ollamaChatTestSameEffect(systemPartial(playFn, 14, 7, 30, 30), \
+        systemPartial(ollamaChatConversationOnVoice, args, 'play', null), pausedData)
+
+    systemGlobalSet('vId', null)
+endfunction
+unittestRunTest('testOllamaChatConversationVoiceBarBinding')
