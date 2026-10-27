@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.2 (2026-10-27)
+
+- [d7521ba](https://github.com/craigahobbs/ollama-chat/commit/d7521ba) - Read Aloud: read tables (header row once, then each row)
+
 ## 1.6.1 (2026-10-27)
 
 - [9b5a02b](https://github.com/craigahobbs/ollama-chat/commit/9b5a02b) - picovox 1.6.8
