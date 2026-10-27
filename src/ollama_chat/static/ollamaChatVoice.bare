@@ -120,8 +120,12 @@ function ollamaChatVoiceRateNext(rate):
 endfunction
 
 
-# Get a Markdown text's text to read aloud - its paragraphs (headings, list items, and
-# block quotes included) separated by blank lines. Code blocks and tables are skipped.
+# Matches text that ends with punctuation (closing quotes and parentheses allowed)
+ollamaChatVoiceTextEndRegex = regexNew('[.!?:;,]["\'\\)\u201d\u2019]*$')
+
+
+# Get a Markdown text's text to read aloud - its paragraphs (headings, list items, block
+# quotes, and table rows included) separated by blank lines. Code blocks are skipped.
 function ollamaChatVoiceText(markdownText):
     paragraphs = []
     ollamaChatVoiceTextParts(objectGet(markdownParse(markdownText), 'parts'), paragraphs)
@@ -143,6 +147,21 @@ function ollamaChatVoiceTextParts(parts, paragraphs):
             endfor
         elif objectHas(part, 'quote'):
             ollamaChatVoiceTextParts(objectGet(objectGet(part, 'quote'), 'parts'), paragraphs)
+        elif objectHas(part, 'table'):
+            # Each table row (header first) is a paragraph of its cells' texts as sentences
+            table = objectGet(part, 'table')
+            for row in arrayExtend([objectGet(table, 'headers')], objectGet(table, 'rows')):
+                cells = []
+                for cell in row:
+                    text = stringTrim(ollamaChatVoiceTextSpans(cell))
+                    if text != '':
+                        arrayPush(cells, if(regexMatch(ollamaChatVoiceTextEndRegex, text), text, text + '.'))
+                    endif
+                endfor
+                if arrayLength(cells):
+                    arrayPush(paragraphs, arrayJoin(cells, ' '))
+                endif
+            endfor
         endif
     endfor
 endfunction

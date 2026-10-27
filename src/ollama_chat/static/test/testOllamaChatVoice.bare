@@ -198,12 +198,58 @@ function testOllamaChatVoiceText():
         '', \
         'Quoted.', \
         '', \
+        'A. B.', \
+        '', \
+        '1. 2.', \
+        '', \
         '**', \
         '', \
         'The end.' \
     ], '\n'))
 endfunction
 unittestRunTest('testOllamaChatVoiceText')
+
+
+function testOllamaChatVoiceTextTable():
+    markdownText = arrayJoin([ \
+        'Before.', \
+        '', \
+        '| Category | Example Tasks |', \
+        '|----------|---------------|', \
+        '| **Writing & Editing** | • Draft emails.<br>• Proofread [text](https://example.com). |', \
+        '| Health (non-medical) | Fitness tips, |', \
+        '| `code` | Says "hello!" |', \
+        '| Ends with a colon: | ![image](image.png) |', \
+        '| | Empty first cell |', \
+        '| | |', \
+        '', \
+        'After.' \
+    ], '\n')
+    unittestEqual(ollamaChatVoiceText(markdownText), arrayJoin([ \
+        'Before.', \
+        '', \
+        'Category. Example Tasks.', \
+        '', \
+        'Writing & Editing. • Draft emails. • Proofread text.', \
+        '', \
+        'Health (non-medical). Fitness tips,', \
+        '', \
+        'code. Says "hello!"', \
+        '', \
+        'Ends with a colon:', \
+        '', \
+        'Empty first cell.', \
+        '', \
+        'After.' \
+    ], '\n'))
+endfunction
+unittestRunTest('testOllamaChatVoiceTextTable')
+
+
+function testOllamaChatVoiceTextTableEmptyHeader():
+    unittestEqual(ollamaChatVoiceText('| | |\n| - | - |\n| 1 | 2 |'), '1. 2.')
+endfunction
+unittestRunTest('testOllamaChatVoiceTextTableEmptyHeader')
 
 
 function testOllamaChatVoiceTextEmpty():
