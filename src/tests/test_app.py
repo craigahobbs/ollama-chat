@@ -84,7 +84,6 @@ class TestApp(unittest.TestCase):
                     'picovox/lib/models/voiceModel.js',
                     'picovox/lib/package.js',
                     'picovox/lib/params.js',
-                    'picovox/lib/phonemes.js',
                     'picovox/lib/render.js',
                     'picovox/lib/rng.js',
                     'picovox/lib/sentences.js',
