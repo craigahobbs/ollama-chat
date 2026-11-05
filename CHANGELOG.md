@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.4 (2026-11-05)
+
+- [fdd77e9](https://github.com/craigahobbs/ollama-chat/commit/fdd77e9) - picovox 2.0.1
+
 ## 1.6.3 (2026-11-03)
 
 - [957ee6e](https://github.com/craigahobbs/ollama-chat/commit/957ee6e) - picovox 2.0.0
