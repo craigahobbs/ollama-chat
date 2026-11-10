@@ -207,6 +207,11 @@ To get prompt command help use the `-h` option:
 ```
 
 
+## Ollama Models
+
+[Browse the models available to download with Ollama](https://craigahobbs.github.io/ollama-chat/models.html)
+
+
 ## File Format and API Documentation
 
 [Ollama Chat File Format](https://craigahobbs.github.io/ollama-chat/api.html#var.vName='OllamaChatConfig')

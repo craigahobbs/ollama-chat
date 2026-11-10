@@ -19,7 +19,8 @@ Local Makefile overrides:
 - `GHPAGES_RSYNC_ARGS` — `--exclude='models/models.json'`
 - `TESTS_REQUIRE` — `bare-script`
 - `PYLINT_ARGS` — also `static/models`; missing docstring checks disabled
-- no `SPHINX_DOC` — `doc` is a custom recipe (README, `static/*`, `ollamaChat.smd`)
+- no `SPHINX_DOC` — `doc` is a custom recipe (README, `static/*`, `ollamaChat.smd`, and the
+  `ollamaChatModels.bare`/`ollamaChatUtil.bare` scripts used by `static/models.html`)
 - `commit` also depends on `test-app`
 - `lint` also runs pylint on `static/models/models.py`
 
@@ -77,6 +78,9 @@ Tests require `bare-script`; the back-end never contacts a real Ollama server in
 `models.json`, the list of downloadable models shown in the app. The
 `.github/workflows/nightly-models.yml` workflow regenerates it nightly and commits to the `gh-pages`
 branch. `static/` (root) is published to GitHub Pages (`gh-pages`) via `make gh-pages`.
+`static/models.html` publishes the model download page as a static web page by calling
+`ollamaChatModelsDownloadPage(args, true)` — in static mode there is no back-end, so no system info
+(no compatibility filtering), no Back link, and no downloads.
 
 ## Conventions
 

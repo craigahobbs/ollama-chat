@@ -251,21 +251,27 @@ async function ollamaChatModelsOnDelete(args, model):
 endfunction
 
 
-# The Ollama Chat model download page
-async function ollamaChatModelsDownloadPage(args):
+# The Ollama Chat model download page. If staticMode is true, the page is rendered as a static web
+# page (e.g. GitHub Pages) with no Ollama Chat back-end - there is no system info (and so no
+# compatibility filtering), no navigation to the other views, and no model downloads.
+async function ollamaChatModelsDownloadPage(args, staticMode):
     action = objectGet(args, 'action')
     actionID = objectGet(args, 'actionID')
     filterMonths = objectGet(args, 'filterMonths')
-    filterCompatible = objectGet(args, 'filterCompatible')
+    filterCompatible = !staticMode && objectGet(args, 'filterCompatible')
     filterType = objectGet(args, 'filterType')
     sort = objectGet(args, 'sort')
 
-    # Get the system info (a null response means the server is unreachable)
-    systemInfo = systemFetch('getSystemInfo')
-    systemInfo = if(systemInfo != null, jsonParse(systemInfo))
-    if systemInfo == null:
-        ollamaChatErrorPage('Failed to get system info')
-        return
+    # Get the system info (a null response means the server is unreachable). There is no system info
+    # in static mode.
+    systemInfo = null
+    if !staticMode:
+        systemInfo = systemFetch('getSystemInfo')
+        systemInfo = if(systemInfo != null, jsonParse(systemInfo))
+        if systemInfo == null:
+            ollamaChatErrorPage('Failed to get system info')
+            return
+        endif
     endif
 
     # A non-positive memory (e.g. -1) means the total memory is unknown - skip compatibility filtering
@@ -282,11 +288,11 @@ async function ollamaChatModelsDownloadPage(args):
     endif
 
     # Render the page title
-    title = 'Ollama Chat - Download'
+    title = if(staticMode, 'Ollama Models', 'Ollama Chat - Download')
     documentSetTitle(title)
     markdownPrint( \
-        argsLink(ollamaChatArguments, 'Back', {'view': 'models'}, true), \
-        '', \
+        if(!staticMode, argsLink(ollamaChatArguments, 'Back', {'view': 'models'}, true)), \
+        if(!staticMode, ''), \
         '# ' + markdownEscape(title) \
     )
 
@@ -299,10 +305,10 @@ async function ollamaChatModelsDownloadPage(args):
             ollamaChatModelsFilterLink('6 month', 6, 'filterMonths', filterMonths) + filterSpacer + \
             ollamaChatModelsFilterLink('All', 0, 'filterMonths', filterMonths), \
         '', \
-        '**Show:** ' + \
+        if(!staticMode, '**Show:** ' + \
             ollamaChatModelsFilterLink('Compatible', true, 'filterCompatible', filterCompatible) + filterSpacer + \
-            ollamaChatModelsFilterLink('All', false, 'filterCompatible', filterCompatible), \
-        '', \
+            ollamaChatModelsFilterLink('All', false, 'filterCompatible', filterCompatible)), \
+        if(!staticMode, ''), \
         '**Type:** ' + \
             ollamaChatModelsFilterLink('All', 'All', 'filterType', filterType) + filterSpacer + \
             ollamaChatModelsFilterLink('Local', 'Local', 'filterType', filterType) + filterSpacer + \
@@ -385,13 +391,14 @@ async function ollamaChatModelsDownloadPage(args):
             '**Downloads:** ' + ollamaChatModelsFormatCount(downloads) + ' \\', \
             '**Modified:** ' + modifiedText, \
             '', \
-            argsLink( \
+            if(!staticMode, argsLink( \
                 ollamaChatArguments, \
                 if(selected, 'Cancel', 'Download'), {'action': if(!selected, 'model'), 'actionID': if(!selected, name)} \
-            ), \
-            if(!selected, filterSpacer + '[Info](' + ollamaChatModelsModelURL(name) + ')') \
+            )), \
+            if(staticMode, '[Info](' + ollamaChatModelsModelURL(name) + ')', \
+                if(!selected, filterSpacer + '[Info](' + ollamaChatModelsModelURL(name) + ')')) \
         )
-        if selected:
+        if selected && !staticMode:
             downloadLinks = []
             for variant, ixVariant in typeVariants:
                 modelID = objectGet(variant, 'id')

@@ -54,6 +54,8 @@ doc:
 		README.md \
 		static/* \
 		src/ollama_chat/static/ollamaChat.smd \
+		src/ollama_chat/static/ollamaChatModels.bare \
+		src/ollama_chat/static/ollamaChatUtil.bare \
 		$(GHPAGES_SRC)
 
 

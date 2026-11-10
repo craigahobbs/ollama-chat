@@ -1096,6 +1096,83 @@ endfunction
 unittestRunTest('testOllamaChatModelsDownloadPageMLX')
 
 
+async function testOllamaChatModelsDownloadPageStatic():
+    # Static mode - no system info, no compatibility filtering, no Back link, and no downloads
+    systemGlobalSet('vFilterMonths', 0)
+    systemGlobalSet('vAction', 'model')
+    systemGlobalSet('vActionID', 'llm')
+    args = argsParse(ollamaChatArguments)
+    url = 'https://craigahobbs.github.io/ollama-chat/models/models.json'
+    model = {'name': 'llm', 'description': 'A model', 'modified': '2024-01-15', 'downloads': 100, 'variants': [ \
+        {'id': 'llm:7b', 'size': '7b', 'parameters': 7000000000}, \
+        {'id': 'llm:70b-mlx', 'size': '70b-mlx', 'parameters': 70000000000, 'mlx': true}, \
+        {'id': 'llm:cloud', 'size': 'cloud', 'parameters': 0, 'cloud': true} \
+    ]}
+    unittestMockAll({'systemFetch': {url: jsonStringify([model])}})
+    ollamaChatModelsDownloadPage(args, true)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', [url]], \
+        ['documentSetTitle', ['Ollama Models']], \
+        ['markdownPrint', [null, null, '# Ollama Models']], \
+        ['markdownPrint', [ \
+            "**Recent:** [1 month](#var.vFilterMonths=1)" + \
+                ' | ' + \
+                "[3 months](#var.vFilterMonths=3)" + \
+                ' | ' + \
+                "[6 month](#var=)" + \
+                ' | ' + \
+                'All', \
+            '', \
+            null, \
+            null, \
+            '**Type:** All' + \
+                ' | ' + \
+                "[Local](#var.vFilterMonths=0&var.vFilterType='Local')" + \
+                ' | ' + \
+                "[Cloud](#var.vFilterMonths=0&var.vFilterType='Cloud')" + \
+                ' | ' + \
+                "[MLX](#var.vFilterMonths=0&var.vFilterType='MLX')", \
+            '', \
+            "**Sort:** [Downloads](#var.vFilterMonths=0&var.vSort='Downloads')" + \
+                ' | ' + \
+                'Modified' + \
+                ' | ' + \
+                "[Name](#var.vFilterMonths=0&var.vSort='Name')" \
+        ]], \
+        ['markdownPrint', [ \
+            '## llm', \
+            '', \
+            'A model', \
+            '', \
+            '**Variants:** 7b, 70b-mlx, cloud \\', \
+            '**Downloads:** 0.1K \\', \
+            '**Modified:** 2024-01-15', \
+            '', \
+            null, \
+            '[Info](https://ollama.com/library/llm)' \
+        ]] \
+    ])
+    systemGlobalSet('vFilterMonths', null)
+    systemGlobalSet('vAction', null)
+    systemGlobalSet('vActionID', null)
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageStatic')
+
+
+async function testOllamaChatModelsDownloadPageStaticError():
+    # Static mode - the available-models fetch fails -> error page
+    args = argsParse(ollamaChatArguments)
+    unittestMockAll()
+    ollamaChatModelsDownloadPage(args, true)
+    unittestDeepEqual(unittestMockEnd(), [ \
+        ['systemFetch', ['https://craigahobbs.github.io/ollama-chat/models/models.json']], \
+        ['documentSetTitle', ['Ollama Chat']], \
+        ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Failed to get available models']] \
+    ])
+endfunction
+unittestRunTest('testOllamaChatModelsDownloadPageStaticError')
+
+
 async function testOllamaChatModelsDownloadPageMLXUnsupported():
     # MLX variants are incompatible without Apple Silicon
     systemGlobalSet('vFilterMonths', 0)
