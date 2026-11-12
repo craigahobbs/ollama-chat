@@ -68,7 +68,7 @@ test-app: $(DEFAULT_VENV_BUILD)
 
 
 # Update the PicoVox package tarball
-PICOVOX_VERSION := 2.0.2
+PICOVOX_VERSION := 2.0.5
 .PHONY: picovox
 picovox:
 	cd src/ollama_chat/static && \
