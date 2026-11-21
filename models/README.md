@@ -13,6 +13,11 @@ available API (static resource). Unfortunately, no such API exists at the time o
 ## Implementation
 
 The script, `models.py`, downloads the Ollama models web page and scrapes it for model names,
-parameter counts, downloads, and last modified dates. It then downloads each model's tags web page
-and scrapes it for cloud (e.g. "cloud", "31b-cloud") and MLX (e.g. "12b-mlx") variant tags. If this
-sounds fragile to you, you are right.
+parameter counts, capabilities (e.g. "vision", "tools"), downloads, and last modified dates. It then
+downloads each model's tags web page and scrapes it for cloud (e.g. "cloud", "31b-cloud") and MLX
+(e.g. "12b-mlx") variant tags. A model that lists no parameter counts uses its tags page's sized tags
+(e.g. "40m-en") or, failing that, a "latest" variant whose parameter count comes from the Ollama
+registry's model config or from the description (e.g. "26B parameters"). If this sounds fragile to
+you, you are right.
+
+The scraper's unit tests are `src/tests/test_models.py` (`make test`, `make cover`).

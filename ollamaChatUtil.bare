@@ -14,6 +14,7 @@ ollamaChatTitle = 'Ollama Chat'
 ollamaChatArguments = argsValidate([ \
     {'name': 'action', 'explicit': true}, \
     {'name': 'actionID', 'explicit': true}, \
+    {'name': 'filterCapability', 'type': 'string'}, \
     {'name': 'filterCompatible', 'type': 'bool', 'default': true}, \
     {'name': 'filterMonths', 'type': 'int', 'default': 6}, \
     {'name': 'filterType', 'type': 'string', 'default': 'All'}, \

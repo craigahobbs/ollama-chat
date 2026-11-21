@@ -21,6 +21,7 @@ class OllamaModelParser(HTMLParser):
         self.current_model = None
         self.in_description = False
         self.span_is_size = False
+        self.span_is_capability = False
         self.span_text = None
         self.prior_span = None
 
@@ -33,15 +34,17 @@ class OllamaModelParser(HTMLParser):
         if tag == 'a' and not self.current_model and attrs.get('href', '').startswith('/library/'):
             self.current_model = attrs['href'].split('/')[-1].lower()
             if self.current_model not in self.models:
-                self.models[self.current_model] = {'sizes': []}
+                self.models[self.current_model] = {'sizes': [], 'capabilities': []}
 
         # Handle description - the "break-words" paragraph
         elif tag == 'p' and self.current_model and 'break-words' in attrs.get('class', ''):
             self.in_description = True
 
         elif tag == 'span' and self.current_model:
-            # Model sizes are the blue "pill" spans
-            self.span_is_size = 'text-blue-600' in attrs.get('class', '')
+            # Model sizes are the blue "pill" spans - capabilities (e.g. "vision", "tools") are the indigo pills
+            span_class = attrs.get('class', '')
+            self.span_is_size = 'text-blue-600' in span_class
+            self.span_is_capability = 'text-indigo-600' in span_class
             self.span_text = ''
 
             # The updated span's title attribute is the exact updated timestamp - ignore other
@@ -61,12 +64,15 @@ class OllamaModelParser(HTMLParser):
             text = self.span_text.strip()
             if self.span_is_size and text:
                 self.models[self.current_model]['sizes'].append(text)
+            elif self.span_is_capability and text:
+                self.models[self.current_model]['capabilities'].append(text)
             elif text == 'Pulls':
                 # The pull count span immediately precedes its "Pulls" label span
                 self.models[self.current_model]['downloads'] = self.prior_span
             elif text:
                 self.prior_span = text
             self.span_is_size = False
+            self.span_is_capability = False
             self.span_text = None
 
 
@@ -98,6 +104,11 @@ def _parse_count(count, model_name):
         if _regex_count_effective.match(count):
             count = count[1:]
 
+        # Active parameter count suffix? (e.g. "30b-a3b" - the total parameter count is the footprint)
+        m_active = _regex_count_active.search(count)
+        if m_active:
+            count = count[:m_active.start()]
+
         # Parse the count
         scale = _COUNT_UNIT_SCALES.get(count[-1].lower())
         if scale:
@@ -109,6 +120,7 @@ def _parse_count(count, model_name):
 
 _regex_count_moe = re.compile(r'^(?P<mult>[1-9]\d*)x')
 _regex_count_effective = re.compile(r'^e\d')
+_regex_count_active = re.compile(r'-a\d+(?:\.\d+)?[tbmk]$', re.IGNORECASE)
 _COUNT_UNIT_SCALES = {'t': 1e12, 'b': 1e9, 'm': 1e6, 'k': 1e3}
 
 
@@ -138,9 +150,10 @@ _FETCH_RETRY_SECONDS = 5
 _FETCH_TIMEOUT_SECONDS = 30
 
 
-# Scrape a model's tags web page for its cloud and MLX variant tags (e.g. "cloud", "31b-cloud", "12b-mlx").
-# Quantization tags (e.g. "12b-mlx-bf16", "12b-it-q4_K_M") are not variants and are excluded.
-# Returns None if the model's tags page no longer exists.
+# Scrape a model's tags web page for its cloud and MLX variant tags (e.g. "cloud", "31b-cloud", "12b-mlx"),
+# its local sized tags (e.g. "8b", "40m-en"), and whether it has a "latest" tag. Quantization tags (e.g.
+# "12b-mlx-bf16", "12b-it-q4_K_M") are not variants and are excluded. Returns None if the model's tags page
+# no longer exists.
 def _scrape_variant_tags(model_name):
     html = _fetch(f'https://ollama.com/library/{model_name}/tags')
     if html is None:
@@ -155,7 +168,58 @@ def _scrape_variant_tags(model_name):
     if 'mlx' in mlx_tags and len(mlx_tags) > 1:
         mlx_tags.remove('mlx')
 
-    return cloud_tags, mlx_tags
+    local_tags = [tag for tag in tags if _is_sized_tag(tag)]
+    return cloud_tags, mlx_tags, local_tags, 'latest' in tags
+
+
+# Is the tag a local sized tag (e.g. "8b", "30b-a3b", "40m-en", "7b-v2.5")? Cloud, MLX, and quantization
+# tags (e.g. "8b-q4_K_M", "8b-instruct-fp16") are not.
+def _is_sized_tag(tag):
+    match = _regex_sized_tag.match(tag)
+    if match is None or _is_cloud_mlx_size(tag):
+        return False
+    rest = match.group('rest')
+    return rest is None or not any(_regex_quantization.match(part) for part in rest.split('-'))
+
+
+# Parse a size's parameter count - the leading count of a sized tag (e.g. "40m-en" -> 40e6)
+def _parse_size_count(size, model_name):
+    match = _regex_sized_tag.match(size)
+    return _parse_count(match.group('count') if match else size, model_name)
+
+_regex_sized_tag = re.compile(
+    r'^(?P<count>(?:[1-9]\d*x)?e?\d+(?:\.\d+)?[tbmk](?:-a\d+(?:\.\d+)?[tbmk])?)(?:-(?P<rest>.+))?$',
+    re.IGNORECASE
+)
+_regex_quantization = re.compile(r'^(?:i?q\d\w*|b?fp?\d+|mxfp\d+|nvfp\d+|int\d+|mlx)$', re.IGNORECASE)
+
+
+# Fetch a model's "latest" tag parameter count from the Ollama registry - the tag's config blob
+# "model_type" (e.g. "9.0B", "891.14M"). Returns 0 if the parameter count is unavailable.
+def _scrape_latest_count(model_name):
+    registry_url = f'https://registry.ollama.ai/v2/library/{model_name}'
+    manifest = _fetch(f'{registry_url}/manifests/latest')
+    if manifest is None:
+        return 0
+    try:
+        config = _fetch(f'{registry_url}/blobs/{json.loads(manifest)["config"]["digest"]}')
+        model_type = json.loads(config).get('model_type') if config is not None else None
+    except (ValueError, KeyError, TypeError, AttributeError):
+        return 0
+    return _parse_count(model_type, model_name) if isinstance(model_type, str) and model_type else 0
+
+
+# Parse a parameter count from a model description phrase (e.g. "26B parameters", "a 7B model",
+# "33B total parameter", "a 30B Mixture-of-Experts model"). Active parameter counts (e.g. "3B active
+# parameters") are skipped. Returns 0 if the description has no parameter count.
+def _parse_description_count(description, model_name):
+    match = _regex_description_count.search(description)
+    return _parse_count(match.group('count'), model_name) if match else 0
+
+_regex_description_count = re.compile(
+    r'\b(?P<count>\d+(?:\.\d+)?[KMBT])\b[\s-]+(?!active\b)(?:[\w-]+\s+)?(?:parameters?|params?|model)\b',
+    re.IGNORECASE
+)
 
 
 # Is the size a cloud/MLX variant tag? The model's tags page is the source of truth for those.
@@ -190,11 +254,28 @@ def main():
             print(f'Warning: "{model_name}" no longer exists', file=sys.stderr)
             skipped += 1
             continue
-        cloud_tags, mlx_tags = variant_tags
+        cloud_tags, mlx_tags, local_tags, has_latest = variant_tags
+        description = raw_model.get('description', '').strip() or _DEFAULT_DESCRIPTION
+
+        # No local sizes listed? If so, use the tags page's local sized tags (e.g. "40m-en") or, failing that,
+        # the "latest" tag with the registry's parameter count or the description's parameter count (e.g.
+        # "26B parameters"), if any.
+        local_sizes = [size for size in dict.fromkeys(raw_model['sizes']) if not _is_cloud_mlx_size(size)]
+        local_variants = [
+            {
+                'id': f'{model_name}:{size}',
+                'size': size,
+                'parameters': _parse_size_count(size, model_name)
+            }
+            for size in (local_sizes or local_tags)
+        ]
+        if not local_variants and has_latest:
+            latest_parameters = _scrape_latest_count(model_name) or _parse_description_count(description, model_name)
+            if latest_parameters:
+                local_variants.append({'id': f'{model_name}:latest', 'size': 'latest', 'parameters': latest_parameters})
 
         # No model variants?
-        local_sizes = [size for size in dict.fromkeys(raw_model['sizes']) if not _is_cloud_mlx_size(size)]
-        if not local_sizes and not cloud_tags and not mlx_tags:
+        if not local_variants and not cloud_tags and not mlx_tags:
             print(f'Warning: "{model_name}" has no sizes', file=sys.stderr)
             skipped += 1
             continue
@@ -204,15 +285,16 @@ def main():
         if not downloads:
             raise ValueError(f'"{model_name}" has invalid downloads "{raw_model["downloads"]}"')
 
+        # Known model capabilities (e.g. "vision", "tools") - an unknown capability is dropped, not fatal
+        capabilities = []
+        for capability in dict.fromkeys(raw_model['capabilities']):
+            if capability in _CAPABILITIES:
+                capabilities.append(capability)
+            else:
+                print(f'Info: "{model_name}" has unknown capability "{capability}"', file=sys.stderr)
+
         # Create the model variants - local sizes, then MLX, then cloud
-        variants = [
-            {
-                'id': f'{model_name}:{size}',
-                'size': size,
-                'parameters': _parse_count(size, model_name)
-            }
-            for size in local_sizes
-        ]
+        variants = local_variants
         for kind, kind_tags in (('mlx', mlx_tags), ('cloud', cloud_tags)):
             for tag in kind_tags:
                 variants.append({
@@ -224,9 +306,10 @@ def main():
 
         models.append({
             'name': model_name,
-            'description': raw_model.get('description', '').strip() or _DEFAULT_DESCRIPTION,
+            'description': description,
             'modified': _parse_modified(raw_model['modified']).isoformat(),
             'downloads': downloads,
+            'capabilities': capabilities,
             'variants': variants
         })
 
@@ -242,11 +325,14 @@ def main():
     for kind in ('cloud', 'mlx'):
         if not any(variant.get(kind) for model in models for variant in model['variants']):
             raise ValueError(f'No {kind} model variants scraped')
+    if not any(model['capabilities'] for model in models):
+        raise ValueError('No model capabilities scraped')
 
-    # Validate the model JSON
-    ollama_chat_smd = 'ollamaChat.smd'
+    # Validate the model JSON - the type model is beside the models directory on gh-pages, or in the source tree
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    ollama_chat_smd = os.path.join(script_dir, '..', 'ollamaChat.smd')
     if not os.path.isfile(ollama_chat_smd):
-        ollama_chat_smd = '../../src/ollama_chat/static/ollamaChat.smd'
+        ollama_chat_smd = os.path.join(script_dir, '..', '..', 'src', 'ollama_chat', 'static', 'ollamaChat.smd')
     with open(ollama_chat_smd, 'r', encoding='utf-8') as fh:
         ollama_chat_types = schema_markdown.parse_schema_markdown(fh.read())
     schema_markdown.validate_type(ollama_chat_types, 'OllamaChatModels', models)
@@ -254,6 +340,7 @@ def main():
     # Output the model JSON
     print(json.dumps(sorted(models, key=lambda model: model['name']), indent=4))
 
+_CAPABILITIES = ('vision', 'tools', 'thinking', 'embedding', 'decision', 'audio')
 _DEFAULT_DESCRIPTION = 'No model description provided.'
 _SANITY_MIN_MODELS = 150
 _SANITY_MAX_SKIPPED = 0.2
