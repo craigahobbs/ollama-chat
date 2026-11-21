@@ -27,6 +27,10 @@ include Makefile.base
 TESTS_REQUIRE := bare-script
 
 
+# Measure the models scraper's coverage, too
+COVERAGE_ARGS := $(COVERAGE_ARGS) --source src/,static/models/
+
+
 # Disable pylint docstring warnings
 PYLINT_ARGS := $(PYLINT_ARGS) static/models --disable=missing-class-docstring --disable=missing-function-docstring --disable=missing-module-docstring
 

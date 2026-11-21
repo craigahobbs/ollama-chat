@@ -251,12 +251,30 @@ async function ollamaChatModelsOnDelete(args, model):
 endfunction
 
 
+# The model download page capability filters - "Chat" (the default, except in static mode) hides the
+# models that can't chat (decision and embedding models)
+ollamaChatModelsCapabilityFilters = [ \
+    ['Chat', 'Chat'], \
+    ['All', 'All'], \
+    ['Vision', 'vision'], \
+    ['Tools', 'tools'], \
+    ['Thinking', 'thinking'], \
+    ['Embedding', 'embedding'], \
+    ['Audio', 'audio'], \
+    ['Decision', 'decision'] \
+]
+
+
 # The Ollama Chat model download page. If staticMode is true, the page is rendered as a static web
 # page (e.g. GitHub Pages) with no Ollama Chat back-end - there is no system info (and so no
 # compatibility filtering), no navigation to the other views, and no model downloads.
 async function ollamaChatModelsDownloadPage(args, staticMode):
     action = objectGet(args, 'action')
     actionID = objectGet(args, 'actionID')
+    filterCapability = objectGet(args, 'filterCapability')
+    if filterCapability == null:
+        filterCapability = if(staticMode, 'All', 'Chat')
+    endif
     filterMonths = objectGet(args, 'filterMonths')
     filterCompatible = !staticMode && objectGet(args, 'filterCompatible')
     filterType = objectGet(args, 'filterType')
@@ -275,9 +293,9 @@ async function ollamaChatModelsDownloadPage(args, staticMode):
     endif
 
     # A non-positive memory (e.g. -1) means the total memory is unknown - skip compatibility filtering
-    totalMemory = objectGet(systemInfo, 'memory')
+    totalMemory = if(systemInfo != null, objectGet(systemInfo, 'memory'))
     memoryKnown = totalMemory > 0
-    mlxSupported = objectGet(systemInfo, 'mlx')
+    mlxSupported = if(systemInfo != null, objectGet(systemInfo, 'mlx'))
 
     # Get the downloaded and available models
     availableModels = systemFetch(ollamaChatModelsAvailableURL)
@@ -298,6 +316,12 @@ async function ollamaChatModelsDownloadPage(args, staticMode):
 
     # Render the filters
     filterSpacer = '\u00a0|\u00a0'
+    capabilityLinks = []
+    for capabilityFilter in ollamaChatModelsCapabilityFilters:
+        arrayPush(capabilityLinks, ollamaChatModelsFilterLink( \
+            arrayGet(capabilityFilter, 0), arrayGet(capabilityFilter, 1), 'filterCapability', filterCapability \
+        ))
+    endfor
     markdownPrint( \
         '**Recent:** ' + \
             ollamaChatModelsFilterLink('1 month', 1, 'filterMonths', filterMonths) + filterSpacer + \
@@ -314,6 +338,8 @@ async function ollamaChatModelsDownloadPage(args, staticMode):
             ollamaChatModelsFilterLink('Local', 'Local', 'filterType', filterType) + filterSpacer + \
             ollamaChatModelsFilterLink('Cloud', 'Cloud', 'filterType', filterType) + filterSpacer + \
             ollamaChatModelsFilterLink('MLX', 'MLX', 'filterType', filterType), \
+        '', \
+        '**Capability:** ' + arrayJoin(capabilityLinks, filterSpacer), \
         '', \
         '**Sort:** ' + \
             ollamaChatModelsFilterLink('Downloads', 'Downloads', 'sort', sort) + filterSpacer + \
@@ -343,6 +369,7 @@ async function ollamaChatModelsDownloadPage(args, staticMode):
         modifiedText = objectGet(model, 'modified')
         modified = datetimeISOParse(modifiedText)
         variants = objectGet(model, 'variants')
+        capabilities = objectGet(model, 'capabilities', [])
         selected = action == 'model' && actionID == name
 
         # Filter the variants by type
@@ -377,7 +404,8 @@ async function ollamaChatModelsDownloadPage(args, staticMode):
         variantsText = arrayJoin(variantSizes, ', ')
 
         # Filter models
-        if !typeVariants || (minModified && modified < minModified) || (filterCompatible && !anyCompatible):
+        if !typeVariants || (minModified && modified < minModified) || (filterCompatible && !anyCompatible) || \
+            !ollamaChatModelsCapabilityMatch(capabilities, filterCapability):
             continue
         endif
 
@@ -388,6 +416,7 @@ async function ollamaChatModelsDownloadPage(args, staticMode):
             markdownEscape(description), \
             '', \
             '**Variants:** ' + variantsText + ' \\', \
+            if(capabilities, '**Capabilities:** ' + arrayJoin(capabilities, ', ') + ' \\'), \
             '**Downloads:** ' + ollamaChatModelsFormatCount(downloads) + ' \\', \
             '**Modified:** ' + modifiedText, \
             '', \
@@ -420,6 +449,17 @@ function ollamaChatModelsFilterLink(text, value, argName, argValue):
         return markdownEscape(text)
     endif
     return argsLink(ollamaChatArguments, text, {argName: value})
+endfunction
+
+
+# Helper to determine if a model's capabilities match the capability filter
+function ollamaChatModelsCapabilityMatch(capabilities, filterCapability):
+    if filterCapability == 'All':
+        return true
+    elif filterCapability == 'Chat':
+        return arrayIndexOf(capabilities, 'decision') == -1 && arrayIndexOf(capabilities, 'embedding') == -1
+    endif
+    return arrayIndexOf(capabilities, filterCapability) != -1
 endfunction
 
 

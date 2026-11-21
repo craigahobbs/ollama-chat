@@ -19,6 +19,7 @@ Local Makefile overrides:
 - `GHPAGES_RSYNC_ARGS` — `--exclude='models/models.json'`
 - `TESTS_REQUIRE` — `bare-script`
 - `PYLINT_ARGS` — also `static/models`; missing docstring checks disabled
+- `COVERAGE_ARGS` — also measures `static/models/` (the models scraper)
 - no `SPHINX_DOC` — `doc` is a custom recipe (README, `static/*`, `ollamaChat.smd`, and the
   `ollamaChatModels.bare`/`ollamaChatUtil.bare` scripts used by `static/models.html`)
 - `commit` also depends on `test-app`
@@ -75,7 +76,8 @@ Tests require `bare-script`; the back-end never contacts a real Ollama server in
 ## Model metadata (`static/models/`)
 
 `models.py` scrapes the Ollama library web page (HTML, fragile by design — no official API) to produce
-`models.json`, the list of downloadable models shown in the app. The
+`models.json`, the list of downloadable models shown in the app. Its unit tests are
+`src/tests/test_models.py` (loaded by file path; `_fetch` is mocked — no network). The
 `.github/workflows/nightly-models.yml` workflow regenerates it nightly and commits to the `gh-pages`
 branch. `static/` (root) is published to GitHub Pages (`gh-pages`) via `make gh-pages`.
 `static/models.html` publishes the model download page as a static web page by calling

@@ -164,8 +164,33 @@ struct OllamaChatModel
     # The model's download count
     int downloads
 
+    # The model's capabilities
+    optional OllamaChatModelCapability[] capabilities
+
     # The model variants
     OllamaChatModelVariant[len > 0] variants
+
+
+# A downloadable model capability
+enum OllamaChatModelCapability
+
+    # The model accepts image input
+    vision
+
+    # The model supports tool calling
+    tools
+
+    # The model supports thinking (reasoning)
+    thinking
+
+    # The model generates embeddings
+    embedding
+
+    # The model is a decision model (classification, routing, and scoring)
+    decision
+
+    # The model accepts audio input
+    audio
 
 
 # A downloadable model variant
