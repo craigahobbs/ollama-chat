@@ -60,14 +60,13 @@ Tests require `bare-script`; the back-end never contacts a real Ollama server in
   `ollamaChatUtil.bare`. Routing is hash-based on the `vView` arg.
 - The front-end calls the back-end with `systemFetch('actionName')` and `jsonParse`. Use the
   **bare-script skill** when editing `.bare` files or front-end tests (`static/test/`).
-- **Voice playback** ("Read Aloud"): `ollamaChatVoice.js` implements the `voice*` BareScript functions
-  (`voiceSpeak`, `voiceSetText`, `voicePlay`/`voicePause`, `voiceRewind`/`voiceParagraphBack`/`voiceParagraphForward`,
-  `voiceSetVoice`/`voiceSetRate`, `voiceClose`, `voiceState`, `voiceVoices`, `voiceSetChange`) with [PicoVox](https://github.com/craigahobbs/picovox) speech
-  synthesis and Web Audio; `index.html` passes them to MarkdownUp as `globals`. Outside the browser (the `bare`
-  CLI, tests), `ollamaChatVoice.bare` includes the no-op `ollamaChatVoiceStub.bare` instead. Tests mock the voice
-  functions with `ollamaChatTestMockAll(data)` (`testOllamaChatHelpers.bare`) when `data` has a `voiceState` member.
-  PicoVox is vendored as the npm tarball `static/picovox.tgz` (served at `/picovox/lib/`); update it with
-  `make picovox` (`PICOVOX_VERSION`).
+- **Voice playback** ("Read Aloud") is MarkdownUp's: a response's Read Aloud link calls `voiceSpeak(markdownText,
+  final, key)` (the key is the conversation ID and exchange index), and each conversation page render syncs the
+  playback with `ollamaChatConversationVoiceSync` - `voiceSetText` for a response that's still generating, `voiceClose`
+  when the playback's exchange isn't on the page. MarkdownUp owns the playback bar (and the voice and speaking rate
+  preferences) and renders it in the page's `markdownUpVoice` element (`ollamaChatConversationVoiceBarElements`, above
+  the prompt controls). MarkdownUp loads PicoVox speech synthesis from its own statics (`/markdown-up/picovox/`,
+  served by `chisel`'s MarkdownUp tarball). Tests seed the playback with `unittestMockAll({'voiceState': ...})`.
 - `ollamaChat.smd` is the [schema-markdown](https://github.com/craigahobbs/schema-markdown) type model.
   It defines both the API request/response types (validated server-side in `app.py`) and the
   `OllamaChatConfig` file format. Adding or changing an endpoint means editing the `.smd` and `app.py`

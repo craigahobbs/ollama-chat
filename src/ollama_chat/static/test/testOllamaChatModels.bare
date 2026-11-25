@@ -969,6 +969,7 @@ async function testOllamaChatModelsMainError():
     unittestMockAll({})
     ollamaChatMain()
     unittestDeepEqual(unittestMockEnd(), [ \
+        ['voiceClose', []], \
         ['systemFetch', ['getModels']], \
         ['documentSetTitle', ['Ollama Chat']], \
         ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Failed to get models']], \
@@ -985,6 +986,7 @@ async function testOllamaChatModelsMainDownloadError():
     unittestMockAll({'systemFetch': {'getSystemInfo': jsonStringify({'memory': 8000000000, 'mlx': false})}})
     ollamaChatMain()
     unittestDeepEqual(unittestMockEnd(), [ \
+        ['voiceClose', []], \
         ['systemFetch', ['getSystemInfo']], \
         ['systemFetch', ['https://craigahobbs.github.io/ollama-chat/models/models.json']], \
         ['documentSetTitle', ['Ollama Chat']], \
@@ -1001,6 +1003,7 @@ async function testOllamaChatModelsMainDownloadSystemInfoError():
     unittestMockAll({})
     ollamaChatMain()
     unittestDeepEqual(unittestMockEnd(), [ \
+        ['voiceClose', []], \
         ['systemFetch', ['getSystemInfo']], \
         ['documentSetTitle', ['Ollama Chat']], \
         ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Failed to get system info']] \

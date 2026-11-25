@@ -824,6 +824,7 @@ async function testOllamaChatTemplateMainError():
     unittestMockAll({})
     ollamaChatMain()
     unittestDeepEqual(unittestMockEnd(), [ \
+        ['voiceClose', []], \
         ['systemFetch', ['getTemplate?id=T1']], \
         ['documentSetTitle', ['Ollama Chat']], \
         ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Unknown template ID']] \
@@ -840,6 +841,7 @@ async function testOllamaChatTemplateMainVariablesError():
     unittestMockAll({})
     ollamaChatMain()
     unittestDeepEqual(unittestMockEnd(), [ \
+        ['voiceClose', []], \
         ['systemFetch', ['getTemplate?id=T1']], \
         ['documentSetTitle', ['Ollama Chat']], \
         ['markdownPrint', ['[Back](#var=)','','# Ollama Chat','','**ERROR:** Unknown template ID']] \
