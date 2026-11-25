@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.0 (2026-11-25)
+
+- [17ea3c8](https://github.com/craigahobbs/ollama-chat/commit/17ea3c8) - Read Aloud: use MarkdownUp's voice playback \(chisel 2.6\) - remove the vendored PicoVox and the voice functions
+
 ## 1.6.7 (2026-11-21)
 
 - [20e222b](https://github.com/craigahobbs/ollama-chat/commit/20e222b) - Models: capabilities, capability filter, size fallbacks, and scraper tests
